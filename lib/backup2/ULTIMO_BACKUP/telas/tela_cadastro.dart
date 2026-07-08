@@ -337,7 +337,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white, borderRadius: BorderRadius.circular(20), 
-                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.05), blurRadius: 15)],
+                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.05), blurRadius: 15)],
                 ),
                 child: Column(
                   children: [
@@ -470,7 +470,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white, borderRadius: BorderRadius.circular(20), 
-                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.05), blurRadius: 15)],
+                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.05), blurRadius: 15)],
                 ),
                 child: Column(
                   children: [
@@ -644,7 +644,7 @@ onTap: () {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         if (_contatoPreenchido && _enderecoPreenchido)
-                          BoxShadow(color: const Color(0xFF7C3AED).withOpacity(0.5), blurRadius: 10, offset: const Offset(0, 4))
+                          BoxShadow(color: const Color(0xFF7C3AED).withValues(alpha: 0.5), blurRadius: 10, offset: const Offset(0, 4))
                       ]
                     ),
 

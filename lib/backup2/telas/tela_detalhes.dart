@@ -119,8 +119,8 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF3F51B5).withOpacity(
-                0.05,
+              color: const Color(0xFF3F51B5).withValues(
+                alpha: 0.05,
               ),
               blurRadius: 15,
               offset: const Offset(0, 5),
@@ -220,7 +220,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -346,7 +346,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
             ), 
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, -5), 
               ),

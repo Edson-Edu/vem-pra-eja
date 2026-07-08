@@ -431,7 +431,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
         border: Border.all(color: const Color(0xFFEDE9FE), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4F46E5).withOpacity(0.04), 
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.04), 
             blurRadius: 15, 
             offset: const Offset(0, 5),
           )
@@ -610,7 +610,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2), 
+              color: Colors.white.withValues(alpha: 0.2), 
               shape: BoxShape.circle,
             ),
             child: const Icon(

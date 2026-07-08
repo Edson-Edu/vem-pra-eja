@@ -375,7 +375,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   borderRadius: BorderRadius.circular(20), 
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF3F51B5).withOpacity(0.05), 
+                      color: const Color(0xFF3F51B5).withValues(alpha: 0.05), 
                       blurRadius: 15,
                     ),
                   ],
@@ -634,7 +634,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   borderRadius: BorderRadius.circular(20), 
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF3F51B5).withOpacity(0.05), 
+                      color: const Color(0xFF3F51B5).withValues(alpha: 0.05), 
                       blurRadius: 15,
                     )
                   ],
@@ -938,7 +938,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                         borderRadius: BorderRadius.circular(20),
                       ), 
                       elevation: 5,
-                      shadowColor: const Color(0xFFFF9800).withOpacity(0.5),
+                      shadowColor: const Color(0xFFFF9800).withValues(alpha: 0.5),
                     ), 
                     onPressed: _enviandoDados ? null : () {
                       bool contatoValido = _formContato.currentState!.validate();

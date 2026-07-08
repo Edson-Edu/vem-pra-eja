@@ -45,6 +45,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
   final FocusNode _focoNumero = FocusNode();
   final FocusNode _focoNumeroEndereco = FocusNode();
 
+  final TextEditingController _idadeCtrl = TextEditingController();
+
   bool _buscando = false;
   bool _camposEndTravados = false;
   String _cidadeSelecionada = 'Camboriú'; 
@@ -67,6 +69,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
   bool get _contatoPreenchido {
     return _nomeCtrl.text.isNotEmpty &&
            _cpfCtrl.text.length == 14 &&
+           _idadeCtrl.text.isNotEmpty &&
            _dddCtrl.text.length == 2 &&
            _numeroCtrl.text.length >= 10;
   }
@@ -77,7 +80,10 @@ class _TelaCadastroState extends State<TelaCadastro> {
            _bairroCtrl.text.isNotEmpty &&
            _cidadeSelecionada.isNotEmpty;
   }
-
+  
+  bool get _enderecoVazio {
+    return _cepCtrl.text.isEmpty && _ruaCtrl.text.isEmpty;
+  }
 
   @override
   void dispose() {
@@ -94,6 +100,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
     _focoDdd.dispose(); 
     _focoNumero.dispose(); 
     _focoNumeroEndereco.dispose();
+    _idadeCtrl.dispose();
     super.dispose();
   }
 
@@ -227,6 +234,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
         'turno_selecionado': widget.turnoSelecionado, 
         'nome_completo': _nomeCtrl.text,
         'cpf': _cpfCtrl.text.replaceAll(RegExp(r'\D'), ''), 
+        'idade': int.tryParse(_idadeCtrl.text),
         'ddd': _dddCtrl.text,
         'telefone': _numeroCtrl.text.replaceAll(RegExp(r'\D'), ''),
         'email_aluno': _emailCtrl.text.isEmpty ? null : _emailCtrl.text,
@@ -337,7 +345,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white, borderRadius: BorderRadius.circular(20), 
-                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.05), blurRadius: 15)],
+                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.05), blurRadius: 15)],
                 ),
                 child: Column(
                   children: [
@@ -390,17 +398,61 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                 validator: (v) => v == null || v.isEmpty ? 'Nome é obrigatório' : null,
                               ),
                               const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _cpfCtrl,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [MascaraCPF()],
-                                decoration: InputDecoration(labelText: 'CPF (Obrigatório)', hintText: '000.000.000-00', isDense: true, filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(15))),
-                                validator: (v) {
-                                  if (v == null || v.isEmpty) return 'Digite o CPF';
-                                  if (!_isCpfValido(v)) return 'CPF Inválido';
-                                  return null;
-                                },
+                              
+                              // ==========================================
+                              // PARTE 2: AQUI ESTÁ A LINHA COM CPF E IDADE
+                              // ==========================================
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 7,
+                                    child: TextFormField(
+                                      controller: _cpfCtrl,
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [MascaraCPF()],
+                                      decoration: InputDecoration(
+                                        labelText: 'CPF (Obrigatório)', 
+                                        hintText: '000.000.000-00', 
+                                        isDense: true, filled: true, fillColor: Colors.white, 
+                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15))
+                                      ),
+                                      validator: (v) {
+                                        if (v == null || v.isEmpty) return 'Digite o CPF';
+                                        if (!_isCpfValido(v)) return 'CPF Inválido';
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    flex: 3,
+                                    child: TextFormField(
+                                      controller: _idadeCtrl, // <- Controlador da idade aqui
+                                      keyboardType: TextInputType.number,
+                                      maxLength: 2,
+                                      decoration: InputDecoration(
+                                        labelText: 'Idade', 
+                                        counterText: '', 
+                                        isDense: true, filled: true, fillColor: Colors.white, 
+                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15))
+                                      ),
+                                      validator: (v) {
+                                        if (v == null || v.isEmpty) return 'Falta';
+                                        int? idade = int.tryParse(v);
+                                        if (idade == null) return 'Erro';
+                                        if (widget.nivelSelecionado.contains('Fundamental') && idade < 15) return 'Mín 15';
+                                        if (widget.nivelSelecionado.contains('Médio') && idade < 18) return 'Mín 18';
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
+                              // ==========================================
+                              // FIM DA PARTE 2
+                              // ==========================================
+
                               const SizedBox(height: 12),
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -470,7 +522,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white, borderRadius: BorderRadius.circular(20), 
-                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.05), blurRadius: 15)],
+                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.05), blurRadius: 15)],
                 ),
                 child: Column(
                   children: [
@@ -491,15 +543,15 @@ onTap: () {
                           children: [
                             const Icon(Icons.location_on_outlined, color: Color(0xFF4F46E5)),
                             const SizedBox(width: 10),
-                            Text('ENDEREÇO', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF1E1B4B))),
-                            const Spacer(),
+                           Text('ENDEREÇO (Opcional)', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF1E1B4B))),
+const Spacer(),
 
-                            // MUDANÇA UX: Ícone de alerta caso a aba esteja fechada e o formulário incompleto
-                            if (!_enderecoAberto && !_enderecoPreenchido)
-                              const Padding(
-                                padding: EdgeInsets.only(right: 12.0),
-                                child: Icon(Icons.error_outline_rounded, color: Colors.orange, size: 20),
-                              ),
+// Atualizado: Só mostra o alerta laranja se ele começou a preencher e parou no meio
+if (!_enderecoAberto && !_enderecoPreenchido && !_enderecoVazio)
+  const Padding(
+    padding: EdgeInsets.only(right: 12.0),
+    child: Icon(Icons.error_outline_rounded, color: Colors.orange, size: 20),
+  ),
 
                             Icon(_enderecoAberto ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: Colors.grey),
                           ],
@@ -637,46 +689,74 @@ onTap: () {
               FadeInUp(
                 child: SizedBox(
                   width: double.infinity, height: 60, 
-
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 400),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        if (_contatoPreenchido && _enderecoPreenchido)
-                          BoxShadow(color: const Color(0xFF7C3AED).withOpacity(0.5), blurRadius: 10, offset: const Offset(0, 4))
-                      ]
-                    ),
-
-                  child: ElevatedButton(
-                   style: ElevatedButton.styleFrom(
-                        // MUDANÇA UX: Cinza e sem vida até preencher tudo!
-                        backgroundColor: (_contatoPreenchido && _enderecoPreenchido) 
-                            ? const Color(0xFF7C3AED) 
-                            : Colors.grey.shade400,
-                        disabledBackgroundColor: Colors.grey.shade300,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), 
-                        elevation: 0,
-                    ), 
-                      onPressed: (_enviandoDados || !_contatoPreenchido || !_enderecoPreenchido) ? null : () {                      bool contatoValido = _formContato.currentState!.validate();
-                      bool enderecoValido = _formEndereco.currentState!.validate();
-
-                      if (contatoValido && enderecoValido) {
-                        _enviarInscricao(); 
+                  // O Builder entra aqui, dentro do SizedBox!
+                  child: Builder(
+                    builder: (context) {
+                      // Define a cor do botão baseado no preenchimento
+                      Color corBotao;
+                      if (_contatoPreenchido && _enderecoPreenchido) {
+                        corBotao = const Color(0xFF7C3AED); // Ideal: Totalmente colorido
+                      } else if (_contatoPreenchido && _enderecoVazio) {
+                        corBotao = const Color(0xFF7C3AED).withValues(alpha: 0.5); // Meio colorido (passável)
                       } else {
-                        setState(() {
-                          if (!contatoValido) { _contatoAberto = true; _enderecoAberto = false; } 
-                          else if (!enderecoValido) { _enderecoAberto = true; _contatoAberto = false; }
-                        });
-                        _mostrarErro('Por favor, corrija os campos marcados em vermelho.');
+                        corBotao = Colors.grey.shade400; // Faltando dados de contato (Bloqueado)
                       }
-                    }, 
-                    child: _enviandoDados 
-                        ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                        : const Text('Realizar Pré-Inscrição', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+
+                      // Regra para liberar o clique do botão
+                      bool podeEnviar = _contatoPreenchido && (_enderecoPreenchido || _enderecoVazio) && !_enviandoDados;
+
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 400),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            if (podeEnviar)
+                              BoxShadow(color: const Color(0xFF7C3AED).withValues(alpha: 0.5), blurRadius: 10, offset: const Offset(0, 4))
+                          ]
+                        ),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: corBotao,
+                            disabledBackgroundColor: Colors.grey.shade300,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), 
+                            elevation: 0,
+                          ),
+                          onPressed: !podeEnviar ? null : () {
+                            bool contatoValido = _formContato.currentState!.validate();
+                            // Se o endereço estiver totalmente vazio, não valida ele (já que é opcional)
+                            bool enderecoValido = _enderecoVazio || _formEndereco.currentState!.validate();
+
+                            // Checagem silenciosa da idade para disparar a mensagem completa
+                            int? idade = int.tryParse(_idadeCtrl.text);
+                            bool erroIdade = false;
+                            if (idade != null) {
+                              if (widget.nivelSelecionado.contains('Fundamental') && idade < 15) erroIdade = true;
+                              if (widget.nivelSelecionado.contains('Médio') && idade < 18) erroIdade = true;
+                            }
+
+                            if (contatoValido && enderecoValido && !erroIdade) {
+                              _enviarInscricao(); 
+                            } else {
+                              setState(() {
+                                if (!contatoValido) { _contatoAberto = true; _enderecoAberto = false; } 
+                                else if (!enderecoValido) { _enderecoAberto = true; _contatoAberto = false; }
+                              });
+                              
+                              if (erroIdade) {
+                                _mostrarErro('Você não tem a idade mínima necessária para a EJA, procure a Secretaria de Educação.');
+                              } else {
+                                _mostrarErro('Por favor, corrija os campos marcados em vermelho.');
+                              }
+                            }
+                          },
+                          child: _enviandoDados 
+                              ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
+                              : const Text('Realizar Pré-Inscrição', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                        ),
+                      );
+                    }
                   ),
                 ),
-              ),
               ),
             ],
           ),

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../leitor_texto.dart';
 import 'tela_nivel.dart';
 import 'manutencao.dart';
+import '../paleta.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // ============================================================================
@@ -175,7 +176,7 @@ class _TelaAberturaState extends State<TelaAbertura>
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => TelaNivel(
+        pageBuilder: (_, _, _) => TelaNivel(
           posicaoPreCarregada: _posicaoInicialCarregada,
           dadosEscolas: _dadosSupabase, 
         ),
@@ -287,10 +288,10 @@ class _TelaAberturaState extends State<TelaAbertura>
   @override
   Widget build(BuildContext context) {
     // Cor predominante inspirada na sua imagem
-    const corFundo = Color(0xFF0056A3); 
+   
 
     return Scaffold(
-      backgroundColor: corFundo, 
+      backgroundColor: Paleta.azulPrincipal,
       body: AnimatedBuilder(
         animation: _animFadeTelaFinal,
         builder: (context, child) => Opacity(
@@ -326,7 +327,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                               style: GoogleFonts.inter(
                                 fontSize: 22, 
                                 fontWeight: FontWeight.w400,
-                                color: Colors.white.withOpacity(0.6), // Levemente transparente para não roubar a cena
+                                color: Colors.white.withValues(alpha: 0.6), // Levemente transparente para não roubar a cena
                                 letterSpacing: 4.0, 
                               ),
                             ),
@@ -351,7 +352,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                                 style: GoogleFonts.inter(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: corFundo, // A cor do texto vazando o fundo
+                                  color: Paleta.azulPrincipal, // A cor do texto vazando o fundo
                                   letterSpacing: 1.0,
                                 ),
                               ),
@@ -381,9 +382,9 @@ class _TelaAberturaState extends State<TelaAbertura>
                                   begin: const Alignment(-1.0, 0.0),
                                   end: const Alignment(1.0, 0.0),
                                   colors: [
-                                    Colors.white.withOpacity(0.0), // Invisível
-                                    Colors.white.withOpacity(0.9), // Brilho estourado
-                                    Colors.white.withOpacity(0.0), // Invisível
+                                    Colors.white.withValues(alpha: 0.0), // Invisível
+                                    Colors.white.withValues(alpha: 0.9), // Brilho estourado
+                                    Colors.white.withValues(alpha: 0.0), // Invisível
                                   ],
                                   stops: [
                                     _animShimmer.value - 0.2,
@@ -444,7 +445,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                         style: GoogleFonts.inter(
                           fontSize: 16, 
                           fontWeight: FontWeight.w600,
-                          color: Colors.white.withOpacity(0.7), 
+                          color: Colors.white.withValues(alpha: 0.7), 
                           letterSpacing: 2.0,
                         ),
                       ),
@@ -478,7 +479,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                           Container(
                             height: 45, 
                             width: 1.0, 
-                            color: Colors.white.withOpacity(0.25), 
+                            color: Colors.white.withValues(alpha: 0.25), 
                           ),
                           
                           const SizedBox(width: 25),
@@ -511,7 +512,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                 right: 16,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const BotaoAcessibilidadeGlobal(
@@ -541,14 +542,14 @@ class _LoaderBarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // A trilha de fundo (meio transparente)
     final paintFundo = Paint()
-      ..color = Colors.white.withOpacity(0.2)
+      ..color = Colors.white.withValues(alpha: 0.2)
       ..strokeWidth = 3.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
     // A linha que se move (branca opaca)
     final paintFrente = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white.withValues(alpha: 0.8)
       ..strokeWidth = 3.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;

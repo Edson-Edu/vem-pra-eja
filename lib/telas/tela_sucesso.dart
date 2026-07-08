@@ -74,7 +74,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF4F46E5).withOpacity(0.04),
+              color: const Color(0xFF4F46E5).withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -143,7 +143,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF7C3AED).withOpacity(0.4),
+                            color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
                             blurRadius: 25,
                             offset: const Offset(0, 10),
                           ),
@@ -180,7 +180,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF7C3AED).withOpacity(0.1), 
+                        color: const Color(0xFF7C3AED).withValues(alpha: 0.1), 
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: TextoAcessivel(
@@ -245,7 +245,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
                             borderRadius: BorderRadius.circular(20),
                           ), 
                           elevation: 5, 
-                          shadowColor: const Color(0xFF7C3AED).withOpacity(0.5),
+                          shadowColor: const Color(0xFF7C3AED).withValues(alpha: 0.5),
                         ),
                         onPressed: () {
                           pararVoz(); 
@@ -311,7 +311,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4F46E5).withOpacity(0.1), 
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.1), 
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

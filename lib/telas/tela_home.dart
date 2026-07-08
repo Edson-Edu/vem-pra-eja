@@ -7,9 +7,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
 import 'tela_detalhes.dart';
+import '../paleta.dart';
 import '../leitor_texto.dart';
 
 // ============================================================================
@@ -76,10 +76,10 @@ class _CabecalhoFixoDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8F7FF),
+      decoration:  BoxDecoration(
+        color: Paleta.fundoGeral,
         border: Border(
-          bottom: BorderSide(color: Color(0xFFEDE9FE), width: 1.5),
+          bottom: BorderSide(color: Colors.grey.shade300, width: 1.5),
         ),
       ),
       child: Column(
@@ -104,7 +104,7 @@ class _CabecalhoFixoDelegate extends SliverPersistentHeaderDelegate {
               children: [
                 const Icon(
                   Icons.location_on_rounded, 
-                  color: Color(0xFF7C3AED), 
+                  color: Paleta.azulIcones,
                   size: 18,
                 ),
                 const SizedBox(width: 8),
@@ -113,7 +113,7 @@ class _CabecalhoFixoDelegate extends SliverPersistentHeaderDelegate {
                   estilo: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF3730A3),
+                    color: Paleta.textoDestaque,
                   ),
                 ),
               ],
@@ -458,13 +458,13 @@ class _TelaHomeState extends State<TelaHome> {
     }
   }
 
-  Future<BitmapDescriptor> _criarIconeUsuario() async {
+Future<BitmapDescriptor> _criarIconeUsuario() async {
     final size = 54.0; 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     
     final paintSombra = Paint()
-      ..color = const Color(0xFF7C3AED).withAlpha(77) 
+      ..color = Paleta.azulPrincipal.withAlpha(77) // <-- Sombra azul
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
     
     final paintBorda = Paint()
@@ -472,7 +472,7 @@ class _TelaHomeState extends State<TelaHome> {
       ..style = PaintingStyle.fill;
       
     final paintMiolo = Paint()
-      ..color = const Color(0xFF7C3AED) 
+      ..color = Paleta.azulPrincipal // <-- Miolo azul oficial
       ..style = PaintingStyle.fill;
 
     final cx = size / 2;
@@ -511,8 +511,9 @@ class _TelaHomeState extends State<TelaHome> {
     bool isPrimeira = true;
 
     for (var school in escolasFiltradas) {
+      // Pinos agora usam o tom Azul em vez de Violeta!
       final cor = (isPrimeira && _minhaLocalizacao != null)
-          ? BitmapDescriptor.hueViolet   
+          ? BitmapDescriptor.hueAzure   
           : BitmapDescriptor.hueOrange;  
 
       _marcadores.add(
@@ -520,7 +521,7 @@ class _TelaHomeState extends State<TelaHome> {
           markerId: MarkerId(school.id),
           position: school.posicao,
           icon: BitmapDescriptor.defaultMarkerWithHue(cor),
-          consumeTapEvents: true, // Escudo anti-bug
+          consumeTapEvents: true,
           onTap: () {
             _focarNaEscola(school.posicao);
             _rolarParaEscola(school);
@@ -606,20 +607,20 @@ class _TelaHomeState extends State<TelaHome> {
         : '${escolasFiltradas.length} escolas disponíveis.';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F7FF),
+      backgroundColor: Paleta.fundoGeral,
       appBar: AppBar(
         title: TextoAcessivel(
           texto: 'Escolha sua escola',
           estilo: GoogleFonts.inter(
             fontWeight: FontWeight.w900,
-            color: const Color(0xFF1E1B4B),
+            color: Paleta.textoPrincipal,
             fontSize: 18,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Paleta.cardBranco,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFF4F46E5)),
+        iconTheme: const IconThemeData(color: Paleta.azulIcones),
         actions: [BotaoAcessibilidadeGlobal(textoLeituraTela: leituraEscolas)],
       ),
       body: Stack(
@@ -675,7 +676,7 @@ class _TelaHomeState extends State<TelaHome> {
               child: Container(
                 color: Colors.white.withAlpha(204),
                 child: const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
+                  child: CircularProgressIndicator(color: Paleta.azulPrincipal),
                 ),
               ),
             ),
@@ -725,7 +726,7 @@ class _TelaHomeState extends State<TelaHome> {
                         margin: const EdgeInsets.symmetric(horizontal: 8),
                         clipBehavior: Clip.antiAlias, 
                         decoration: const BoxDecoration(
-                          color: Color(0xFFF8F7FF),
+                          color: Paleta.fundoGeral,
                           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                           boxShadow: [
                             BoxShadow(
@@ -768,7 +769,7 @@ class _TelaHomeState extends State<TelaHome> {
                               },
                               child: Container(
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFFF8F7FF),
+                                  color: Paleta.fundoGeral,
                                   border: Border(
                                     bottom: BorderSide(color: Color(0xFFEDE9FE), width: 1.5),
                                   ),
@@ -813,7 +814,7 @@ class _TelaHomeState extends State<TelaHome> {
                                         children: [
                                           const Icon(
                                             Icons.location_on_rounded, 
-                                            color: Color(0xFF7C3AED), 
+                                            color: Paleta.azulIcones, 
                                             size: 18
                                           ),
                                           const SizedBox(width: 8),
@@ -822,7 +823,7 @@ class _TelaHomeState extends State<TelaHome> {
                                             estilo: GoogleFonts.inter(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w500,
-                                              color: const Color(0xFF3730A3),
+                                              color: Paleta.textoDestaque
                                             ),
                                           ),
                                         ],
@@ -906,10 +907,8 @@ class _TelaHomeState extends State<TelaHome> {
                                           gradient: LinearGradient(
                                             begin: Alignment.topCenter,
                                             end: Alignment.bottomCenter,
-                                            colors: [
-                                              const Color(0xFFF8F7FF).withAlpha(0), // Transparente em cima
-                                              const Color(0xFFF8F7FF), // Cor sólida da aba embaixo
-                                            ],
+                                            colors: [Paleta.fundoGeral.withAlpha(0), 
+                                              Paleta.fundoGeral,],
                                           ),
                                         ),
                                       ),
@@ -1026,6 +1025,7 @@ class _CardEscolaState extends State<_CardEscola> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final List<String> turnos = _obterTurnosUnicos();
     final List<String> beneficios = _obterBeneficiosUnicos();
@@ -1034,25 +1034,25 @@ class _CardEscolaState extends State<_CardEscola> {
       duration: const Duration(milliseconds: 400),
       child: Padding(
         padding: const EdgeInsets.only(bottom: 16),
-        // O GESTURE DETECTOR AQUI FAZ O CARD TODO SER CLICÁVEL!
         child: GestureDetector(
           onTap: widget.onCardTap,
           behavior: HitTestBehavior.opaque,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 400),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Paleta.cardBranco,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
+                // Borda Azul Vibrante quando clica, e Cinza Neutro quando normal
                 color: widget.isHighlighted
-                    ? const Color(0xFF7C3AED)
-                    : const Color(0xFFE0DAFA),
+                    ? Paleta.azulBotao
+                    : Colors.grey.shade300,
                 width: widget.isHighlighted ? 2.0 : 0.5,
               ),
               boxShadow: [
                 if (widget.isHighlighted)
                   BoxShadow(
-                    color: const Color(0xFF7C3AED).withAlpha(77),
+                    color: Paleta.azulBotao.withAlpha(50),
                     blurRadius: 15,
                     offset: const Offset(0, 4),
                   ),
@@ -1068,19 +1068,19 @@ class _CardEscolaState extends State<_CardEscola> {
                 height: 140, 
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFEDE9FE),
+                  color: Paleta.fundoGeral, // Fundo caso a imagem falhe
                   borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
                 ),
                 child: totalFotos == 0
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.school_rounded, size: 50, color: Color(0xFFC4B5FD)),
+                          const Icon(Icons.school_rounded, size: 50, color: Paleta.azulIcones),
                           const SizedBox(height: 8),
                           Text(
                             'Foto da Escola',
                             style: TextStyle(
-                              color: const Color(0xFF818CF8).withAlpha(178),
+                              color: Paleta.textoSecundario,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -1109,10 +1109,10 @@ class _CardEscolaState extends State<_CardEscola> {
                                   loadingBuilder: (context, child, progress) {
                                     if (progress == null) return child;
                                     return Container(
-                                      color: const Color(0xFFEDE9FE),
+                                      color: Paleta.fundoGeral,
                                       child: const Center(
                                         child: CircularProgressIndicator(
-                                          color: Color(0xFF7C3AED),
+                                          color: Paleta.azulPrincipal,
                                           strokeWidth: 2,
                                         ),
                                       ),
@@ -1120,20 +1120,20 @@ class _CardEscolaState extends State<_CardEscola> {
                                   },
                                   errorBuilder: (context, error, stack) {
                                     return Container(
-                                      color: const Color(0xFFEDE9FE),
+                                      color: Paleta.fundoGeral,
                                       child: const Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Icon(
                                             Icons.broken_image_rounded, 
                                             size: 40, 
-                                            color: Color(0xFFC4B5FD)
+                                            color: Paleta.azulIcones
                                           ),
                                           SizedBox(height: 8),
                                           Text(
                                             'Imagem indisponível',
                                             style: TextStyle(
-                                              color: Color(0xFF818CF8), 
+                                              color: Paleta.textoSecundario, 
                                               fontSize: 12
                                             ),
                                           ),
@@ -1166,14 +1166,14 @@ class _CardEscolaState extends State<_CardEscola> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFF7C3AED)),
+                                    const Icon(Icons.location_on_rounded, size: 14, color: Paleta.azulIcones),
                                     const SizedBox(width: 4),
                                     Text(
                                       'MAIS PRÓXIMA', 
                                       style: GoogleFonts.inter(
                                         fontSize: 11, 
                                         fontWeight: FontWeight.w800, 
-                                        color: const Color(0xFF1E1B4B)
+                                        color: Paleta.textoPrincipal
                                       )
                                     ),
                                   ],
@@ -1223,7 +1223,7 @@ class _CardEscolaState extends State<_CardEscola> {
                       estilo: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1E1B4B),
+                        color: Paleta.textoPrincipal, // Texto forte
                         height: 1.1,
                       ),
                     ),
@@ -1235,7 +1235,7 @@ class _CardEscolaState extends State<_CardEscola> {
                           : '${widget.escola.cidade} • Calculando...',
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: const Color(0xFF455A64),
+                        color: Paleta.textoSecundario,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1246,19 +1246,20 @@ class _CardEscolaState extends State<_CardEscola> {
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade500,
+                        color: Paleta.textoSecundario,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
+                      // Tags de Turno: Tom Azul Claro oficial
                       children: turnos.map((t) => _buildTagChip(
                         texto: t,
-                        corFundo: const Color(0xFFF0EEFF),
-                        corTexto: const Color(0xFF6C4DD4),
+                        corFundo: Paleta.azulIcones.withValues(alpha: 0.1),
+                        corTexto: Paleta.azulPrincipal,
                         icone: Icons.schedule_rounded,
-                        corIcone: const Color(0xFF6C4DD4),
+                        corIcone: Paleta.azulPrincipal,
                       )).toList(),
                     ),
                     const SizedBox(height: 12),
@@ -1269,19 +1270,20 @@ class _CardEscolaState extends State<_CardEscola> {
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade500,
+                          color: Paleta.textoSecundario,
                         ),
                       ),
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
+                        // Tags de Benefícios: Os Verdes da Paleta
                         children: beneficios.take(4).map((b) => _buildTagChip(
                           texto: b,
-                          corFundo: const Color(0xFFEAF3DE),
-                          corTexto: const Color(0xFF2E7D32),
+                          corFundo: Paleta.fundoVerde,
+                          corTexto: Paleta.verdeSucesso,
                           icone: Icons.check_circle_outline_rounded,
-                          corIcone: const Color(0xFF4CAF50),
+                          corIcone: Paleta.verdeSucesso,
                         )).toList(),
                       ),
                       const SizedBox(height: 8),
@@ -1300,7 +1302,7 @@ class _CardEscolaState extends State<_CardEscola> {
                       height: 42,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED),
+                          backgroundColor: Paleta.azulBotao, // Botão Azul Vibrante
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -1341,7 +1343,7 @@ class _CardEscolaState extends State<_CardEscola> {
                         Icon(
                           Icons.favorite_border_rounded, 
                           size: 14, 
-                          color: Colors.grey.shade500
+                          color: Paleta.textoSecundario
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -1349,7 +1351,7 @@ class _CardEscolaState extends State<_CardEscola> {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade500,
+                            color: Paleta.textoSecundario,
                           ),
                         ),
                       ],

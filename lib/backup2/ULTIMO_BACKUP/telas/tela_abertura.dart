@@ -175,7 +175,7 @@ class _TelaAberturaState extends State<TelaAbertura>
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => TelaNivel(
+        pageBuilder: (_, _, _) => TelaNivel(
           posicaoPreCarregada: _posicaoInicialCarregada,
           dadosEscolas: _dadosSupabase, 
         ),
@@ -326,7 +326,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                               style: GoogleFonts.inter(
                                 fontSize: 22, 
                                 fontWeight: FontWeight.w400,
-                                color: Colors.white.withOpacity(0.6), // Levemente transparente para não roubar a cena
+                                color: Colors.white.withValues(alpha: 0.6), // Levemente transparente para não roubar a cena
                                 letterSpacing: 4.0, 
                               ),
                             ),
@@ -381,9 +381,9 @@ class _TelaAberturaState extends State<TelaAbertura>
                                   begin: const Alignment(-1.0, 0.0),
                                   end: const Alignment(1.0, 0.0),
                                   colors: [
-                                    Colors.white.withOpacity(0.0), // Invisível
-                                    Colors.white.withOpacity(0.9), // Brilho estourado
-                                    Colors.white.withOpacity(0.0), // Invisível
+                                    Colors.white.withValues(alpha: 0.0), // Invisível
+                                    Colors.white.withValues(alpha: 0.9), // Brilho estourado
+                                    Colors.white.withValues(alpha: 0.0), // Invisível
                                   ],
                                   stops: [
                                     _animShimmer.value - 0.2,
@@ -444,7 +444,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white.withOpacity(0.4), 
+                          color: Colors.white.withValues(alpha: 0.4), 
                           letterSpacing: 2.0,
                         ),
                       ),
@@ -461,7 +461,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                 right: 16,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const BotaoAcessibilidadeGlobal(
@@ -491,14 +491,14 @@ class _LoaderBarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // A trilha de fundo (meio transparente)
     final paintFundo = Paint()
-      ..color = Colors.white.withOpacity(0.2)
+      ..color = Colors.white.withValues(alpha: 0.2)
       ..strokeWidth = 3.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
     // A linha que se move (branca opaca)
     final paintFrente = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white.withValues(alpha: 0.8)
       ..strokeWidth = 3.0
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;

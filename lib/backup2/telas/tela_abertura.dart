@@ -135,7 +135,7 @@ class _TelaAberturaState extends State<TelaAbertura>
       context,
       PageRouteBuilder(
         // TROQUE AQUI:
-        pageBuilder: (_, __, ___) => TelaManutencao(
+        pageBuilder: (_, _, _) => TelaManutencao(
           posicaoPreCarregada: _posicaoInicialCarregada,
           dadosEscolas: _dadosSupabase, // <-- PASSANDO O BASTÃO!
         ),
@@ -265,7 +265,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                     // "vem pra " digitando
                     AnimatedBuilder(
                       animation: _animVemPra,
-                      builder: (_, __) {
+                      builder: (_, _) {
                         final visivel = _textoVemPra.substring(
                             0,
                             _animVemPra.value
@@ -275,7 +275,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                           style: GoogleFonts.inter(
                             fontSize: 26,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white.withOpacity(0.65),
+                            color: Colors.white.withValues(alpha: 0.65),
                             letterSpacing: 4,
                           ),
                         );
@@ -317,7 +317,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                               _ctrlTopo,
                               _ctrlBorla,
                             ]),
-                            builder: (_, __) => CustomPaint(
+                            builder: (_, _) => CustomPaint(
                               painter: _LetrAChapeu(
                                 progLinhas: _animALinhas.value,
                                 progBarra: _animBarra.value,
@@ -350,7 +350,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white.withOpacity(0.45)),
+                              Colors.white.withValues(alpha: 0.45)),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -358,7 +358,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                         'Carregando...',
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                     ],
@@ -372,7 +372,7 @@ class _TelaAberturaState extends State<TelaAbertura>
                 right: 16,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const BotaoAcessibilidadeGlobal(
@@ -473,7 +473,7 @@ class _LetrAChapeu extends CustomPainter {
           const Radius.circular(3),
         ),
         Paint()
-          ..color = const Color(0xFFC4B5FD).withOpacity(progTopo.clamp(0.0, 1.0))
+          ..color = const Color(0xFFC4B5FD).withValues(alpha: progTopo.clamp(0.0, 1.0))
           ..style = PaintingStyle.fill,
       );
     }

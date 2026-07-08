@@ -60,7 +60,7 @@ class _TelaNivelState extends State<TelaNivel> {
               20,
             ),
             border: Border.all(
-              color: cor.withOpacity(0.3), 
+              color: cor.withValues(alpha: 0.3), 
               width: 2,
             ),
             boxShadow: const [
@@ -78,7 +78,7 @@ class _TelaNivelState extends State<TelaNivel> {
                   12,
                 ),
                 decoration: BoxDecoration(
-                  color: cor.withOpacity(0.1), 
+                  color: cor.withValues(alpha: 0.1), 
                   shape: BoxShape.circle,
                 ),
                 child: Icon(

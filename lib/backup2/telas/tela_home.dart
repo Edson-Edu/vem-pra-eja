@@ -327,7 +327,7 @@ class _TelaHomeState extends State<TelaHome> {
           if (_carregandoEscolas)
             Positioned.fill(
               child: Container(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 child: const Center(
                   child: CircularProgressIndicator(
                     color: Color(0xFF3F51B5),

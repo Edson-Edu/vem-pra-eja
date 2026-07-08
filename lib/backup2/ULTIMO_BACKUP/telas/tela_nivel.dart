@@ -79,7 +79,7 @@ class _TelaNivelState extends State<TelaNivel> {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF4F46E5).withOpacity(0.04), 
+              color: const Color(0xFF4F46E5).withValues(alpha: 0.04), 
               blurRadius: 15, 
               offset: const Offset(0, 5),
             ),
@@ -89,8 +89,8 @@ class _TelaNivelState extends State<TelaNivel> {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(24),
-            splashColor: const Color(0xFF7C3AED).withOpacity(0.1),
-            highlightColor: const Color(0xFF7C3AED).withOpacity(0.05),
+            splashColor: const Color(0xFF7C3AED).withValues(alpha: 0.1),
+            highlightColor: const Color(0xFF7C3AED).withValues(alpha: 0.05),
             onTap: () {
               pararVoz(); 
               Navigator.push(
@@ -154,7 +154,7 @@ class _TelaNivelState extends State<TelaNivel> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF7C3AED).withOpacity(0.05),
+                      color: const Color(0xFF7C3AED).withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -191,7 +191,7 @@ class _TelaNivelState extends State<TelaNivel> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05), 
+                  color: Colors.black.withValues(alpha: 0.05), 
                   blurRadius: 5,
                 )
               ]
@@ -220,7 +220,7 @@ class _TelaNivelState extends State<TelaNivel> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05), 
+                  color: Colors.black.withValues(alpha: 0.05), 
                   blurRadius: 5,
                 )
               ]

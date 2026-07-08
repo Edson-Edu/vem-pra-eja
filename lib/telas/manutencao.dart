@@ -32,12 +32,12 @@ class _TelaManutencaoState extends State<TelaManutencao> {
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => TelaNivel(
+          pageBuilder: (_, _, _) => TelaNivel(
             posicaoPreCarregada: widget.posicaoPreCarregada,
             dadosEscolas: widget.dadosEscolas, // <-- PASSANDO O BASTÃO!
           ),
           transitionDuration: const Duration(milliseconds: 500),
-          transitionsBuilder: (_, animation, __, child) {
+          transitionsBuilder: (_, animation, _, child) {
             return FadeTransition(opacity: animation, child: child);
           },
         ),
@@ -70,7 +70,7 @@ class _TelaManutencaoState extends State<TelaManutencao> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF7C3AED).withOpacity(0.15),
+                            color: const Color(0xFF7C3AED).withValues(alpha: 0.15),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           )

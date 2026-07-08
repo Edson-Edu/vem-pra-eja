@@ -7,7 +7,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
 import 'tela_detalhes.dart';
 import '../leitor_texto.dart';
