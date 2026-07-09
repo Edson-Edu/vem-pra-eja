@@ -4,6 +4,7 @@ import 'package:animate_do/animate_do.dart';
 import 'tela_cadastro.dart';
 import 'tela_home.dart'; 
 import '../leitor_texto.dart';
+import '../paleta.dart';
 
 // ============================================================================
 // CLASSE AUXILIAR PARA PADRONIZAR AS CORES E ÍCONES DOS BENEFÍCIOS
@@ -146,7 +147,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
     );
     
     await gerenciadorVoz.speak(
-      "Clique no botão roxo fixo no rodapé para Quero me inscrever.",
+      "Clique no botão azul fixo no rodapé para Quero me inscrever.",
     );
   }
 
@@ -213,13 +214,13 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
         textoMinusculo.contains('apostila')) {
       return _AuxilioVisual(
         icone: Icons.menu_book_rounded,
-        corIcone: const Color(0xFF4F46E5), 
-        corFundo: const Color(0xFFEEF2FF),
+        corIcone: Paleta.azulIcones, // <-- NOVO
+        corFundo: Paleta.azulIcones.withValues(alpha: 0.1), // <-- NOVO
         explicacao: "Você receberá o material didático necessário (como apostilas e cadernos) de forma 100% gratuita para acompanhar as aulas.",
       );
-    } 
+    }
     
-    if (textoMinusculo.contains('uniforme') || 
+   if (textoMinusculo.contains('uniforme') || 
         textoMinusculo.contains('roupa') || 
         textoMinusculo.contains('camisa')) {
       return _AuxilioVisual(
@@ -232,8 +233,8 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
 
     return _AuxilioVisual(
       icone: Icons.check_circle_outline_rounded,
-      corIcone: const Color(0xFF7C3AED),
-      corFundo: const Color(0xFFF5F3FF),
+      corIcone: Paleta.azulBotao, // <-- NOVO
+      corFundo: Paleta.azulBotao.withValues(alpha: 0.1), // <-- NOVO
       explicacao: "Detalhes específicos sobre este auxílio estarão disponíveis na secretaria da escola no ato da matrícula.",
     );
   }
@@ -244,7 +245,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
   void _abrirDetalheAuxilio(String titulo, _AuxilioVisual visual) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Paleta.azulBotao,
       isScrollControlled: true,
       builder: (BuildContext context) {
         return Container(
@@ -526,7 +527,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                         texto: textoLimpo,
                         estilo: GoogleFonts.inter(
                           fontSize: 15, 
-                          color: const Color(0xFF1E1B4B), 
+                          color: Colors.grey.shade400,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -600,7 +601,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
     final double paddingTopo = MediaQuery.of(context).padding.top;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF4F46E5), 
+      backgroundColor: Paleta.azulPrincipal,
       extendBodyBehindAppBar: true, 
       
       appBar: AppBar(
@@ -682,7 +683,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                     '${widget.bairro} • ${widget.cidade} • SC', 
                     style: GoogleFonts.inter(
                       fontSize: 14, 
-                      color: const Color(0xFFC4B5FD),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -697,7 +698,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
             child: Container(
               clipBehavior: Clip.antiAlias, 
               decoration: const BoxDecoration(
-                color: Color(0xFFF8F7FF), 
+                color: Paleta.fundoGeral,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(35), 
                   topRight: Radius.circular(35),
@@ -766,7 +767,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                                             duration: const Duration(milliseconds: 300),
                                             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
                                             decoration: BoxDecoration(
-                                              color: isSelected ? const Color(0xFF4F46E5) : Colors.white,
+                                              color: isSelected ? Paleta.azulBotao : Colors.white, // <-- AQUI
                                               borderRadius: BorderRadius.circular(20),
                                               border: Border.all(
                                                 color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFEDE9FE), 
@@ -775,7 +776,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                                               boxShadow: isSelected 
                                                 ? [
                                                     BoxShadow(
-                                                      color: const Color(0xFF4F46E5).withAlpha(77), 
+                                                      color: Paleta.azulBotao.withAlpha(77),
                                                       blurRadius: 10, 
                                                       offset: const Offset(0, 4),
                                                     ),
@@ -800,7 +801,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                                                   style: GoogleFonts.inter(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.w500,
-                                                    color: isSelected ? const Color(0xFFC4B5FD) : Colors.grey.shade500,
+                                                    color: isSelected ? Colors.white.withValues(alpha: 0.8) : Paleta.textoSecundario,
                                                   ),
                                                 ),
                                               ],
@@ -828,13 +829,13 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                                   Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFEDE9FE),
+                                      color: Paleta.azulIcones.withValues(alpha: 0.1),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
                                       Icons.school_rounded, 
                                       size: 40, 
-                                      color: Color(0xFF5B21B6),
+                                      color: Paleta.azulIcones,
                                     ),
                                   ),
                                   const SizedBox(height: 20),
@@ -951,16 +952,16 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
       // BOTÃO FLUTUANTE DE AÇÃO FINAL
       // ============================================================================
       bottomNavigationBar: Container(
-        color: const Color(0xFFF8F7FF), 
+        color: Paleta.fundoGeral,
         padding: const EdgeInsets.only(left: 24, right: 24, top: 10, bottom: 30),
         child: SizedBox(
           width: double.infinity, 
           height: 60,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: _turnoSelecionado == null 
+             backgroundColor: _turnoSelecionado == null 
                   ? Colors.grey.shade300 
-                  : const Color(0xFF7C3AED),
+                  : Paleta.azulBotao, // <-- AQUI (Cor do botão)
               disabledBackgroundColor: Colors.grey.shade300,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),

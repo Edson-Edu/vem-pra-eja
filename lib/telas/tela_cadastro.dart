@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart'; 
 import 'tela_sucesso.dart';
+import '../paleta.dart';
 import '../leitor_texto.dart';
 
 class TelaCadastro extends StatefulWidget {
@@ -271,7 +272,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
   }@override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F7FF), 
+      backgroundColor: Paleta.fundoCadastro,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -311,13 +312,13 @@ class _TelaCadastroState extends State<TelaCadastro> {
                     TextoAcessivel(
                       texto: 'Você está se inscrevendo na escola',
                       alinhamento: TextAlign.center,
-                      estilo: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF6366F1)),
+                      estilo: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Paleta.textoSubtituloCadastro),
                     ),
                     const SizedBox(height: 4),
                     TextoAcessivel(
                       texto: widget.nomeEscolaSelecionada,
                       alinhamento: TextAlign.center,
-                      estilo: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900, color: const Color(0xFF1E1B4B)),
+                     estilo: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w900, color: Paleta.textoTituloCadastro), // <-- AQUI
                     ),
                     const SizedBox(height: 12),
                     
@@ -326,14 +327,14 @@ class _TelaCadastroState extends State<TelaCadastro> {
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(color: const Color(0xFFEDE9FE), borderRadius: BorderRadius.circular(10)),
-                          child: Text('Nível: ${widget.nivelSelecionado}', style: const TextStyle(color: Color(0xFF3730A3), fontSize: 13, fontWeight: FontWeight.bold)),
+                          decoration: BoxDecoration(color: Paleta.fundoTagNivelCadastro, borderRadius: BorderRadius.circular(10)), // <-- AQUI
+                          child: Text('Nível: ${widget.nivelSelecionado}', style: const TextStyle(color: Paleta.textoTagNivelCadastro, fontSize: 13, fontWeight: FontWeight.bold)), // <-- AQUI
                         ),
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(color: const Color(0xFFE0E7FF), borderRadius: BorderRadius.circular(10)),
-                          child: Text('Turno: ${widget.turnoSelecionado}', style: const TextStyle(color: Color(0xFF3730A3), fontSize: 13, fontWeight: FontWeight.bold)),
+                          decoration: BoxDecoration(color: Paleta.fundoTagTurnoCadastro, borderRadius: BorderRadius.circular(10)), // <-- AQUI
+                          child: Text('Turno: ${widget.turnoSelecionado}', style: const TextStyle(color: Paleta.textoTagTurnoCadastro, fontSize: 13, fontWeight: FontWeight.bold)), // <-- AQUI
                         ),
                       ],
                     ),
@@ -345,7 +346,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white, borderRadius: BorderRadius.circular(20), 
-                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.05), blurRadius: 15)],
+                  boxShadow: [BoxShadow(color: Paleta.sombraFormularioCadastro.withValues(alpha: 0.05), blurRadius: 15)],
                 ),
                 child: Column(
                   children: [
@@ -365,9 +366,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
                         padding: const EdgeInsets.all(16.0),
                         child: Row(
                           children: [
-                            const Icon(Icons.person_outline_rounded, color: Color(0xFF4F46E5)),
+                            const Icon(Icons.person_outline_rounded, color: Paleta.iconeAcaoCadastro),
                             const SizedBox(width: 10),
-                            Text('DADOS DE CONTATO', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF1E1B4B))),
+                            Text('DADOS DE CONTATO', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Paleta.textoTituloCadastro)),
                             const Spacer(),
 
                             if (!_contatoAberto && !_contatoPreenchido)
@@ -460,7 +461,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                   Container(
                                     margin: const EdgeInsets.only(top: 2), padding: const EdgeInsets.all(10),
                                     decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-                                    child: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF4F46E5), size: 24),
+                                    child: const Icon(Icons.chat_bubble_rounded, color: Paleta.iconeAcaoCadastro, size: 24),
                                   ),
                                   const SizedBox(width: 8),
                                   SizedBox(
@@ -504,8 +505,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                       _mostrarErro('Verifique os campos em vermelho antes de avançar.');
                                     }
                                   },
-                                  icon: const Icon(Icons.arrow_downward_rounded, size: 18, color: Color(0xFF4F46E5)),
-                                  label: const Text('Continuar para Endereço', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                                  icon: const Icon(Icons.arrow_downward_rounded, size: 18, color: Paleta.iconeAcaoCadastro),
+                                  label: const Text('Continuar para Endereço', style: TextStyle(fontWeight: FontWeight.bold, color: Paleta.iconeAcaoCadastro)),
                                 ),
                               ),
                             ],
@@ -522,7 +523,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white, borderRadius: BorderRadius.circular(20), 
-                  boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.05), blurRadius: 15)],
+                  boxShadow: [BoxShadow(color: Paleta.iconeAcaoCadastro.withValues(alpha: 0.05), blurRadius: 15)],
                 ),
                 child: Column(
                   children: [
@@ -541,9 +542,9 @@ onTap: () {
                         padding: const EdgeInsets.all(16.0),
                         child: Row(
                           children: [
-                            const Icon(Icons.location_on_outlined, color: Color(0xFF4F46E5)),
+                            const Icon(Icons.location_on_outlined, color: Paleta.iconeAcaoCadastro),
                             const SizedBox(width: 10),
-                           Text('ENDEREÇO (Opcional)', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF1E1B4B))),
+                            Text('ENDEREÇO (Opcional)', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Paleta.textoTituloCadastro)),
 const Spacer(),
 
 // Atualizado: Só mostra o alerta laranja se ele começou a preencher e parou no meio
@@ -582,7 +583,7 @@ if (!_enderecoAberto && !_enderecoPreenchido && !_enderecoVazio)
                                       controller: _cepCtrl, keyboardType: TextInputType.number, inputFormatters: [MascaraCEP()],
                                       decoration: InputDecoration(
                                         labelText: 'Buscar CEP', hintText: '00000-000', isDense: true, filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                        suffixIcon: _buscando ? const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4F46E5)))) : null,
+                                        suffixIcon: _buscando ? const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Paleta.iconeAcaoCadastro))) : null,
                                       ),
                                       onChanged: (v) {
                                           setState(() {});
@@ -596,7 +597,7 @@ if (!_enderecoAberto && !_enderecoPreenchido && !_enderecoVazio)
                                       padding: const EdgeInsets.only(left: 8),
                                      child: IconButton(
                                         onPressed: _resetarEndereco, 
-                                        icon: const Icon(Icons.edit_rounded, color: Color(0xFF4F46E5)), 
+                                        icon: const Icon(Icons.edit_rounded, color: Paleta.iconeAcaoCadastro), 
                                         tooltip: 'Editar Endereço'
                                       ),
                                     )
@@ -695,9 +696,9 @@ if (!_enderecoAberto && !_enderecoPreenchido && !_enderecoVazio)
                       // Define a cor do botão baseado no preenchimento
                       Color corBotao;
                       if (_contatoPreenchido && _enderecoPreenchido) {
-                        corBotao = const Color(0xFF7C3AED); // Ideal: Totalmente colorido
+                        corBotao = Paleta.botaoPrincipalCadastro; // Ideal: Totalmente colorido
                       } else if (_contatoPreenchido && _enderecoVazio) {
-                        corBotao = const Color(0xFF7C3AED).withValues(alpha: 0.5); // Meio colorido (passável)
+                        corBotao = Paleta.botaoPrincipalCadastro.withValues(alpha: 0.5); // <-- AQUI
                       } else {
                         corBotao = Colors.grey.shade400; // Faltando dados de contato (Bloqueado)
                       }
@@ -711,7 +712,7 @@ if (!_enderecoAberto && !_enderecoPreenchido && !_enderecoVazio)
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             if (podeEnviar)
-                              BoxShadow(color: const Color(0xFF7C3AED).withValues(alpha: 0.5), blurRadius: 10, offset: const Offset(0, 4))
+                              BoxShadow(color: Paleta.botaoPrincipalCadastro.withValues(alpha: 0.5), blurRadius: 10, offset: const Offset(0, 4))
                           ]
                         ),
                         child: ElevatedButton(

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:confetti/confetti.dart'; 
 import 'dart:math'; 
+import '../paleta.dart';
 import 'tela_abertura.dart'; 
 import '../leitor_texto.dart';
 
@@ -69,12 +70,12 @@ class _TelaSucessoState extends State<TelaSucesso> {
           color: Colors.white, 
           borderRadius: BorderRadius.circular(16), 
           border: Border.all(
-            color: const Color(0xFFEDE9FE),
+            color: Colors.grey.shade300,
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF4F46E5).withValues(alpha: 0.04),
+              color: Paleta.iconeAcaoCadastro.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -86,7 +87,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
               width: 34, 
               height: 34,
               decoration: const BoxDecoration(
-                color: Color(0xFF7C3AED), 
+                color: Paleta.bolinhaPassoSucesso,
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -139,11 +140,11 @@ class _TelaSucessoState extends State<TelaSucesso> {
                       width: 100, 
                       height: 100, 
                       decoration: BoxDecoration(
-                        color: const Color(0xFF7C3AED), 
+                        color: Paleta.corCheckSucesso,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
+                            color: Paleta.corCheckSucesso.withValues(alpha: 0.4),
                             blurRadius: 25,
                             offset: const Offset(0, 10),
                           ),
@@ -162,11 +163,11 @@ class _TelaSucessoState extends State<TelaSucesso> {
                       child: TextoAcessivel(
                         texto: 'Inscrição Realizada!', 
                         alinhamento: TextAlign.center, 
-                        corIcone: const Color(0xFF7C3AED), 
+                        corIcone: Paleta.corCheckSucesso,
                         estilo: GoogleFonts.inter(
                           fontSize: 30, 
                           fontWeight: FontWeight.w900, 
-                          color: const Color(0xFF1E1B4B),
+                          color: Paleta.textoTituloCadastro,
                           letterSpacing: -1.0,
                         ),
                       ),
@@ -180,17 +181,17 @@ class _TelaSucessoState extends State<TelaSucesso> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF7C3AED).withValues(alpha: 0.1), 
+                        color: Paleta.fundoAvisoSucesso,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: TextoAcessivel(
                         texto: 'Fique atento ao seu WhatsApp ou e-mail.', 
                         alinhamento: TextAlign.center, 
-                        corIcone: const Color(0xFF7C3AED), 
+                        corIcone: Paleta.textoAvisoSucesso,
                         estilo: GoogleFonts.inter(
                           fontSize: 14, 
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF6D28D9), 
+                          color: Paleta.textoAvisoSucesso,
                         ),
                       ),
                     ),
@@ -240,12 +241,12 @@ class _TelaSucessoState extends State<TelaSucesso> {
                       height: 60,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF7C3AED), 
+                          backgroundColor: Paleta.botaoPrincipalCadastro,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ), 
                           elevation: 5, 
-                          shadowColor: const Color(0xFF7C3AED).withValues(alpha: 0.5),
+                          shadowColor: Paleta.botaoPrincipalCadastro.withValues(alpha: 0.5),
                         ),
                         onPressed: () {
                           pararVoz(); 
@@ -296,8 +297,8 @@ class _TelaSucessoState extends State<TelaSucesso> {
                   Colors.blue,
                   Colors.pink,
                   Colors.orange,
-                  Colors.purple,
-                  Color(0xFF7C3AED)      
+                  Paleta.bolinhaPassoSucesso, // <-- Substituiu o roxo!
+                  Paleta.corCheckSucesso      // <-- Verde do check!  
                 ],
               ),
             ),
@@ -311,7 +312,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.1), 
+                      color: Paleta.iconeAcaoCadastro.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

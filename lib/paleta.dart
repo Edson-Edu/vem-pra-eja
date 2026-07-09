@@ -37,5 +37,52 @@ static const Color textoDestaque = Color(0xFF0257A0);
   static const Color textoSecundario = Color(0xFF64748B); 
   
   /// Laranja/Vermelho - Para os alertas e erros do formulário.
-  static const Color erro = Color(0xFFF97316);           
+  static const Color erro = Color(0xFFF97316);        
+
+
+  // ==========================================
+  // CORES ESPECÍFICAS DA TELA DE CADASTRO
+  // ==========================================
+  
+  /// Fundo da tela de cadastro
+  static const Color fundoCadastro = Color(0xFFF2F3F6); // Cinza super claro
+
+  /// Textos de título ("Nome da Escola", "DADOS DE CONTATO")
+  static const Color textoTituloCadastro = Color(0xFF1E293B); // Azul muito escuro
+
+  /// Subtítulo "Você está se inscrevendo na escola..."
+  static const Color textoSubtituloCadastro = Color(0xFF4E8AFB); // Azul médio
+
+  /// Ícones principais do formulário e botões secundários
+  static const Color iconeAcaoCadastro = Color(0xFF0257A0); // Azul oficial da prefeitura
+
+  /// Cor da sombra ao redor dos cartões brancos
+  static const Color sombraFormularioCadastro = Color(0xFF0257A0); 
+
+  /// Fundo e texto da Tag que mostra o Nível selecionado
+  static const Color fundoTagNivelCadastro = Color(0xFFE6F0FA); // Azul bem clarinho
+  static const Color textoTagNivelCadastro = Color(0xFF0257A0);
+
+  /// Fundo e texto da Tag que mostra o Turno selecionado
+  static const Color fundoTagTurnoCadastro = Color(0xFFD6E8FA); 
+  static const Color textoTagTurnoCadastro = Color(0xFF0257A0);
+
+  /// Cor principal do botão gigante de "Realizar Pré-Inscrição"
+  static const Color botaoPrincipalCadastro = Color(0xFF008BFF); // Azul vibrante
+
+
+  // ==========================================
+  // CORES ESPECÍFICAS DA TELA DE SUCESSO
+  // ==========================================
+  
+  /// Cor principal de sucesso (Verde) para a bolinha do Check
+  static const Color corCheckSucesso = Color.fromARGB(255, 7, 170, 67); 
+  
+  /// Fundo e texto do banner de aviso ("Fique atento...")
+  static const Color fundoAvisoSucesso = Color(0xFFE6F0FA); // Azul clarinho
+  static const Color textoAvisoSucesso = Color(0xFF0257A0); // Azul oficial da prefeitura
+  
+  /// Cor das bolinhas dos passos numerados (1, 2, 3)
+  static const Color bolinhaPassoSucesso = Color(0xFF008BFF); // Azul vibrante
+
 }                                      

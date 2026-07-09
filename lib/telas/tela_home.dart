@@ -387,10 +387,8 @@ class _TelaHomeState extends State<TelaHome> {
     }
   }
 
-  Future<void> _calcularDistanciasEGerarMarcadores() async {
-    if (_minhaLocalizacao == null) return;
-
-    if (mounted) {
+  Future<void> _calcularDistanciasEGerarMarcadores() async {// 1. Só calcula a distância se tivermos o GPS do usuário
+    if (mounted && _minhaLocalizacao != null) {
       setState(() {
         for (var school in escolasFiltradas) {
           school.distanciaMetros = Geolocator.distanceBetween(
@@ -402,21 +400,40 @@ class _TelaHomeState extends State<TelaHome> {
         }
         escolasFiltradas.sort((a, b) => a.distanciaMetros.compareTo(b.distanciaMetros));
       });
+    }
+
+    // 2. Sempre gera os marcadores (os pinos), com ou sem GPS!
+    if (mounted) {
       await _gerarMarcadores();
     }
 
+    // 3. Centraliza a câmera no mapa
     if (escolasFiltradas.isNotEmpty && _mapController != null) {
-      final escolaMaisProxima = escolasFiltradas.first;
+      double minLat = escolasFiltradas.first.posicao.latitude;
+      double maxLat = minLat;
+      double minLng = escolasFiltradas.first.posicao.longitude;
+      double maxLng = minLng;
 
-      double minLat = min(_minhaLocalizacao!.latitude, escolaMaisProxima.posicao.latitude);
-      double maxLat = max(_minhaLocalizacao!.latitude, escolaMaisProxima.posicao.latitude);
-      double minLng = min(_minhaLocalizacao!.longitude, escolaMaisProxima.posicao.longitude);
-      double maxLng = max(_minhaLocalizacao!.longitude, escolaMaisProxima.posicao.longitude);
+      // Se tem GPS, o quadro do mapa inclui o usuário e a escola mais próxima
+      if (_minhaLocalizacao != null) {
+        minLat = min(_minhaLocalizacao!.latitude, minLat);
+        maxLat = max(_minhaLocalizacao!.latitude, maxLat);
+        minLng = min(_minhaLocalizacao!.longitude, minLng);
+        maxLng = max(_minhaLocalizacao!.longitude, maxLng);
+      } else {
+        // Sem GPS, o quadro abraça TODAS as escolas para a pessoa ver as opções
+        for (var school in escolasFiltradas) {
+          minLat = min(school.posicao.latitude, minLat);
+          maxLat = max(school.posicao.latitude, maxLat);
+          minLng = min(school.posicao.longitude, minLng);
+          maxLng = max(school.posicao.longitude, maxLng);
+        }
+      }
 
       double latDelta = maxLat - minLat;
       double lngDelta = maxLng - minLng;
       
-      // Proteção contra zoom extremo se a pessoa estiver na porta da escola
+      // Proteção contra zoom extremo
       if (latDelta < 0.005) {
         double centerLat = (maxLat + minLat) / 2;
         minLat = centerLat - 0.0025;
@@ -430,33 +447,24 @@ class _TelaHomeState extends State<TelaHome> {
         lngDelta = 0.005;
       }
 
-      // ========================================================================
-      // A MATEMÁTICA DOS QUADRADOS RESPONSIVOS:
-      // O espaço visível é o "Quadrado de Cima" (1.0 - _sheetSize).
-      // Para empurrar a câmera e centralizar os pinos nesse quadrado de cima, 
-      // adicionamos uma margem sul matemática proporcional ao tamanho da caixinha.
-      // ========================================================================
+      // A matemática dos quadrados responsivos
       double espacoVisivel = 1.0 - _sheetSize; 
       double margemSul = latDelta * (_sheetSize / espacoVisivel);
-
-      // Respiro para os pinos não baterem no teto ou nas bordas
       double respiroLat = latDelta * 0.3;
       double respiroLng = lngDelta * 0.3;
-
-      // Compensamos o respiro na margem sul para manter a proporção exata
       margemSul += respiroLat * (_sheetSize / espacoVisivel);
       margemSul += 0.015;
+
       _mapController?.animateCamera(
         CameraUpdate.newLatLngBounds(
           LatLngBounds(
             southwest: LatLng(minLat - margemSul - respiroLat, minLng - respiroLng),
             northeast: LatLng(maxLat + respiroLat, maxLng + respiroLng),
           ),
-          0.0, // Retiramos o padding nativo! Agora só a nossa matemática domina.
+          0.0, 
         ),
       );
-    }
-  }
+    }}
 
 Future<BitmapDescriptor> _criarIconeUsuario() async {
     final size = 54.0; 
@@ -663,7 +671,8 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
                     ]
                   ''');
 
-                  if (_minhaLocalizacao != null && escolasFiltradas.isNotEmpty) {
+                  // MUDANÇA: Tiramos a exigência do `_minhaLocalizacao != null`
+                  if (escolasFiltradas.isNotEmpty) {
                     await _calcularDistanciasEGerarMarcadores();
                   }
                 },
