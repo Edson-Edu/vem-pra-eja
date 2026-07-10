@@ -69,14 +69,18 @@ class _CabecalhoFixoDelegate extends SliverPersistentHeaderDelegate {
   _CabecalhoFixoDelegate(this.quantidadeEscolas);
 
   @override
-  double get minExtent => 65.0; 
+  double get minExtent => 65.0;
   @override
   double get maxExtent => 65.0;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
-      decoration:  BoxDecoration(
+      decoration: BoxDecoration(
         color: Paleta.fundoGeral,
         border: Border(
           bottom: BorderSide(color: Colors.grey.shade300, width: 1.5),
@@ -103,13 +107,15 @@ class _CabecalhoFixoDelegate extends SliverPersistentHeaderDelegate {
             child: Row(
               children: [
                 const Icon(
-                  Icons.location_on_rounded, 
+                  Icons.location_on_rounded,
                   color: Paleta.azulIcones,
                   size: 18,
                 ),
                 const SizedBox(width: 8),
                 TextoAcessivel(
                   texto: '$quantidadeEscolas escolas prontas para te receber',
+                  // <-- NOVO: Força o feminino para 1 e 2
+                  textoOcultoParaLer: 'Temos ${quantidadeEscolas == 2 ? "duas" : quantidadeEscolas == 1 ? "uma" : quantidadeEscolas} escolas prontas para te receber nesta região.',
                   estilo: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -151,7 +157,6 @@ class TelaHome extends StatefulWidget {
 }
 
 class _TelaHomeState extends State<TelaHome> {
-
   // ============================================================================
   // CONTROLADORES E VARIÁVEIS DE ESTADO
   // ============================================================================
@@ -163,18 +168,19 @@ class _TelaHomeState extends State<TelaHome> {
   String? _escolaDestacadaId;
   final Map<String, GlobalKey> _keysEscola = {};
 
-  final DraggableScrollableController _sheetController = DraggableScrollableController();
-  
-  double _sheetSize = 0.65; 
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
+
+  double _sheetSize = 0.65;
   double _sheetInitialSize = 0.65;
   double _sheetMaxSize = 0.95;
 
   bool _jaExpandiu = false;
-  final ScrollController _listaController = ScrollController(); 
+  final ScrollController _listaController = ScrollController();
 
   bool _mouseSobreLista = false;
   bool _tocandoLista = false;
-  
+
   bool get _bloquearMapa => _mouseSobreLista || _tocandoLista;
 
   void _atualizarBloqueioMapa() {
@@ -195,64 +201,64 @@ class _TelaHomeState extends State<TelaHome> {
     _sheetController.addListener(_onSheetChanged);
   }
 
- void _onSheetChanged() {
+  void _onSheetChanged() {
     if (!_sheetController.isAttached) return;
     final size = _sheetController.size;
-    
+
     if (size > 0.85) {
       _jaExpandiu = true;
     } else if (size < 0.70) {
-      // MÁGICA DA ROLAGEM: Se a caixinha descer para o tamanho X (ex: 0.65), 
+      // MÁGICA DA ROLAGEM: Se a caixinha descer para o tamanho X (ex: 0.65),
       // a lista "esquece" que expandiu. Assim, no próximo scroll pra cima, ela sobe de novo!
-      _jaExpandiu = false; 
+      _jaExpandiu = false;
     }
-    
+
     if ((size - _sheetSize).abs() > 0.001) {
-      setState(() { _sheetSize = size; });
+      setState(() {
+        _sheetSize = size;
+      });
     }
   }
 
-
-// ============================================================================
+  // ============================================================================
   // UX: ANIMAÇÃO DE NUDGE (O TREMOR DA GAVETA - VERSÃO INTELIGENTE)
   // ============================================================================
   void _animarNudgeInicial() async {
     // Dá o tempo de 1.5s para a tela carregar
     await Future.delayed(const Duration(milliseconds: 1500));
-    
+
     // ========================================================================
     // O SENSOR DE DEDO (A MÁGICA AQUI):
-    // Se o widget morreu, se a gaveta não tá pronta, 
+    // Se o widget morreu, se a gaveta não tá pronta,
     // SE O USUÁRIO ESTIVER COM O DEDO NA TELA (_tocandoLista),
     // OU se a gaveta já não estiver mais em 65% (ele já puxou): CANCELA O TREMOR!
     // ========================================================================
-    if (!mounted || 
-        !_sheetController.isAttached || 
-        _tocandoLista || 
+    if (!mounted ||
+        !_sheetController.isAttached ||
+        _tocandoLista ||
         (_sheetSize - 0.65).abs() > 0.02) {
-      return; 
+      return;
     }
 
     // Se ele não tocou em nada, faz a respiração subindo
     await _sheetController.animateTo(
       0.72,
       duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic, 
+      curve: Curves.easeOutCubic,
     );
-    
+
     await Future.delayed(const Duration(milliseconds: 150));
-    
+
     // Sensor de dedo de novo (vai que ele agarra a gaveta no meio do voo)
     if (!mounted || !_sheetController.isAttached || _tocandoLista) return;
 
     // Desce suave e dá aquele "quique" macio no final
     await _sheetController.animateTo(
       0.65,
-      duration: const Duration(milliseconds: 800), 
+      duration: const Duration(milliseconds: 800),
       curve: Curves.bounceOut,
     );
   }
-
 
   // ============================================================================
   // LÓGICA DE DADOS (SUPABASE)
@@ -270,24 +276,32 @@ class _TelaHomeState extends State<TelaHome> {
       if (linha['turnos_escola'] != null) {
         for (var t in linha['turnos_escola']) {
           String nivelDoTurnoBanco = t['nivel_do_turno'] ?? '';
-          if (nivelDoTurnoBanco.isEmpty || nivelDoTurnoBanco.contains(widget.nivelEscolhido)) {
-            listaTurnos.add(TurnoEscola(
-              id: t['id'], 
-              turno: t['turno'] ?? '', 
-              horario: t['horario'] ?? 'A combinar',
-              descricao: t['descricao'] ?? '', 
-              auxilios: t['auxilios'] ?? '', 
-              nivelDoTurno: nivelDoTurnoBanco,
-              // Mantendo a preparação para o banco de dados dos dias
-              diasAula: t['dias_aula'] ?? 'Seg–Qui', 
-            ));
+          if (nivelDoTurnoBanco.isEmpty ||
+              nivelDoTurnoBanco.contains(widget.nivelEscolhido)) {
+            listaTurnos.add(
+              TurnoEscola(
+                id: t['id'],
+                turno: t['turno'] ?? '',
+                horario: t['horario'] ?? 'A combinar',
+                descricao: t['descricao'] ?? '',
+                auxilios: t['auxilios'] ?? '',
+                nivelDoTurno: nivelDoTurnoBanco,
+                // Mantendo a preparação para o banco de dados dos dias
+                diasAula: t['dias_aula'] ?? 'Seg–Qui',
+              ),
+            );
           }
         }
       }
 
       List<String> fotosEscola = [];
-      if (linha['image_url'] != null && linha['image_url'].toString().trim().isNotEmpty) {
-        fotosEscola = linha['image_url'].toString().split(',').map((e) => e.trim()).toList();
+      if (linha['image_url'] != null &&
+          linha['image_url'].toString().trim().isNotEmpty) {
+        fotosEscola = linha['image_url']
+            .toString()
+            .split(',')
+            .map((e) => e.trim())
+            .toList();
       }
 
       if (fotosEscola.isEmpty) {
@@ -299,13 +313,13 @@ class _TelaHomeState extends State<TelaHome> {
       }
 
       final escola = Escola(
-        id: linha['id'], 
-        nome: linha['nome'], 
+        id: linha['id'],
+        nome: linha['nome'],
         cidade: linha['cidade'] ?? 'Camboriú',
         bairro: linha['bairro'] ?? 'Centro',
         posicao: LatLng(linha['latitude'], linha['longitude']),
         niveisOferecidos: List<String>.from(linha['niveis_oferecidos']),
-        turnos: listaTurnos, 
+        turnos: listaTurnos,
         imagens: fotosEscola,
       );
 
@@ -315,13 +329,17 @@ class _TelaHomeState extends State<TelaHome> {
 
     // 1. Filtra as escolas
     List<Escola> listaFiltrada = todasEscolas
-        .where((e) => e.niveisOferecidos.contains(widget.nivelEscolhido) && e.turnos.isNotEmpty)
+        .where(
+          (e) =>
+              e.niveisOferecidos.contains(widget.nivelEscolhido) &&
+              e.turnos.isNotEmpty,
+        )
         .toList();
 
     // 2. A MÁGICA: Calcula a distância e ordena ANTES de aparecer na tela!
     if (widget.posicaoInjetada != null) {
       _minhaLocalizacao = widget.posicaoInjetada;
-      
+
       for (var school in listaFiltrada) {
         school.distanciaMetros = Geolocator.distanceBetween(
           _minhaLocalizacao!.latitude,
@@ -330,15 +348,17 @@ class _TelaHomeState extends State<TelaHome> {
           school.posicao.longitude,
         );
       }
-      
+
       // Ordena da mais próxima para a mais distante
-      listaFiltrada.sort((a, b) => a.distanciaMetros.compareTo(b.distanciaMetros));
+      listaFiltrada.sort(
+        (a, b) => a.distanciaMetros.compareTo(b.distanciaMetros),
+      );
     }
 
     // 3. Atualiza a tela já com tudo perfeitamente ordenado
     setState(() {
       escolasFiltradas = listaFiltrada;
-      _carregandoEscolas = false; 
+      _carregandoEscolas = false;
     });
 
     if (widget.posicaoInjetada != null) {
@@ -382,12 +402,15 @@ class _TelaHomeState extends State<TelaHome> {
     );
 
     if (mounted) {
-      setState(() { _minhaLocalizacao = posicaoAtual; });
+      setState(() {
+        _minhaLocalizacao = posicaoAtual;
+      });
       await _calcularDistanciasEGerarMarcadores();
     }
   }
 
-  Future<void> _calcularDistanciasEGerarMarcadores() async {// 1. Só calcula a distância se tivermos o GPS do usuário
+  Future<void> _calcularDistanciasEGerarMarcadores() async {
+    // 1. Só calcula a distância se tivermos o GPS do usuário
     if (mounted && _minhaLocalizacao != null) {
       setState(() {
         for (var school in escolasFiltradas) {
@@ -398,7 +421,9 @@ class _TelaHomeState extends State<TelaHome> {
             school.posicao.longitude,
           );
         }
-        escolasFiltradas.sort((a, b) => a.distanciaMetros.compareTo(b.distanciaMetros));
+        escolasFiltradas.sort(
+          (a, b) => a.distanciaMetros.compareTo(b.distanciaMetros),
+        );
       });
     }
 
@@ -432,7 +457,7 @@ class _TelaHomeState extends State<TelaHome> {
 
       double latDelta = maxLat - minLat;
       double lngDelta = maxLng - minLng;
-      
+
       // Proteção contra zoom extremo
       if (latDelta < 0.005) {
         double centerLat = (maxLat + minLat) / 2;
@@ -448,7 +473,7 @@ class _TelaHomeState extends State<TelaHome> {
       }
 
       // A matemática dos quadrados responsivos
-      double espacoVisivel = 1.0 - _sheetSize; 
+      double espacoVisivel = 1.0 - _sheetSize;
       double margemSul = latDelta * (_sheetSize / espacoVisivel);
       double respiroLat = latDelta * 0.3;
       double respiroLng = lngDelta * 0.3;
@@ -458,33 +483,39 @@ class _TelaHomeState extends State<TelaHome> {
       _mapController?.animateCamera(
         CameraUpdate.newLatLngBounds(
           LatLngBounds(
-            southwest: LatLng(minLat - margemSul - respiroLat, minLng - respiroLng),
+            southwest: LatLng(
+              minLat - margemSul - respiroLat,
+              minLng - respiroLng,
+            ),
             northeast: LatLng(maxLat + respiroLat, maxLng + respiroLng),
           ),
-          0.0, 
+          0.0,
         ),
       );
-    }}
+    }
+  }
 
-Future<BitmapDescriptor> _criarIconeUsuario() async {
-    final size = 54.0; 
+  Future<BitmapDescriptor> _criarIconeUsuario() async {
+    final size = 54.0;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    
+
     final paintSombra = Paint()
-      ..color = Paleta.azulPrincipal.withAlpha(77) // <-- Sombra azul
+      ..color = Paleta.azulPrincipal
+          .withAlpha(77) // <-- Sombra azul
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
-    
+
     final paintBorda = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-      
+
     final paintMiolo = Paint()
-      ..color = Paleta.azulPrincipal // <-- Miolo azul oficial
+      ..color = Paleta
+          .azulPrincipal // <-- Miolo azul oficial
       ..style = PaintingStyle.fill;
 
     final cx = size / 2;
-    
+
     canvas.drawCircle(Offset(cx, cx), cx * 0.5, paintSombra);
     canvas.drawCircle(Offset(cx, cx), cx * 0.35, paintBorda);
     canvas.drawCircle(Offset(cx, cx), cx * 0.25, paintMiolo);
@@ -492,7 +523,7 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
     final picture = recorder.endRecording();
     final img = await picture.toImage(size.toInt(), size.toInt());
     final bytes = await img.toByteData(format: ui.ImageByteFormat.png);
-    
+
     return BitmapDescriptor.bytes(
       Uint8List.view(bytes!.buffer),
       width: size,
@@ -502,16 +533,19 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
 
   Future<void> _gerarMarcadores() async {
     _marcadores.clear();
-    
+
     if (_minhaLocalizacao != null) {
       final iconeUser = await _criarIconeUsuario();
       _marcadores.add(
         Marker(
           markerId: const MarkerId('meu_local'),
-          position: LatLng(_minhaLocalizacao!.latitude, _minhaLocalizacao!.longitude),
+          position: LatLng(
+            _minhaLocalizacao!.latitude,
+            _minhaLocalizacao!.longitude,
+          ),
           icon: iconeUser,
-          zIndex: 999, 
-          consumeTapEvents: true, 
+          zIndex: 999,
+          consumeTapEvents: true,
         ),
       );
     }
@@ -521,8 +555,8 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
     for (var school in escolasFiltradas) {
       // Pinos agora usam o tom Azul em vez de Violeta!
       final cor = (isPrimeira && _minhaLocalizacao != null)
-          ? BitmapDescriptor.hueAzure   
-          : BitmapDescriptor.hueOrange;  
+          ? BitmapDescriptor.hueAzure
+          : BitmapDescriptor.hueOrange;
 
       _marcadores.add(
         Marker(
@@ -551,8 +585,8 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
     // Simulamos um quadrado virtual ao redor da escola (que define o nível de zoom)
     // E aplicamos a mesma regra proporcional da Caixinha!
     // ========================================================================
-    double deltaFixo = 0.0035; 
-    
+    double deltaFixo = 0.0035;
+
     double minLat = local.latitude - deltaFixo;
     double maxLat = local.latitude + deltaFixo;
     double minLng = local.longitude - deltaFixo;
@@ -570,7 +604,7 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
           southwest: LatLng(minLat - margemSul, minLng),
           northeast: LatLng(maxLat, maxLng),
         ),
-        0.0, 
+        0.0,
       ),
     );
   }
@@ -584,7 +618,9 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
     );
 
     // Liga o destaque visual
-    setState(() { _escolaDestacadaId = school.id; });
+    setState(() {
+      _escolaDestacadaId = school.id;
+    });
 
     // 2. ESPERA A ABA ESTABILIZAR (Crucial para a lista rolar corretamente)
     await Future.delayed(const Duration(milliseconds: 350));
@@ -603,16 +639,21 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
     // 3. Remove o destaque após a visualização
     Future.delayed(const Duration(milliseconds: 2000), () {
       if (mounted && _escolaDestacadaId == school.id) {
-        setState(() { _escolaDestacadaId = null; });
+        setState(() {
+          _escolaDestacadaId = null;
+        });
       }
     });
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
+    // <-- NOVO: Força a gramática feminina antes de jogar na frase
+    String qtdAudio = escolasFiltradas.length == 2 ? 'duas' : escolasFiltradas.length == 1 ? 'uma' : escolasFiltradas.length.toString();
+
     final String leituraEscolas = escolasFiltradas.isEmpty
-        ? 'Nenhuma escola encontrada.'
-        : '${escolasFiltradas.length} escolas disponíveis.';
+        ? 'No momento, não encontramos escolas disponíveis para esta pesquisa.'
+        : 'Encontramos $qtdAudio escolas prontas para te receber. Deslize a lista para explorar cada uma delas ou navegue diretamente pelo mapa.';
 
     return Scaffold(
       backgroundColor: Paleta.fundoGeral,
@@ -633,7 +674,6 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
       ),
       body: Stack(
         children: [
-
           // ============================================================================
           // MAPA
           // ============================================================================
@@ -643,19 +683,17 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
               child: GoogleMap(
                 initialCameraPosition: _posicaoInicial,
                 markers: _marcadores,
-                myLocationEnabled: false, 
+                myLocationEnabled: false,
                 myLocationButtonEnabled: false,
                 zoomControlsEnabled: false,
                 compassEnabled: false,
-                mapToolbarEnabled: false, 
+                mapToolbarEnabled: false,
                 scrollGesturesEnabled: !_bloquearMapa,
                 zoomGesturesEnabled: !_bloquearMapa,
                 tiltGesturesEnabled: !_bloquearMapa,
                 rotateGesturesEnabled: !_bloquearMapa,
 
-                
-
-                // O padding foi removido aqui. A nossa Matemática do Quadrado 
+                // O padding foi removido aqui. A nossa Matemática do Quadrado
                 // assumiu 100% do controle responsivo!
                 onMapCreated: (controller) async {
                   _mapController = controller;
@@ -695,16 +733,13 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
           // ============================================================================
           ScrollConfiguration(
             behavior: ScrollConfiguration.of(context).copyWith(
-              dragDevices: {
-                PointerDeviceKind.touch,
-                PointerDeviceKind.mouse,
-              },
+              dragDevices: {PointerDeviceKind.touch, PointerDeviceKind.mouse},
             ),
             child: DraggableScrollableSheet(
               controller: _sheetController,
               initialChildSize: _sheetInitialSize,
               minChildSize: 0.2,
-              maxChildSize: _sheetMaxSize, 
+              maxChildSize: _sheetMaxSize,
               builder: (BuildContext context, ScrollController scrollController) {
                 return Listener(
                   onPointerDown: (_) {
@@ -730,18 +765,20 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
                     },
                     child: GestureDetector(
                       onTap: () {}, // Escudo Anti-Vazamento
-                      behavior: HitTestBehavior.opaque, 
+                      behavior: HitTestBehavior.opaque,
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 8),
-                        clipBehavior: Clip.antiAlias, 
+                        clipBehavior: Clip.antiAlias,
                         decoration: const BoxDecoration(
                           color: Paleta.fundoGeral,
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(24),
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black26, 
-                              blurRadius: 15, 
-                              offset: Offset(0, -4)
+                              color: Colors.black26,
+                              blurRadius: 15,
+                              offset: Offset(0, -4),
                             ),
                           ],
                         ),
@@ -754,25 +791,37 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
                               onVerticalDragStart: (_) {
                                 setState(() {
                                   _sheetMaxSize = 0.95;
-                                  _sheetInitialSize = _sheetController.size.clamp(0.2, 0.95);
+                                  _sheetInitialSize = _sheetController.size
+                                      .clamp(0.2, 0.95);
                                 });
                               },
                               onVerticalDragUpdate: (details) {
                                 if (!_sheetController.isAttached) return;
-                                final availableHeight = MediaQuery.of(context).size.height - kToolbarHeight - MediaQuery.of(context).padding.top;
-                                double delta = details.primaryDelta! / availableHeight;
-                                double newSize = (_sheetController.size - delta).clamp(0.2, 0.95);
+                                final availableHeight =
+                                    MediaQuery.of(context).size.height -
+                                    kToolbarHeight -
+                                    MediaQuery.of(context).padding.top;
+                                double delta =
+                                    details.primaryDelta! / availableHeight;
+                                double newSize = (_sheetController.size - delta)
+                                    .clamp(0.2, 0.95);
                                 _sheetController.jumpTo(newSize);
                               },
                               onVerticalDragEnd: (_) {
                                 setState(() {
-                                  _sheetMaxSize = _sheetController.size.clamp(0.2, 0.95);
+                                  _sheetMaxSize = _sheetController.size.clamp(
+                                    0.2,
+                                    0.95,
+                                  );
                                   _sheetInitialSize = _sheetMaxSize;
                                 });
                               },
                               onVerticalDragCancel: () {
                                 setState(() {
-                                  _sheetMaxSize = _sheetController.size.clamp(0.2, 0.95);
+                                  _sheetMaxSize = _sheetController.size.clamp(
+                                    0.2,
+                                    0.95,
+                                  );
                                   _sheetInitialSize = _sheetMaxSize;
                                 });
                               },
@@ -780,7 +829,10 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
                                 decoration: const BoxDecoration(
                                   color: Paleta.fundoGeral,
                                   border: Border(
-                                    bottom: BorderSide(color: Color(0xFFEDE9FE), width: 1.5),
+                                    bottom: BorderSide(
+                                      color: Color(0xFFEDE9FE),
+                                      width: 1.5,
+                                    ),
                                   ),
                                 ),
                                 child: Column(
@@ -788,27 +840,46 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
                                   children: [
                                     Center(
                                       child: Container(
-                                        margin: const EdgeInsets.only(top: 8, bottom: 0),
-                                        height: 24, // Fixa a altura para não dar solavanco
+                                        margin: const EdgeInsets.only(
+                                          top: 8,
+                                          bottom: 0,
+                                        ),
+                                        height:
+                                            24, // Fixa a altura para não dar solavanco
                                         child: AnimatedSwitcher(
-                                          duration: const Duration(milliseconds: 300),
-                                          transitionBuilder: (Widget child, Animation<double> animation) {
-                                            return FadeTransition(opacity: animation, child: child);
-                                          },
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
+                                          transitionBuilder:
+                                              (
+                                                Widget child,
+                                                Animation<double> animation,
+                                              ) {
+                                                return FadeTransition(
+                                                  opacity: animation,
+                                                  child: child,
+                                                );
+                                              },
                                           // Se a gaveta subir mais que 80%, a seta vira um traço plano
                                           child: _sheetSize > 0.8
                                               ? Container(
                                                   key: const ValueKey('traco'),
-                                                  margin: const EdgeInsets.only(top: 10),
+                                                  margin: const EdgeInsets.only(
+                                                    top: 10,
+                                                  ),
                                                   width: 36,
                                                   height: 4,
                                                   decoration: BoxDecoration(
                                                     color: Colors.grey.shade300,
-                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
                                                   ),
                                                 )
                                               : Icon(
-                                                  Icons.keyboard_arrow_up_rounded,
+                                                  Icons
+                                                      .keyboard_arrow_up_rounded,
                                                   key: const ValueKey('seta'),
                                                   color: Colors.grey.shade400,
                                                   size: 26,
@@ -818,21 +889,27 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
                                     ),
                                     Container(
                                       width: double.infinity,
-                                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                                      padding: const EdgeInsets.fromLTRB(
+                                        20,
+                                        8,
+                                        20,
+                                        16,
+                                      ),
                                       child: Row(
                                         children: [
                                           const Icon(
-                                            Icons.location_on_rounded, 
-                                            color: Paleta.azulIcones, 
-                                            size: 18
+                                            Icons.location_on_rounded,
+                                            color: Paleta.azulIcones,
+                                            size: 18,
                                           ),
                                           const SizedBox(width: 8),
                                           TextoAcessivel(
-                                            texto: '${escolasFiltradas.length} escolas prontas para te receber',
+                                            texto:
+                                                '${escolasFiltradas.length} escolas prontas para te receber',
                                             estilo: GoogleFonts.inter(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w500,
-                                              color: Paleta.textoDestaque
+                                              color: Paleta.textoDestaque,
                                             ),
                                           ),
                                         ],
@@ -842,7 +919,7 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
                                 ),
                               ),
                             ),
-                            
+
                             // ====================================================================
                             // 2. A LISTA DE ESCOLAS ROLANDO INDEPENDENTE COM SOMBREAMENTO
                             // ====================================================================
@@ -853,53 +930,74 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
                                     child: NotificationListener<ScrollUpdateNotification>(
                                       onNotification: (notification) {
                                         // MÁGICA AQUI: O "axis == Axis.vertical" ignora as fotos pro lado!
-                                        if (notification.metrics.axis == Axis.vertical &&
-                                            notification.dragDetails != null && 
-                                            notification.scrollDelta != null && 
+                                        if (notification.metrics.axis ==
+                                                Axis.vertical &&
+                                            notification.dragDetails != null &&
+                                            notification.scrollDelta != null &&
                                             notification.scrollDelta! > 2.5) {
-                                          if (!_jaExpandiu && _sheetSize < 0.9) {
-                                            _jaExpandiu = true; 
+                                          if (!_jaExpandiu &&
+                                              _sheetSize < 0.9) {
+                                            _jaExpandiu = true;
                                             _sheetController.animateTo(
-                                              0.95, 
-                                              duration: const Duration(milliseconds: 850), 
-                                              curve: Curves.fastLinearToSlowEaseIn, 
+                                              0.95,
+                                              duration: const Duration(
+                                                milliseconds: 850,
+                                              ),
+                                              curve:
+                                                  Curves.fastLinearToSlowEaseIn,
                                             );
                                           }
                                         }
-                                        return false; 
+                                        return false;
                                       },
                                       child: SingleChildScrollView(
-                                        controller: scrollController, 
-                                        physics: const AlwaysScrollableScrollPhysics(), 
+                                        controller: scrollController,
+                                        physics:
+                                            const AlwaysScrollableScrollPhysics(),
                                         padding: const EdgeInsets.all(20),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                                          children: escolasFiltradas.asMap().entries.map((entry) {
-                                            final index = entry.key;
-                                            final school = entry.value;
-                                            final bool isHighlighted = _escolaDestacadaId == school.id;
-                                            final bool isMaisProximo = index == 0 && _minhaLocalizacao != null;
-                                            final GlobalKey itemKey = _keysEscola.putIfAbsent(
-                                              school.id,
-                                              () => GlobalKey(),
-                                            );
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: escolasFiltradas
+                                              .asMap()
+                                              .entries
+                                              .map((entry) {
+                                                final index = entry.key;
+                                                final school = entry.value;
+                                                final bool isHighlighted =
+                                                    _escolaDestacadaId ==
+                                                    school.id;
+                                                final bool isMaisProximo =
+                                                    index == 0 &&
+                                                    _minhaLocalizacao != null;
+                                                final GlobalKey itemKey =
+                                                    _keysEscola.putIfAbsent(
+                                                      school.id,
+                                                      () => GlobalKey(),
+                                                    );
 
-                                          return _CardEscola(
-                                              key: itemKey,
-                                              escola: school,
-                                              isHighlighted: isHighlighted,
-                                              isMaisProximo: isMaisProximo,
-                                              minhaLocalizacao: _minhaLocalizacao,
-                                              nivelEscolhido: widget.nivelEscolhido,
-                                              onCardTap: () {
-                                                // 1. O mapa usa 0.65 para calcular o centro antes mesmo da gaveta descer
-                                                _focarNaEscola(school.posicao, tamanhoAlvo: 0.65);
-                                                
-                                                // 2. Chama a função que desce a gaveta, DÁ O DESTAQUE NA BORDA e rola a lista
-                                                _rolarParaEscola(school);
-                                              },
-                                            );
-                                          }).toList(),
+                                                return _CardEscola(
+                                                  key: itemKey,
+                                                  escola: school,
+                                                  isHighlighted: isHighlighted,
+                                                  isMaisProximo: isMaisProximo,
+                                                  minhaLocalizacao:
+                                                      _minhaLocalizacao,
+                                                  nivelEscolhido:
+                                                      widget.nivelEscolhido,
+                                                  onCardTap: () {
+                                                    // 1. O mapa usa 0.65 para calcular o centro antes mesmo da gaveta descer
+                                                    _focarNaEscola(
+                                                      school.posicao,
+                                                      tamanhoAlvo: 0.65,
+                                                    );
+
+                                                    // 2. Chama a função que desce a gaveta, DÁ O DESTAQUE NA BORDA e rola a lista
+                                                    _rolarParaEscola(school);
+                                                  },
+                                                );
+                                              })
+                                              .toList(),
                                         ),
                                       ),
                                     ),
@@ -916,8 +1014,10 @@ Future<BitmapDescriptor> _criarIconeUsuario() async {
                                           gradient: LinearGradient(
                                             begin: Alignment.topCenter,
                                             end: Alignment.bottomCenter,
-                                            colors: [Paleta.fundoGeral.withAlpha(0), 
-                                              Paleta.fundoGeral,],
+                                            colors: [
+                                              Paleta.fundoGeral.withAlpha(0),
+                                              Paleta.fundoGeral,
+                                            ],
                                           ),
                                         ),
                                       ),
@@ -970,6 +1070,10 @@ class _CardEscola extends StatefulWidget {
 class _CardEscolaState extends State<_CardEscola> {
   int _fotoAtual = 0;
 
+  // ==============================================================
+  // TRADUTOR DE SIGLAS PARA O ÁUDIO
+  // ==============================================================
+ 
   String _formatarDistancia(double metros) {
     if (metros < 1000) {
       return '${metros.toInt()} m';
@@ -1001,6 +1105,48 @@ class _CardEscolaState extends State<_CardEscola> {
     }
     return beneficios.toList();
   }
+
+  // <-- NOVO: Função que ensina a voz a ler as siglas corretamente
+// ============================================================================
+  // TRADUTOR DE SIGLAS PARA O ÁUDIO
+  // ============================================================================
+    // ============================================================================
+  // TRADUTOR INTELIGENTE PARA O ÁUDIO (SIGLAS E DIAS)
+  // ============================================================================
+  // ============================================================================
+  // TRADUTOR BLINDADO PARA O ÁUDIO (SIGLAS E DIAS)
+  // ============================================================================
+  String _expandirSiglasParaAudio(String texto) {
+    if (texto.isEmpty) return texto;
+    String limpo = texto;
+    
+    // 1. Siglas Escolares (Maiúsculas e minúsculas)
+    limpo = limpo.replaceAll(RegExp(r'\bCEJA\b', caseSensitive: false), 'Centro de Educação de Jovens e Adultos');
+    limpo = limpo.replaceAll(RegExp(r'\bEBM\b', caseSensitive: false), 'Escola Básica Municipal');
+    limpo = limpo.replaceAll(RegExp(r'\bE\.B\.M\.?\b', caseSensitive: false), 'Escola Básica Municipal');
+    limpo = limpo.replaceAll(RegExp(r'\bCEM\b', caseSensitive: false), 'Centro Educacional Municipal');
+    limpo = limpo.replaceAll(RegExp(r'\bC\.E\.M\.?\b', caseSensitive: false), 'Centro Educacional Municipal');
+    limpo = limpo.replaceAll(RegExp(r'\bEEB\b', caseSensitive: false), 'Escola de Educação Básica');
+    limpo = limpo.replaceAll(RegExp(r'\bEJA\b', caseSensitive: false), 'Êja');
+
+    // 2. Dias da Semana
+    limpo = limpo.replaceAll('Seg', 'segunda')
+                 .replaceAll('Ter', 'terça')
+                 .replaceAll('Qua', 'quarta')
+                 .replaceAll('Qui', 'quinta')
+                 .replaceAll('Sex', 'sexta')
+                 .replaceAll('Sab', 'sábado').replaceAll('Sáb', 'sábado')
+                 .replaceAll('Dom', 'domingo');
+
+    // 3. O SEGREDO DO TRAÇO: Troca qualquer formato de traço por " a "
+    limpo = limpo.replaceAll(' - ', ' a ')
+                 .replaceAll(' – ', ' a ') // En-dash
+                 .replaceAll('-', ' a ')
+                 .replaceAll('–', ' a ');
+
+    return limpo;
+  }
+
 
   Widget _buildTagChip({
     required String texto,
@@ -1070,308 +1216,349 @@ class _CardEscolaState extends State<_CardEscola> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              // ==============================================================
-              // FOTO MAIOR COM BADGE FLUTUANTE 
-              // ==============================================================
-              Container(
-                height: 140, 
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Paleta.fundoGeral, // Fundo caso a imagem falhe
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-                ),
-                child: totalFotos == 0
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.school_rounded, size: 50, color: Paleta.azulIcones),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Foto da Escola',
-                            style: TextStyle(
-                              color: Paleta.textoSecundario,
-                              fontWeight: FontWeight.bold,
+                // ==============================================================
+                // FOTO MAIOR COM BADGE FLUTUANTE
+                // ==============================================================
+                Container(
+                  height: 140,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Paleta.fundoGeral, // Fundo caso a imagem falhe
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(15),
+                    ),
+                  ),
+                  child: totalFotos == 0
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.school_rounded,
+                              size: 50,
+                              color: Paleta.azulIcones,
                             ),
-                          ),
-                        ],
-                      )
-                    : Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                            child: PageView.builder(
-                              scrollBehavior: ScrollConfiguration.of(context).copyWith(
-                                dragDevices: {
-                                  PointerDeviceKind.touch,
-                                  PointerDeviceKind.mouse,
-                                },
+                            const SizedBox(height: 8),
+                            Text(
+                              'Foto da Escola',
+                              style: TextStyle(
+                                color: Paleta.textoSecundario,
+                                fontWeight: FontWeight.bold,
                               ),
-                              itemCount: totalFotos,
-                              onPageChanged: (index) {
-                                setState(() { _fotoAtual = index; });
-                              },
-                              itemBuilder: (context, idx) {
-                                return Image.network(
-                                  widget.escola.imagens[idx],
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  loadingBuilder: (context, child, progress) {
-                                    if (progress == null) return child;
-                                    return Container(
-                                      color: Paleta.fundoGeral,
-                                      child: const Center(
-                                        child: CircularProgressIndicator(
-                                          color: Paleta.azulPrincipal,
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stack) {
-                                    return Container(
-                                      color: Paleta.fundoGeral,
-                                      child: const Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.broken_image_rounded, 
-                                            size: 40, 
-                                            color: Paleta.azulIcones
-                                          ),
-                                          SizedBox(height: 8),
-                                          Text(
-                                            'Imagem indisponível',
-                                            style: TextStyle(
-                                              color: Paleta.textoSecundario, 
-                                              fontSize: 12
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
                             ),
-                          ),
-                          
-                          if (widget.isMaisProximo)
-                            Positioned(
-                              top: 12,
-                              left: 12,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      color: Colors.black12, 
-                                      blurRadius: 4, 
-                                      offset: Offset(0, 2)
-                                    )
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.location_on_rounded, size: 14, color: Paleta.azulIcones),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'MAIS PRÓXIMA', 
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11, 
-                                        fontWeight: FontWeight.w800, 
-                                        color: Paleta.textoPrincipal
-                                      )
+                          ],
+                        )
+                      : Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(15),
+                              ),
+                              child: PageView.builder(
+                                scrollBehavior: ScrollConfiguration.of(context)
+                                    .copyWith(
+                                      dragDevices: {
+                                        PointerDeviceKind.touch,
+                                        PointerDeviceKind.mouse,
+                                      },
                                     ),
-                                  ],
-                                ),
+                                itemCount: totalFotos,
+                                onPageChanged: (index) {
+                                  setState(() {
+                                    _fotoAtual = index;
+                                  });
+                                },
+                                itemBuilder: (context, idx) {
+                                  return Image.network(
+                                    widget.escola.imagens[idx],
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    loadingBuilder: (context, child, progress) {
+                                      if (progress == null) return child;
+                                      return Container(
+                                        color: Paleta.fundoGeral,
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            color: Paleta.azulPrincipal,
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder: (context, error, stack) {
+                                      return Container(
+                                        color: Paleta.fundoGeral,
+                                        child: const Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.broken_image_rounded,
+                                              size: 40,
+                                              color: Paleta.azulIcones,
+                                            ),
+                                            SizedBox(height: 8),
+                                            Text(
+                                              'Imagem indisponível',
+                                              style: TextStyle(
+                                                color: Paleta.textoSecundario,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
                               ),
                             ),
 
-                          if (totalFotos > 1)
-                            Positioned(
-                              bottom: 10,
-                              left: 0,
-                              right: 0,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: List.generate(
-                                  totalFotos,
-                                  (idx) => AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                                    width: _fotoAtual == idx ? 18 : 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      color: _fotoAtual == idx
-                                          ? Colors.white
-                                          : Colors.white.withAlpha(128),
-                                      borderRadius: BorderRadius.circular(3),
+                            if (widget.isMaisProximo)
+                              Positioned(
+                                top: 12,
+                                left: 12,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.location_on_rounded,
+                                        size: 14,
+                                        color: Paleta.azulIcones,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'MAIS PRÓXIMA',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: Paleta.textoPrincipal,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                            if (totalFotos > 1)
+                              Positioned(
+                                bottom: 10,
+                                left: 0,
+                                right: 0,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(
+                                    totalFotos,
+                                    (idx) => AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 300,
+                                      ),
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      width: _fotoAtual == idx ? 18 : 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: _fotoAtual == idx
+                                            ? Colors.white
+                                            : Colors.white.withAlpha(128),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
+                ),
+
+                // ==============================================================
+                // ÁREA DE INFORMAÇÕES SUPER COMPACTA
+                // ==============================================================
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // <-- ESSE É O PAI (Lê todas as informações do card de uma vez)
+                      TextoAcessivel(
+                        texto: widget.escola.nome,
+                        textoOcultoParaLer: '${_expandirSiglasParaAudio(widget.escola.nome)}. Fica em ${widget.escola.cidade}, a ${_formatarDistancia(widget.escola.distanciaMetros)} do seu local atual. Turnos disponíveis: ${turnos.join(", ")}. Benefícios: ${beneficios.take(4).join(", ")}. Toque no botão azul abaixo para iniciar a pré-inscrição.',
+                        estilo: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: Paleta.textoPrincipal, 
+                          height: 1.1,
+                        ),
                       ),
-              ),
+                      const SizedBox(height: 6),
 
-              // ==============================================================
-              // ÁREA DE INFORMAÇÕES SUPER COMPACTA
-              // ==============================================================
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                      Text(
+                        widget.minhaLocalizacao != null
+                            ? '${widget.escola.cidade} • ${_formatarDistancia(widget.escola.distanciaMetros)} do seu local atual.'
+                            : '${widget.escola.cidade} • Calculando...',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: Paleta.textoSecundario,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
 
-                    TextoAcessivel(
-                      texto: widget.escola.nome,
+                     TextoAcessivel(
+                      texto: 'Turnos disponíveis:',
+                      ocultarIcone: true, // <-- FILHO INVISÍVEL (Deixa a tela limpa)
                       estilo: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Paleta.textoPrincipal, // Texto forte
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-
-                    Text(
-                      widget.minhaLocalizacao != null
-                          ? '${widget.escola.cidade} • ${_formatarDistancia(widget.escola.distanciaMetros)} do seu local atual.'
-                          : '${widget.escola.cidade} • Calculando...',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: Paleta.textoSecundario,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    Text(
-                      'Turnos disponíveis:',
-                      style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: Paleta.textoSecundario,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      // Tags de Turno: Tom Azul Claro oficial
-                      children: turnos.map((t) => _buildTagChip(
-                        texto: t,
-                        corFundo: Paleta.azulIcones.withValues(alpha: 0.1),
-                        corTexto: Paleta.azulPrincipal,
-                        icone: Icons.schedule_rounded,
-                        corIcone: Paleta.azulPrincipal,
-                      )).toList(),
-                    ),
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        // Tags de Turno: Tom Azul Claro oficial
+                        children: turnos
+                            .map(
+                              (t) => _buildTagChip(
+                                texto: t,
+                                corFundo: Paleta.azulIcones.withValues(
+                                  alpha: 0.1,
+                                ),
+                                corTexto: Paleta.azulPrincipal,
+                                icone: Icons.schedule_rounded,
+                                corIcone: Paleta.azulPrincipal,
+                              ),
+                            )
+                            .toList(),
+                      ),
+                      const SizedBox(height: 12),
 
-                    if (beneficios.isNotEmpty) ...[
-                      Text(
-                        'Benefícios oferecidos:',
-                        style: GoogleFonts.inter(
+                      if (beneficios.isNotEmpty) ...[
+                        TextoAcessivel(
+                        texto: 'Benefícios oferecidos:',
+                        ocultarIcone: true, // <-- FILHO INVISÍVEL (Deixa a tela limpa)
+                        estilo: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: Paleta.textoSecundario,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        // Tags de Benefícios: Os Verdes da Paleta
-                        children: beneficios.take(4).map((b) => _buildTagChip(
-                          texto: b,
-                          corFundo: Paleta.fundoVerde,
-                          corTexto: Paleta.verdeSucesso,
-                          icone: Icons.check_circle_outline_rounded,
-                          corIcone: Paleta.verdeSucesso,
-                        )).toList(),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          // Tags de Benefícios: Os Verdes da Paleta
+                          children: beneficios
+                              .take(4)
+                              .map(
+                                (b) => _buildTagChip(
+                                  texto: b,
+                                  corFundo: Paleta.fundoVerde,
+                                  corTexto: Paleta.verdeSucesso,
+                                  icone: Icons.check_circle_outline_rounded,
+                                  corIcone: Paleta.verdeSucesso,
+                                ),
+                              )
+                              .toList(),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ],
+                  ),
+                ),
+
+                // BOTÃO E MENSAGEM ACOLHEDORA DE CONFIANÇA
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        height: 42,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Paleta.azulBotao, // Botão Azul Vibrante
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          onPressed: () {
+                            pararVoz();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TelaDetalhes(
+                                  idEscola: widget.escola.id,
+                                  nomeEscola: widget.escola.nome,
+                                  bairro: widget.escola.bairro,
+                                  cidade: widget.escola.cidade,
+                                  nivel: widget.nivelEscolhido,
+                                  turnos: widget.escola.turnos,
+                                  distancia: _formatarDistancia(
+                                    widget.escola.distanciaMetros,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          child: const TextoAcessivel(
+                            texto: 'Ver Escola',
+                            ocultarIcone: true, // <-- FILHO INVISÍVEL (Salva o design do botão)
+                            corIcone: Colors.white,
+                            estilo: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 8),
-                    ],
-                  ],
-                ),
-              ),
-
-              // BOTÃO E MENSAGEM ACOLHEDORA DE CONFIANÇA
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      height: 42,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Paleta.azulBotao, // Botão Azul Vibrante
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        onPressed: () {
-                          pararVoz();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TelaDetalhes(
-                                idEscola: widget.escola.id,
-                                nomeEscola: widget.escola.nome,
-                                bairro: widget.escola.bairro,
-                                cidade: widget.escola.cidade,
-                                nivel: widget.nivelEscolhido,
-                                turnos: widget.escola.turnos,
-                                distancia: _formatarDistancia(widget.escola.distanciaMetros),
-                              ),
-                            ),
-                          );
-                        },
-                        child: const TextoAcessivel(
-                          texto: 'Ver Escola',
-                          corIcone: Colors.white,
-                          estilo: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.favorite_border_rounded, 
-                          size: 14, 
-                          color: Paleta.textoSecundario
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Inscrição gratuita • sem burocracia',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.favorite_border_rounded,
+                            size: 14,
                             color: Paleta.textoSecundario,
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          const SizedBox(width: 6),
+                          Text(
+                            'Inscrição gratuita • sem burocracia',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Paleta.textoSecundario,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

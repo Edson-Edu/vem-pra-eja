@@ -48,6 +48,44 @@ class TelaDetalhes extends StatefulWidget {
 }
 
 class _TelaDetalhesState extends State<TelaDetalhes> {
+
+
+  
+
+  // ============================================================================
+  // TRADUTOR INTELIGENTE PARA O ÁUDIO (SIGLAS E DIAS)
+  // ============================================================================
+   String _expandirSiglasParaAudio(String texto) {
+    if (texto.isEmpty) return texto;
+    String limpo = texto;
+    
+    // 1. Siglas Escolares (Maiúsculas e minúsculas)
+    limpo = limpo.replaceAll(RegExp(r'\bCEJA\b', caseSensitive: false), 'Centro de Educação de Jovens e Adultos');
+    limpo = limpo.replaceAll(RegExp(r'\bEBM\b', caseSensitive: false), 'Escola Básica Municipal');
+    limpo = limpo.replaceAll(RegExp(r'\bE\.B\.M\.?\b', caseSensitive: false), 'Escola Básica Municipal');
+    limpo = limpo.replaceAll(RegExp(r'\bCEM\b', caseSensitive: false), 'Centro Educacional Municipal');
+    limpo = limpo.replaceAll(RegExp(r'\bC\.E\.M\.?\b', caseSensitive: false), 'Centro Educacional Municipal');
+    limpo = limpo.replaceAll(RegExp(r'\bEEB\b', caseSensitive: false), 'Escola de Educação Básica');
+    limpo = limpo.replaceAll(RegExp(r'\bEJA\b', caseSensitive: false), 'Êja');
+
+    // 2. Dias da Semana
+    limpo = limpo.replaceAll('Seg', 'segunda')
+                 .replaceAll('Ter', 'terça')
+                 .replaceAll('Qua', 'quarta')
+                 .replaceAll('Qui', 'quinta')
+                 .replaceAll('Sex', 'sexta')
+                 .replaceAll('Sab', 'sábado').replaceAll('Sáb', 'sábado')
+                 .replaceAll('Dom', 'domingo');
+
+    // 3. O SEGREDO DO TRAÇO: Troca qualquer formato de traço por " a "
+    limpo = limpo.replaceAll(' - ', ' a ')
+                 .replaceAll(' – ', ' a ') // En-dash
+                 .replaceAll('-', ' a ')
+                 .replaceAll('–', ' a ');
+
+    return limpo;
+  }
+
   // ============================================================================
   // CONTROLADORES E VARIÁVEIS DE ESTADO
   // ============================================================================
@@ -88,66 +126,60 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
   // ============================================================================
   // LÓGICA DE ACESSIBILIDADE E LEITURA (TTS)
   // ============================================================================
-  void _iniciarLeituraComRolagem() async {
+void _iniciarLeituraComRolagem({bool lerTudo = true}) async {
+    await pararVoz(); 
+    await Future.delayed(const Duration(milliseconds: 300)); 
     await configurarTts();
-    
-    _controladorDeRolagem.animateTo(
-      0, 
-      duration: const Duration(milliseconds: 500), 
-      curve: Curves.easeInOut,
-    );
-    
-    await gerenciadorVoz.speak(
-      "${widget.nomeEscola}. Apenas ${widget.distancia} daqui.",
-    );
-    
-    if (!mounted || !acessibilidadeAtivada.value) return; 
 
-    if (_turnoSelecionado == null) {
+    // 1. ESCOLA, BAIRRO E CIDADE (Lê apenas quando abre a tela)
+    if (lerTudo) {
+      _controladorDeRolagem.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
       await gerenciadorVoz.speak(
-        "Por favor, selecione um turno na tela para ver os detalhes da escola.",
+        "${_expandirSiglasParaAudio(widget.nomeEscola)}, no bairro ${widget.bairro} em ${widget.cidade}.",
       );
+      if (!mounted || !acessibilidadeAtivada.value) return; 
+    }
+
+    // 2. TURNO
+    if (_turnoSelecionado == null) {
+      await gerenciadorVoz.speak("Por favor, selecione um turno na tela.");
       return;
     }
 
-    await gerenciadorVoz.speak(
-      "Turno selecionado: ${_turnoSelecionado!.turno}. Horário: ${_turnoSelecionado!.horario}",
-    );
-    
+    if (lerTudo) {
+      await gerenciadorVoz.speak("Você selecionou o turno da ${_turnoSelecionado!.turno}.");
+    } else {
+      await gerenciadorVoz.speak("Turno da ${_turnoSelecionado!.turno} selecionado.");
+    }
     if (!mounted || !acessibilidadeAtivada.value) return;
 
-    _controladorDeRolagem.animateTo(
-      150, 
-      duration: const Duration(milliseconds: 600), 
-      curve: Curves.easeInOut,
-    );
-    
+    // <-- LIMPA O HORÁRIO AQUI PARA NÃO LER "MENOS"
+    String horarioLimpo = _turnoSelecionado!.horario.replaceAll(' - ', ' às ').replaceAll('-', ' às ');
+
+    // 3. AULAS, DIAS E DISTÂNCIA (O "de" já tá embutido no _traduzirParaAudio)
     await gerenciadorVoz.speak(
-      "Como funciona. ${_turnoSelecionado!.descricao}",
+      "As aulas acontecem das $horarioLimpo, ${_expandirSiglasParaAudio(_turnoSelecionado!.diasAula)}. A escola está a aproximadamente ${widget.distancia} de você.",
     );
-    
     if (!mounted || !acessibilidadeAtivada.value) return;
 
-    _controladorDeRolagem.animateTo(
-      300, 
-      duration: const Duration(milliseconds: 600), 
-      curve: Curves.easeInOut,
-    );
-    
+    // 4. AUXÍLIOS
+    _controladorDeRolagem.animateTo(150, duration: const Duration(milliseconds: 600), curve: Curves.easeInOut);
     await gerenciadorVoz.speak(
-      "Auxílios. ${_turnoSelecionado!.auxilios}",
+      "Possui os seguintes auxílios: ${_turnoSelecionado!.auxilios}.",
     );
-    
     if (!mounted || !acessibilidadeAtivada.value) return;
 
-    _controladorDeRolagem.animateTo(
-      _controladorDeRolagem.position.maxScrollExtent, 
-      duration: const Duration(milliseconds: 800), 
-      curve: Curves.easeInOut,
-    );
-    
+    // 5. COMO FUNCIONA
+    _controladorDeRolagem.animateTo(300, duration: const Duration(milliseconds: 600), curve: Curves.easeInOut);
     await gerenciadorVoz.speak(
-      "Clique no botão azul fixo no rodapé para Quero me inscrever.",
+      "Nessa escola, a Êja funciona da seguinte forma: ${_turnoSelecionado!.descricao}.",
+    );
+    if (!mounted || !acessibilidadeAtivada.value) return;
+
+    // 6. CONCLUSÃO
+    _controladorDeRolagem.animateTo(_controladorDeRolagem.position.maxScrollExtent, duration: const Duration(milliseconds: 800), curve: Curves.easeInOut);
+    await gerenciadorVoz.speak(
+      "Deseja se inscrever nessa escola? Clique no botão azul no final da tela. Caso deseje ver outra, é só voltar.",
     );
   }
 
@@ -285,9 +317,11 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Text(
-                      titulo,
-                      style: GoogleFonts.inter(
+                    // <-- NOVO: O título do modal agora é um TextoAcessivel e lê tudo
+                    child: TextoAcessivel(
+                      texto: titulo,
+                      textoOcultoParaLer: "$titulo. ${visual.explicacao}",
+                      estilo: GoogleFonts.inter(
                         fontSize: 22, 
                         fontWeight: FontWeight.w900, 
                         color: const Color(0xFF1E1B4B),
@@ -297,9 +331,11 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                 ],
               ),
               const SizedBox(height: 20),
-              Text(
-                visual.explicacao,
-                style: GoogleFonts.inter(
+              // <-- NOVO: A explicação fica como filho (ocultarIcone: true)
+              TextoAcessivel(
+                texto: visual.explicacao,
+                ocultarIcone: true,
+                estilo: GoogleFonts.inter(
                   fontSize: 16, 
                   color: const Color(0xFF455A64), 
                   height: 1.6,
@@ -417,6 +453,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
   // ============================================================================
   Widget _cardInfoModerno({
     required String titulo, 
+    String? textoOcultoTitulo, // <-- NOVO: Permite passar o texto que o Pai vai ler
     required IconData iconeHeader, 
     required Color corIcone,
     required Color corFundoIcone,
@@ -460,6 +497,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                 const SizedBox(width: 14),
                 TextoAcessivel(
                   texto: titulo,
+                  textoOcultoParaLer: textoOcultoTitulo ?? titulo, // <-- NOVO: Aplica o texto do Pai
                   estilo: GoogleFonts.inter(
                     fontSize: 18, 
                     fontWeight: FontWeight.w900, 
@@ -525,6 +563,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                     Expanded(
                       child: TextoAcessivel(
                         texto: textoLimpo,
+                        ocultarIcone: true, // <-- NOVO: Os filhos ficam com o ícone invisível na lista!
                         estilo: GoogleFonts.inter(
                           fontSize: 15, 
                           color: Colors.grey.shade400,
@@ -620,8 +659,8 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
               size: 20,
             ),
           ),
-          onPressed: () { 
-            pararVoz(); 
+          onPressed: () async { 
+            await pararVoz(); 
             Navigator.pop(context); 
           },
         ),
@@ -756,12 +795,16 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                                       return SizedBox(
                                         width: 102, 
                                         child: GestureDetector(
-                                          onTap: () {
-                                            pararVoz(); 
+                                          onTap: () async {
+                                            await pararVoz(); 
                                             setState(() { 
                                               _turnoSelecionado = turnoOpcao; 
                                               _mostrarDicaRolagem = true; 
                                             });
+                                            // <-- NOVO: Acorda a voz e manda ela ler apenas do turno pra baixo!
+                                            if (acessibilidadeAtivada.value) {
+                                              _iniciarLeituraComRolagem(lerTudo: false);
+                                            }
                                           },
                                           child: AnimatedContainer(
                                             duration: const Duration(milliseconds: 300),
@@ -904,6 +947,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                           const SizedBox(height: 25),
 
                           // 2. CARD EXCLUSIVO DE AUXÍLIOS
+                          // 2. CARD EXCLUSIVO DE AUXÍLIOS
                           FadeInUp(
                             key: ValueKey('aux_${_turnoSelecionado!.id}'), 
                             duration: const Duration(milliseconds: 500),
@@ -911,6 +955,8 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                               padding: const EdgeInsets.symmetric(horizontal: 24),
                               child: _cardInfoModerno(
                                 titulo: 'Auxílios', 
+                                // <-- NOVO: O Pai lê todos os benefícios de uma vez!
+                                textoOcultoTitulo: 'Auxílios oferecidos neste turno: ${_turnoSelecionado!.auxilios}.',
                                 iconeHeader: Icons.volunteer_activism_rounded, 
                                 corIcone: const Color(0xFFD97706), 
                                 corFundoIcone: const Color(0xFFFEF3C7),
@@ -968,8 +1014,8 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
               ), 
               elevation: _turnoSelecionado == null ? 0 : 5, 
             ),
-            onPressed: _turnoSelecionado == null ? null : () {
-              pararVoz(); 
+            onPressed: _turnoSelecionado == null ? null : () async {
+              await pararVoz(); 
               Navigator.push(
                 context, 
                 MaterialPageRoute(
@@ -986,15 +1032,15 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
               texto: _turnoSelecionado == null 
                   ? 'Selecione um turno' 
                   : 'Quero me inscrever (${_turnoSelecionado!.turno})', 
+              // <-- NOVO: Orientação de voz inteligente para o botão
+              textoOcultoParaLer: _turnoSelecionado == null 
+                  ? 'Por favor, selecione um turno acima para liberar a inscrição.' 
+                  : 'Deseja inscrever-se no turno da ${_turnoSelecionado!.turno}? Toque aqui para preencher os seus dados.',
               corIcone: Colors.white, 
               alinhamento: TextAlign.center, 
               estilo: TextStyle(
-                color: _turnoSelecionado == null ? Colors.grey.shade500 : Colors.white, 
-                fontSize: 16, 
-                fontWeight: FontWeight.bold,
-              ),
+          )),
             ),
-          ),
         ),
       ),
     );

@@ -32,21 +32,26 @@ class _TelaNivelState extends State<TelaNivel> {
     await configurarTts();
 
     if (!mounted || !acessibilidadeAtivada.value) return;
-    await gerenciadorVoz.speak("De qual nível vamos continuar?");
+    await gerenciadorVoz.speak("Até que série ou ano você estudou?");
 
     if (!mounted || !acessibilidadeAtivada.value) return;
     await gerenciadorVoz.speak(
-      "Opção 1: Ensino Fundamental. Ainda não terminei o nono ano.",
+      "Opção 1: Nunca estudei. Não cheguei a frequentar a escola formalmente.",
     );
 
     if (!mounted || !acessibilidadeAtivada.value) return;
     await gerenciadorVoz.speak(
-      "Opção 2: Ensino Médio. Já concluí o ensino fundamental, quero continuar o médio.",
+      "Opção 2: Ensino Fundamental, antigo primeiro grau. Inclui o primário e o ginásio.",
     );
 
     if (!mounted || !acessibilidadeAtivada.value) return;
     await gerenciadorVoz.speak(
-      "Todas as escolas são gratuitas e possuem auxílios para que você consiga concluir com sucesso.",
+      "Opção 3: Ensino Médio, antigo segundo grau. Para quem já concluiu o fundamental e quer continuar os estudos.",
+    );
+
+    if (!mounted || !acessibilidadeAtivada.value) return;
+    await gerenciadorVoz.speak(
+      "Lembrando que todas as escolas são gratuitas e possuem auxílios para que você consiga concluir com sucesso.",
     );
   }
 
@@ -59,8 +64,10 @@ class _TelaNivelState extends State<TelaNivel> {
   Widget _botaoNivel({
     required BuildContext context,
     required String nivel,
+    String? textoOcultoNivel,
     required String nivelFiltro,
     required String subtitulo,
+    String? textoOcultoSubtitulo,
     required IconData icone,
     required Color cor,
     required int delayMilissegundos,
@@ -118,8 +125,10 @@ class _TelaNivelState extends State<TelaNivel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // ESSE É O PAI (Lê o título e o subtítulo de uma vez só)
                         TextoAcessivel(
                           texto: nivel,
+                          textoOcultoParaLer: "${textoOcultoNivel ?? nivel}. ${textoOcultoSubtitulo ?? subtitulo}",
                           estilo: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
@@ -127,8 +136,11 @@ class _TelaNivelState extends State<TelaNivel> {
                           ),
                         ),
                         const SizedBox(height: 4),
+                        
+                        // ESSE É O FILHO (Liga a invisibilidade do ícone para não quebrar o layout)
                         TextoAcessivel(
                           texto: subtitulo,
+                          ocultarIcone: true, 
                           estilo: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -266,37 +278,39 @@ class _TelaNivelState extends State<TelaNivel> {
                         _botaoNivel(
                           context: context,
                           nivel: 'Nunca estudei',
+                          textoOcultoNivel: 'Opção 1: Nunca estudei',
                           nivelFiltro: 'Ensino Fundamental',
-                          subtitulo:
-                              'Não cheguei a frequentar a escola formalmente.',
+                          subtitulo: 'Não cheguei a frequentar a escola formalmente.',
+                          textoOcultoSubtitulo: 'Toque aqui para escolher se você não chegou a frequentar a escola formalmente.',
                           icone: Icons.menu_book_rounded,
-                          cor: Paleta.azulIcones, // <-- NOVO
+                          cor: Paleta.azulIcones, 
                           delayMilissegundos: 800,
                         ),
-
                         const SizedBox(height: 24),
 
                         _botaoNivel(
                           context: context,
                           nivel: 'Ensino Fundamental (1º Grau)',
+                          textoOcultoNivel: 'Opção 2: Ensino Fundamental, o antigo primeiro grau.',
                           nivelFiltro: 'Ensino Fundamental',
-                          subtitulo:
-                              'Inclui do 1º ao 5º ano (antigo Primário) e do 6º ao 9º ano (antigo Ginásio).',
+                          subtitulo: 'Inclui do 1º ao 5º ano (antigo Primário) e do 6º ao 9º ano (antigo Ginásio).',
+                          textoOcultoSubtitulo: 'Inclui do primeiro ao quinto ano, antigo primário, e do sexto ao nono ano, antigo ginásio. Toque para escolher.',
                           icone: Icons.menu_book_rounded,
-                          cor: Paleta.azulIcones, // <-- NOVO
+                          cor: Paleta.azulIcones, 
                           delayMilissegundos: 800,
                         ),
 
                         const SizedBox(height: 24),
 
-                        _botaoNivel(
+                       _botaoNivel(
                           context: context,
                           nivel: 'Ensino Médio (2º Grau)',
+                          textoOcultoNivel: 'Opção 3: Ensino Médio, o antigo segundo grau.',
                           nivelFiltro: 'Ensino Médio',
-                          subtitulo:
-                              'Já conclui o Ensino Fundamental(1º grau/ginásio) e quero continuar os estudos no Ensino Medio(antigo Colegial).',
+                          subtitulo: 'Já conclui o Ensino Fundamental(1º grau/ginásio) e quero continuar os estudos no Ensino Medio(antigo Colegial).',
+                          textoOcultoSubtitulo: 'Para quem já concluiu o Ensino Fundamental, o antigo ginásio, e quer continuar os estudos no Ensino Médio, o antigo colegial. Toque para escolher.',
                           icone: Icons.school_rounded,
-                          cor: Paleta.azulIcones, // <-- NOVO
+                          cor: Paleta.azulIcones, 
                           delayMilissegundos: 1000,
                         ),
 

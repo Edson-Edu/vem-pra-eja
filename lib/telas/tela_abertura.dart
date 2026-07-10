@@ -21,7 +21,6 @@ class TelaAbertura extends StatefulWidget {
 
 class _TelaAberturaState extends State<TelaAbertura>
     with TickerProviderStateMixin {
-  
   // --------------------------------------------------------------------------
   // VARIÁVEIS DE ESTADO E DADOS BACKEND
   // --------------------------------------------------------------------------
@@ -31,7 +30,7 @@ class _TelaAberturaState extends State<TelaAbertura>
   // --------------------------------------------------------------------------
   // CONTROLADORES DE ANIMAÇÃO (A Coreografia Tipográfica)
   // --------------------------------------------------------------------------
-  
+
   // 1. Texto "VEM" (Fade suave)
   late AnimationController _ctrlVem;
   late Animation<double> _animVemOpacity;
@@ -66,13 +65,13 @@ class _TelaAberturaState extends State<TelaAbertura>
   @override
   void initState() {
     super.initState();
-    
+
     // Trava a tela na vertical para não quebrar a imersão da abertura
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    
+
     // Prepara todos os motores de animação
     _configurarAnimacoes();
-    
+
     // Inicia a função mestre que sincroniza o GPS, Supabase e a Animação
     _iniciarAppSincronizado();
   }
@@ -83,56 +82,66 @@ class _TelaAberturaState extends State<TelaAbertura>
   void _configurarAnimacoes() {
     // Animação 1: "VEM"
     _ctrlVem = AnimationController(
-      vsync: this, 
+      vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _animVemOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrlVem, curve: Curves.easeOut),
-    );
-    _animVemSlide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _ctrlVem, curve: Curves.easeOutCubic),
-    );
+    _animVemOpacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrlVem, curve: Curves.easeOut));
+    _animVemSlide = Tween<Offset>(
+      begin: const Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrlVem, curve: Curves.easeOutCubic));
 
     // Animação 2: "[PRA]" (A pílula surge com um "quique")
     _ctrlPra = AnimationController(
-      vsync: this, 
+      vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _animPraScale = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrlPra, curve: Curves.easeOutBack),
-    );
-    _animPraOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrlPra, curve: Curves.easeIn),
-    );
+    _animPraScale = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrlPra, curve: Curves.easeOutBack));
+    _animPraOpacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrlPra, curve: Curves.easeIn));
 
     // Animação 3: "EJA" Gigante
     _ctrlEja = AnimationController(
-      vsync: this, 
+      vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _animEjaOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrlEja, curve: Curves.easeOut),
-    );
-    _animEjaSlide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
-      CurvedAnimation(parent: _ctrlEja, curve: Curves.easeOutCubic),
-    );
+    _animEjaOpacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _ctrlEja, curve: Curves.easeOut));
+    _animEjaSlide = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrlEja, curve: Curves.easeOutCubic));
 
     // Animação 4: O brilho metálico varrendo a logo
     _ctrlShimmer = AnimationController(
-      vsync: this, 
+      vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _animShimmer = Tween<double>(begin: -1.0, end: 2.0).animate(
-      CurvedAnimation(parent: _ctrlShimmer, curve: Curves.easeInOut),
-    );
+    _animShimmer = Tween<double>(
+      begin: -1.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(parent: _ctrlShimmer, curve: Curves.easeInOut));
 
     // Animação 5: Barrinha de Carregamento e Texto
     _ctrlLoader = AnimationController(
-      vsync: this, 
+      vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
     _animLoaderFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrlLoader, curve: const Interval(0.0, 0.3, curve: Curves.easeIn)),
+      CurvedAnimation(
+        parent: _ctrlLoader,
+        curve: const Interval(0.0, 0.3, curve: Curves.easeIn),
+      ),
     );
     // A barrinha vai ficar animando infinitamente de um lado pro outro
     _animLoaderProgresso = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -141,7 +150,7 @@ class _TelaAberturaState extends State<TelaAbertura>
 
     // Animação 6: O Fade de saída final antes de ir para a próxima tela
     _ctrlFadeTelaFinal = AnimationController(
-      vsync: this, 
+      vsync: this,
       duration: const Duration(milliseconds: 600),
     );
     _animFadeTelaFinal = Tween<double>(begin: 1.0, end: 0.0).animate(
@@ -160,25 +169,23 @@ class _TelaAberturaState extends State<TelaAbertura>
       _executarAnimacaoVisual(),
     ]);
 
-    // Verificação de segurança padrão do Flutter
     if (!mounted) return;
 
-    // Quando TUDO estiver pronto (Backend e Animação), apaga a tela suavemente
+    // Quando TUDO estiver pronto, apaga a tela suavemente
     _ctrlFadeTelaFinal.forward();
     await Future.delayed(const Duration(milliseconds: 600));
-    
+
     if (!mounted) return;
 
-    // Interrompe o áudio para não encavalar com a próxima tela
-    pararVoz();
-    
-    // Navega para a próxima tela sem animação de transição padrão (já fizemos o fade)
+    // REMOVIDO O pararVoz() DAQUI!
+    // Isso permite que o áudio flua naturalmente para a tela_nivel.
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
         pageBuilder: (_, _, _) => TelaNivel(
           posicaoPreCarregada: _posicaoInicialCarregada,
-          dadosEscolas: _dadosSupabase, 
+          dadosEscolas: _dadosSupabase,
         ),
         transitionDuration: Duration.zero,
       ),
@@ -210,18 +217,21 @@ class _TelaAberturaState extends State<TelaAbertura>
 
     // 5. O prêmio visual: Um brilho premium cruza a logo EJA.
     _ctrlShimmer.forward();
-    
+
     // 6. Inicia o loader no rodapé (fica tocando em loop reverso)
     _ctrlLoader.repeat(reverse: true);
 
     // Acessibilidade auditiva tocando após o impacto visual inicial
+    // Acessibilidade auditiva tocando após o impacto visual inicial
     if (acessibilidadeAtivada.value) {
       await configurarTts();
-      await gerenciadorVoz.speak('Aplicativo Vem pra EJA. Carregando.');
+      await gerenciadorVoz.speak(
+        'Seja bem-vindo! Estamos carregando as informações para você.',
+      );
+    } else {
+      // O tempo extra para apreciar a marca só roda se o áudio não estiver ativado
+      await Future.delayed(const Duration(milliseconds: 2000));
     }
-
-    // Tempo extra garantido para que a pessoa aprecie a marca
-    await Future.delayed(const Duration(milliseconds: 2000)); 
   }
 
   // --------------------------------------------------------------------------
@@ -233,11 +243,12 @@ class _TelaAberturaState extends State<TelaAbertura>
       if (!serviceEnabled) return;
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission(); 
+        permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) return;
       }
       final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.high,
+      );
       if (mounted) setState(() => _posicaoInicialCarregada = position);
     } catch (e) {
       debugPrint('Erro GPS: $e');
@@ -246,15 +257,23 @@ class _TelaAberturaState extends State<TelaAbertura>
 
   Future<void> _preCarregarDadosEImagens() async {
     try {
-      _dadosSupabase = await Supabase.instance.client.from('escolas').select('*, turnos_escola(*)');
+      _dadosSupabase = await Supabase.instance.client
+          .from('escolas')
+          .select('*, turnos_escola(*)');
       List<Future<void>> tarefas = [];
-      
+
       for (var linha in _dadosSupabase) {
-        if (linha['image_url'] != null && linha['image_url'].toString().trim().isNotEmpty) {
-          var urls = linha['image_url'].toString().split(',').map((e) => e.trim());
+        if (linha['image_url'] != null &&
+            linha['image_url'].toString().trim().isNotEmpty) {
+          var urls = linha['image_url']
+              .toString()
+              .split(',')
+              .map((e) => e.trim());
           for (var url in urls) {
             if (url.isNotEmpty) {
-              tarefas.add(precacheImage(NetworkImage(url), context).catchError((_) {}));
+              tarefas.add(
+                precacheImage(NetworkImage(url), context).catchError((_) {}),
+              );
             }
           }
         }
@@ -288,20 +307,16 @@ class _TelaAberturaState extends State<TelaAbertura>
   @override
   Widget build(BuildContext context) {
     // Cor predominante inspirada na sua imagem
-   
 
     return Scaffold(
       backgroundColor: Paleta.azulPrincipal,
       body: AnimatedBuilder(
         animation: _animFadeTelaFinal,
-        builder: (context, child) => Opacity(
-          opacity: _animFadeTelaFinal.value,
-          child: child,
-        ),
+        builder: (context, child) =>
+            Opacity(opacity: _animFadeTelaFinal.value, child: child),
         child: SafeArea(
           child: Stack(
             children: [
-              
               // ====================================================================
               // ESTRUTURA CENTRAL: A TIPOGRAFIA ROBUSTA
               // ====================================================================
@@ -310,13 +325,11 @@ class _TelaAberturaState extends State<TelaAbertura>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    
                     // LINHA SUPERIOR: "VEM" + Pílula "[PRA]"
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        
                         // TEXTO: VEM
                         SlideTransition(
                           position: _animVemSlide,
@@ -325,15 +338,17 @@ class _TelaAberturaState extends State<TelaAbertura>
                             child: Text(
                               'VEM',
                               style: GoogleFonts.inter(
-                                fontSize: 22, 
+                                fontSize: 22,
                                 fontWeight: FontWeight.w400,
-                                color: Colors.white.withValues(alpha: 0.6), // Levemente transparente para não roubar a cena
-                                letterSpacing: 4.0, 
+                                color: Colors.white.withValues(
+                                  alpha: 0.6,
+                                ), // Levemente transparente para não roubar a cena
+                                letterSpacing: 4.0,
                               ),
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(width: 8),
 
                         // PÍLULA: [PRA]
@@ -342,24 +357,29 @@ class _TelaAberturaState extends State<TelaAbertura>
                           child: ScaleTransition(
                             scale: _animPraScale,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(8), // Bordas arredondadas do botão
+                                borderRadius: BorderRadius.circular(
+                                  8,
+                                ), // Bordas arredondadas do botão
                               ),
                               child: Text(
                                 'PRA',
                                 style: GoogleFonts.inter(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w900,
-                                  color: Paleta.azulPrincipal, // A cor do texto vazando o fundo
+                                  color: Paleta
+                                      .azulPrincipal, // A cor do texto vazando o fundo
                                   letterSpacing: 1.0,
                                 ),
                               ),
                             ),
                           ),
                         ),
-
                       ],
                     ),
 
@@ -382,9 +402,15 @@ class _TelaAberturaState extends State<TelaAbertura>
                                   begin: const Alignment(-1.0, 0.0),
                                   end: const Alignment(1.0, 0.0),
                                   colors: [
-                                    Colors.white.withValues(alpha: 0.0), // Invisível
-                                    Colors.white.withValues(alpha: 0.9), // Brilho estourado
-                                    Colors.white.withValues(alpha: 0.0), // Invisível
+                                    Colors.white.withValues(
+                                      alpha: 0.0,
+                                    ), // Invisível
+                                    Colors.white.withValues(
+                                      alpha: 0.9,
+                                    ), // Brilho estourado
+                                    Colors.white.withValues(
+                                      alpha: 0.0,
+                                    ), // Invisível
                                   ],
                                   stops: [
                                     _animShimmer.value - 0.2,
@@ -395,10 +421,11 @@ class _TelaAberturaState extends State<TelaAbertura>
                               },
                               child: Text(
                                 'EJA',
-                                style: GoogleFonts.archivo( // A FONTE PESADA QUE VOCÊ SOLICITOU
+                                style: GoogleFonts.archivo(
+                                  // A FONTE PESADA QUE VOCÊ SOLICITOU
                                   fontSize: 120, // GIGANTE
                                   fontWeight: FontWeight.w900,
-                                  color: Colors.white, 
+                                  color: Colors.white,
                                   letterSpacing: -4.0, // Bem juntinho e sólido
                                   height: 1.0,
                                 ),
@@ -408,12 +435,11 @@ class _TelaAberturaState extends State<TelaAbertura>
                         ),
                       ),
                     ),
-
                   ],
                 ),
               ),
 
-// ====================================================================
+              // ====================================================================
               // RODAPÉ: CARREGANDO + LOGOS INSTITUCIONAIS
               // ====================================================================
               Positioned(
@@ -429,30 +455,31 @@ class _TelaAberturaState extends State<TelaAbertura>
                         animation: _animLoaderProgresso,
                         builder: (context, child) {
                           return CustomPaint(
-                            size: const Size(60, 4), 
+                            size: const Size(60, 4),
                             painter: _LoaderBarPainter(
                               progresso: _animLoaderProgresso.value,
                             ),
                           );
-                        }
+                        },
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // O texto
                       Text(
                         'carregando',
                         style: GoogleFonts.inter(
-                          fontSize: 16, 
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.7), 
+                          color: Colors.white.withValues(alpha: 0.7),
                           letterSpacing: 2.0,
                         ),
                       ),
-                      
-                      const SizedBox(height: 50), // <-- ISSO LEVANTA O CARREGANDO!
-                      
-                     // ====================================================================
+
+                      const SizedBox(
+                        height: 50,
+                      ), // <-- ISSO LEVANTA O CARREGANDO!
+                      // ====================================================================
                       // LOGOS DA PREFEITURA E DO IFC (Estilo Premium)
                       // ====================================================================
                       // ====================================================================
@@ -460,40 +487,52 @@ class _TelaAberturaState extends State<TelaAbertura>
                       // ====================================================================
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center, 
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           // 1. Logo Prefeitura
                           Opacity(
-                            opacity: 0.85, 
+                            opacity: 0.85,
                             child: Image.asset(
-                              'assets/logo_prefeitura.png', 
-                              height: 55, 
-                              fit: BoxFit.contain, 
-                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_balance_rounded, color: Colors.white70, size: 36),
+                              'assets/logo_prefeitura.png',
+                              height: 55,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                    Icons.account_balance_rounded,
+                                    color: Colors.white70,
+                                    size: 36,
+                                  ),
                             ),
                           ),
-                          
+
                           const SizedBox(width: 25),
-                          
-                          // 2. O Separador Elegante 
+
+                          // 2. O Separador Elegante
                           Container(
-                            height: 45, 
-                            width: 1.0, 
-                            color: Colors.white.withValues(alpha: 0.25), 
+                            height: 45,
+                            width: 1.0,
+                            color: Colors.white.withValues(alpha: 0.25),
                           ),
-                          
+
                           const SizedBox(width: 25),
-                          
+
                           // 3. Logo IFC (Com ajuste ótico manual)
                           Padding(
-                            padding: const EdgeInsets.only(top: 8.0), // <-- MÁGICA: Empurra a logo 8 pixels para baixo!
+                            padding: const EdgeInsets.only(
+                              top: 8.0,
+                            ), // <-- MÁGICA: Empurra a logo 8 pixels para baixo!
                             child: Opacity(
-                              opacity: 0.85, 
+                              opacity: 0.85,
                               child: Image.asset(
-                                'assets/logo_ifc.png', 
-                                height: 65, 
-                                fit: BoxFit.contain, 
-                                errorBuilder: (context, error, stackTrace) => const Icon(Icons.school_rounded, color: Colors.white70, size: 36),
+                                'assets/logo_ifc.png',
+                                height: 65,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(
+                                      Icons.school_rounded,
+                                      color: Colors.white70,
+                                      size: 36,
+                                    ),
                               ),
                             ),
                           ),
@@ -516,12 +555,11 @@ class _TelaAberturaState extends State<TelaAbertura>
                     shape: BoxShape.circle,
                   ),
                   child: const BotaoAcessibilidadeGlobal(
-                    textoLeituraTela:
-                        'Aplicativo Vem pra EJA abrindo. Carregando as informações.',
+                    // <-- NOVO: Frase atualizada aqui também
+                    textoLeituraTela: 'Seja bem-vindo! Estamos carregando as informações para você.',
                   ),
                 ),
               ),
-              
             ],
           ),
         ),
@@ -562,13 +600,16 @@ class _LoaderBarPainter extends CustomPainter {
 
     // Calcula o pedacinho que vai ficar se movendo
     final larguraTraco = size.width * 0.3; // 30% do tamanho total
-    
+
     // O movimento vai de fora do limite esquerdo até fora do limite direito
     final xAtual = -larguraTraco + ((size.width + larguraTraco) * progresso);
-    
+
     // Trava para não desenhar fora da barrinha principal (Sem caracteres especiais!)
     final tracoStart = Offset(xAtual.clamp(0.0, size.width), size.height / 2);
-    final tracoEnd = Offset((xAtual + larguraTraco).clamp(0.0, size.width), size.height / 2);
+    final tracoEnd = Offset(
+      (xAtual + larguraTraco).clamp(0.0, size.width),
+      size.height / 2,
+    );
 
     // Desenha o segmento em movimento
     if (tracoEnd.dx > 0 && tracoStart.dx < size.width) {
