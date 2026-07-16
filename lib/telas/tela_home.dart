@@ -1518,7 +1518,7 @@ class _CardEscolaState extends State<_CardEscola> {
                                   ),
                                 ),
                               ),
-                            );
+                            ).then((_) => falarAoVoltar("Detalhes da escola fechados. Voltamos para a lista de escolas."));
                           },
                           child: const TextoAcessivel(
                             texto: 'Ver Escola',

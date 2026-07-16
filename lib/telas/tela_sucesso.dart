@@ -105,6 +105,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
             Expanded(
               child: TextoAcessivel(
                 texto: texto,
+                ocultarIcone: true,
                 estilo: GoogleFonts.inter(
                   fontSize: 14, 
                   fontWeight: FontWeight.w700,
@@ -162,6 +163,8 @@ class _TelaSucessoState extends State<TelaSucesso> {
                       fit: BoxFit.scaleDown,
                       child: TextoAcessivel(
                         texto: 'Inscrição Realizada!', 
+                        // <-- NOVO: O Pai assume a leitura da tela toda!
+                        textoOcultoParaLer: 'Inscrição Realizada! Fique atento ao seu WhatsApp ou e-mail. Veja o que acontece agora: Passo 1: A escola recebe seu interesse. Passo 2: A secretaria entra em contato com você. Passo 3: Você confirma a matrícula presencialmente.',
                         alinhamento: TextAlign.center, 
                         corIcone: Paleta.corCheckSucesso,
                         estilo: GoogleFonts.inter(
@@ -186,6 +189,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
                       ),
                       child: TextoAcessivel(
                         texto: 'Fique atento ao seu WhatsApp ou e-mail.', 
+                        ocultarIcone: true,
                         alinhamento: TextAlign.center, 
                         corIcone: Paleta.textoAvisoSucesso,
                         estilo: GoogleFonts.inter(
@@ -203,6 +207,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
                     duration: const Duration(milliseconds: 1200),
                     child: TextoAcessivel(
                       texto: 'Veja o que acontece agora:', 
+                      ocultarIcone: true,
                       alinhamento: TextAlign.center, 
                       corIcone: const Color(0xFF7C3AED), 
                       estilo: GoogleFonts.inter(
@@ -260,6 +265,7 @@ class _TelaSucessoState extends State<TelaSucesso> {
                         },
                         child: const TextoAcessivel(
                           texto: 'Voltar ao Início', 
+                          ocultarIcone: true,
                           alinhamento: TextAlign.center, 
                           corIcone: Colors.white,
                           estilo: TextStyle(

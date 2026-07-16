@@ -4,11 +4,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:device_preview/device_preview.dart'; // IMPORT DO DEVICE PREVIEW
 import 'telas/tela_abertura.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 Future<void> main() async {
   // Garante que o Flutter foi inicializado antes de chamar o Supabase
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Agora ele carrega o arquivo que o Firebase permite!
+  await dotenv.load(fileName: "chaves.env");
+
   // INICIALIZAÇÃO DO SUPABASE 
   await Supabase.initialize(
     url: 'https://uoeguwnhqalhnzolhism.supabase.co',

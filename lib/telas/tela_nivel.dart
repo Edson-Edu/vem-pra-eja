@@ -29,6 +29,10 @@ class _TelaNivelState extends State<TelaNivel> {
   }
 
   void _iniciarLeituraNivel() async {
+    // Dá 600 milissegundos para a animação da tela nova terminar de abrir com calma
+    await Future.delayed(const Duration(milliseconds: 600));
+    
+    await pararVoz(); // Garante que a fila está limpa
     await configurarTts();
 
     if (!mounted || !acessibilidadeAtivada.value) return;
@@ -82,7 +86,7 @@ class _TelaNivelState extends State<TelaNivel> {
           border: Border.all(color: Colors.grey.shade300, width: 1.5),
           boxShadow: [
             BoxShadow(
-             color: Paleta.azulPrincipal.withValues(alpha: 0.04),
+              color: Paleta.azulPrincipal.withValues(alpha: 0.04),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -105,7 +109,7 @@ class _TelaNivelState extends State<TelaNivel> {
                     dadosBrutosEscolas: widget.dadosEscolas ?? [],
                   ),
                 ),
-              );
+              ).then((_) => falarAoVoltar("Voltamos para a tela de níveis. Escolha um nível para continuar."));
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
@@ -114,7 +118,9 @@ class _TelaNivelState extends State<TelaNivel> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Paleta.azulIcones.withValues(alpha: 0.1), // <-- NOVO
+                      color: Paleta.azulIcones.withValues(
+                        alpha: 0.1,
+                      ), // <-- NOVO
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icone, size: 28, color: cor),
@@ -128,23 +134,27 @@ class _TelaNivelState extends State<TelaNivel> {
                         // ESSE É O PAI (Lê o título e o subtítulo de uma vez só)
                         TextoAcessivel(
                           texto: nivel,
-                          textoOcultoParaLer: "${textoOcultoNivel ?? nivel}. ${textoOcultoSubtitulo ?? subtitulo}",
+                          textoOcultoParaLer:
+                              "${textoOcultoNivel ?? nivel}. ${textoOcultoSubtitulo ?? subtitulo}",
                           estilo: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w900,
-                            color: Paleta.textoDestaque, // <-- Independente do fundo da abertura!
+                            color: Paleta
+                                .textoDestaque, // <-- Independente do fundo da abertura!
                           ),
                         ),
                         const SizedBox(height: 4),
-                        
+
                         // ESSE É O FILHO (Liga a invisibilidade do ícone para não quebrar o layout)
                         TextoAcessivel(
                           texto: subtitulo,
-                          ocultarIcone: true, 
+                          ocultarIcone: true,
                           estilo: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: Paleta.textoDestaque.withValues(alpha: 0.7), // <-- Independente também
+                            color: Paleta.textoDestaque.withValues(
+                              alpha: 0.7,
+                            ), // <-- Independente também
                             height: 1.3,
                           ),
                         ),
@@ -280,10 +290,12 @@ class _TelaNivelState extends State<TelaNivel> {
                           nivel: 'Nunca estudei',
                           textoOcultoNivel: 'Opção 1: Nunca estudei',
                           nivelFiltro: 'Ensino Fundamental',
-                          subtitulo: 'Não cheguei a frequentar a escola formalmente.',
-                          textoOcultoSubtitulo: 'Toque aqui para escolher se você não chegou a frequentar a escola formalmente.',
+                          subtitulo:
+                              'Não cheguei a frequentar a escola formalmente.',
+                          textoOcultoSubtitulo:
+                              'Toque aqui para escolher se você não chegou a frequentar a escola formalmente.',
                           icone: Icons.menu_book_rounded,
-                          cor: Paleta.azulIcones, 
+                          cor: Paleta.azulIcones,
                           delayMilissegundos: 800,
                         ),
                         const SizedBox(height: 24),
@@ -291,26 +303,32 @@ class _TelaNivelState extends State<TelaNivel> {
                         _botaoNivel(
                           context: context,
                           nivel: 'Ensino Fundamental (1º Grau)',
-                          textoOcultoNivel: 'Opção 2: Ensino Fundamental, o antigo primeiro grau.',
+                          textoOcultoNivel:
+                              'Opção 2: Ensino Fundamental, o antigo primeiro grau.',
                           nivelFiltro: 'Ensino Fundamental',
-                          subtitulo: 'Inclui do 1º ao 5º ano (antigo Primário) e do 6º ao 9º ano (antigo Ginásio).',
-                          textoOcultoSubtitulo: 'Inclui do primeiro ao quinto ano, antigo primário, e do sexto ao nono ano, antigo ginásio. Toque para escolher.',
+                          subtitulo:
+                              'Inclui do 1º ao 5º ano (antigo Primário) e do 6º ao 9º ano (antigo Ginásio).',
+                          textoOcultoSubtitulo:
+                              'Inclui do primeiro ao quinto ano, antigo primário, e do sexto ao nono ano, antigo ginásio. Toque para escolher.',
                           icone: Icons.menu_book_rounded,
-                          cor: Paleta.azulIcones, 
+                          cor: Paleta.azulIcones,
                           delayMilissegundos: 800,
                         ),
 
                         const SizedBox(height: 24),
 
-                       _botaoNivel(
+                        _botaoNivel(
                           context: context,
                           nivel: 'Ensino Médio (2º Grau)',
-                          textoOcultoNivel: 'Opção 3: Ensino Médio, o antigo segundo grau.',
+                          textoOcultoNivel:
+                              'Opção 3: Ensino Médio, o antigo segundo grau.',
                           nivelFiltro: 'Ensino Médio',
-                          subtitulo: 'Já conclui o Ensino Fundamental(1º grau/ginásio) e quero continuar os estudos no Ensino Medio(antigo Colegial).',
-                          textoOcultoSubtitulo: 'Para quem já concluiu o Ensino Fundamental, o antigo ginásio, e quer continuar os estudos no Ensino Médio, o antigo colegial. Toque para escolher.',
+                          subtitulo:
+                              'Já conclui o Ensino Fundamental(1º grau/ginásio) e quero continuar os estudos no Ensino Medio(antigo Colegial).',
+                          textoOcultoSubtitulo:
+                              'Para quem já concluiu o Ensino Fundamental, o antigo ginásio, e quer continuar os estudos no Ensino Médio, o antigo colegial. Toque para escolher.',
                           icone: Icons.school_rounded,
-                          cor: Paleta.azulIcones, 
+                          cor: Paleta.azulIcones,
                           delayMilissegundos: 1000,
                         ),
 
@@ -407,4 +425,3 @@ class _TelaNivelState extends State<TelaNivel> {
     );
   }
 }
-

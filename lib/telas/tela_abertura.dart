@@ -59,6 +59,10 @@ class _TelaAberturaState extends State<TelaAbertura>
   late AnimationController _ctrlFadeTelaFinal;
   late Animation<double> _animFadeTelaFinal;
 
+  // === NOVO: 7. Dica de Acessibilidade (Tooltip Animado) ===
+  late AnimationController _ctrlTooltip;
+  late Animation<double> _animTooltipOpacity;
+  late Animation<Offset> _animTooltipSlide;
   // --------------------------------------------------------------------------
   // CONFIGURAÇÃO INICIAL (INIT)
   // --------------------------------------------------------------------------
@@ -156,6 +160,12 @@ class _TelaAberturaState extends State<TelaAbertura>
     _animFadeTelaFinal = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(parent: _ctrlFadeTelaFinal, curve: Curves.easeIn),
     );
+
+    // Animação 7: Tooltip de Acessibilidade (Surge da direita para a esquerda)
+    _ctrlTooltip = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _animTooltipOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _ctrlTooltip, curve: Curves.easeOut));
+    _animTooltipSlide = Tween<Offset>(begin: const Offset(0.5, 0), end: Offset.zero).animate(CurvedAnimation(parent: _ctrlTooltip, curve: Curves.easeOutCubic));
+
   }
 
   // --------------------------------------------------------------------------
@@ -168,6 +178,10 @@ class _TelaAberturaState extends State<TelaAbertura>
       _preCarregarDadosEImagens(),
       _executarAnimacaoVisual(),
     ]);
+
+    // === A MÁGICA: ESPERA O ÁUDIO TERMINAR! ===
+    // Se a voz estiver falando, o aplicativo congela aqui até ela acabar
+    await gerenciadorVoz.aguardarFilaTerminar();
 
     if (!mounted) return;
 
@@ -220,6 +234,9 @@ class _TelaAberturaState extends State<TelaAbertura>
 
     // 6. Inicia o loader no rodapé (fica tocando em loop reverso)
     _ctrlLoader.repeat(reverse: true);
+
+    // === NOVO: 7. Surge a dica de acessibilidade deslizando! ===
+    _ctrlTooltip.forward();
 
     // Acessibilidade auditiva tocando após o impacto visual inicial
     // Acessibilidade auditiva tocando após o impacto visual inicial
@@ -296,7 +313,7 @@ class _TelaAberturaState extends State<TelaAbertura>
     _ctrlShimmer.dispose();
     _ctrlLoader.dispose();
     _ctrlFadeTelaFinal.dispose();
-    pararVoz();
+    _ctrlTooltip.dispose();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     super.dispose();
   }
@@ -544,20 +561,51 @@ class _TelaAberturaState extends State<TelaAbertura>
               ),
 
               // ====================================================================
-              // ACESSIBILIDADE: BOTÃO GLOBAL (Mantido para usabilidade)
+              // ACESSIBILIDADE: BOTÃO GLOBAL + TOOLTIP ANIMADO
               // ====================================================================
               Positioned(
                 top: 16,
                 right: 16,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const BotaoAcessibilidadeGlobal(
-                    // <-- NOVO: Frase atualizada aqui também
-                    textoLeituraTela: 'Seja bem-vindo! Estamos carregando as informações para você.',
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // A Dica (Tooltip) Animada
+                    SlideTransition(
+                      position: _animTooltipSlide,
+                      child: FadeTransition(
+                        opacity: _animTooltipOpacity,
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(
+                            'Ativar audiodescrição?',
+                            style: GoogleFonts.inter(
+                              color: Colors.white, 
+                              fontWeight: FontWeight.w600, 
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // O Botão Redondo
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                      ),
+                      child: const BotaoAcessibilidadeGlobal(
+                        textoLeituraTela: 'Seja bem-vindo! Estamos carregando as informações para você.',
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

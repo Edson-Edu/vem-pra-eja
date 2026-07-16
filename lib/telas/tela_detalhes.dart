@@ -1026,7 +1026,7 @@ void _iniciarLeituraComRolagem({bool lerTudo = true}) async {
                     turnoSelecionado: _turnoSelecionado!.turno, 
                   ),
                 ),
-              );
+              ).then((_) => falarAoVoltar("Retornamos para a tela de detalhes da escola. Deseja realizar a inscrição?"));
             },
             child: TextoAcessivel(
               texto: _turnoSelecionado == null 
