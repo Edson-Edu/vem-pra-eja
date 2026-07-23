@@ -52,27 +52,40 @@ class _TelaCadastroState extends State<TelaCadastro> {
   final FocusNode _focoRua = FocusNode();
   final FocusNode _focoBairro = FocusNode();
   final FocusNode _focoNumeroEndereco = FocusNode();
-@override
+
+  // Controladores dedicados ao Autocomplete da Rua para evitar o erro de assertion
+  final TextEditingController _autocompleteTextCtrl = TextEditingController();
+  final FocusNode _autocompleteFocusNode = FocusNode();
+
+  @override
   void initState() {
     super.initState();
     _configurarLeituraGuiada();
 
-    // MÁGICA DO TUTORIAL: Iniciar leitura automática
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final double width = MediaQuery.of(context).size.width;
+      final targetPlatform = Theme.of(context).platform;
+      final bool isDispositivoMovel =
+          targetPlatform == TargetPlatform.android ||
+          targetPlatform == TargetPlatform.iOS;
+
+      if (!isDispositivoMovel && width > 1280) {
+        setState(() {
+          _contatoAberto = true;
+          _enderecoAberto = true;
+        });
+      }
+
       if (acessibilidadeAtivada.value) {
         await pararVoz();
         await gerenciadorVoz.speak(
           "Você está se inscrevendo na escola ${widget.nomeEscolaSelecionada}, "
           "no nível ${widget.nivelSelecionado} e no turno ${widget.turnoSelecionado}. "
-          "Preencha os dados de contato abaixo."
+          "Preencha os dados de contato abaixo.",
         );
-        
-        // Espera a frase inicial terminar de ser dita...
         await gerenciadorVoz.aguardarFilaTerminar();
-        
-        // ... e então joga o foco automaticamente para a primeira caixinha (Nome)
         if (mounted) {
-           FocusScope.of(context).requestFocus(_focoNome);
+          FocusScope.of(context).requestFocus(_focoNome);
         }
       }
     });
@@ -133,10 +146,6 @@ class _TelaCadastroState extends State<TelaCadastro> {
 
   final List<String> _cidadesPermitidas = ['Camboriú', 'Balneário Camboriú'];
 
-  // ==========================================================
-  // CHECAGEM DE UX: Verifica se o básico foi preenchido
-  // para remover o "!" e ativar o Botão Principal
-  // ==========================================================
   bool get _contatoPreenchido {
     return _nomeCtrl.text.isNotEmpty &&
         _cpfCtrl.text.length == 14 &&
@@ -179,6 +188,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
     _focoCep.dispose();
     _focoRua.dispose();
     _focoBairro.dispose();
+    _autocompleteTextCtrl.dispose();
+    _autocompleteFocusNode.dispose();
     super.dispose();
   }
 
@@ -321,9 +332,10 @@ class _TelaCadastroState extends State<TelaCadastro> {
   }
 
   void _mostrarErro(String msg) async {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red.shade700));
-    
-    // <-- NOVO: Se a acessibilidade estiver ligada, ele lê o erro!
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.red.shade700),
+    );
+
     if (acessibilidadeAtivada.value) {
       await pararVoz();
       await configurarTts();
@@ -368,7 +380,6 @@ class _TelaCadastroState extends State<TelaCadastro> {
       debugPrint('Erro ao salvar no banco: $e');
       String msgErro = 'Ocorreu um erro ao enviar sua inscrição.';
 
-      // MÁGICA 3: MENSAGEM DE ERRO ATUALIZADA
       if (e.toString().contains('cpf_escola_turno_unico') ||
           e.toString().contains('unique constraint')) {
         msgErro =
@@ -385,18 +396,86 @@ class _TelaCadastroState extends State<TelaCadastro> {
     }
   }
 
+  InputDecoration _obterEstiloInput(String rotulo, String dica) {
+    return InputDecoration(
+      labelText: rotulo,
+      hintText: dica,
+      isDense: true,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
+    final targetPlatform = Theme.of(context).platform;
+    final bool isDispositivoMovel =
+        targetPlatform == TargetPlatform.android ||
+        targetPlatform == TargetPlatform.iOS;
+
+    final bool ehTabletReal =
+        isDispositivoMovel && screenSize.shortestSide >= 600;
+    final bool ehTelaGrandeComputador =
+        !isDispositivoMovel && screenSize.width > 1280;
+
+    double larguraMaximaFormulario = ehTabletReal
+        ? screenSize.width * 0.85
+        : 500;
+    if (ehTelaGrandeComputador) {
+      larguraMaximaFormulario = 1280;
+    }
+
     return Scaffold(
       backgroundColor: Paleta.fundoCadastro,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        // ... seu leading com o botão de voltar ...
+        toolbarHeight: ehTabletReal ? 120 : 80,
+        leadingWidth: ehTabletReal ? 110 : 75,
+        leading: Center(
+          child: SizedBox(
+            width: ehTabletReal ? 70 : 45,
+            height: ehTabletReal ? 70 : 45,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_back,
+                  color: const Color.fromARGB(255, 0, 0, 0),
+                  size: ehTabletReal ? 32 : 20,
+                ),
+              ),
+              onPressed: () {
+                pararVoz();
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        ),
         actions: [
-          // ==========================================
-          // BOTÃO DEBUG: PULAR CADASTRO (APAGAR DEPOIS)
-          // ==========================================
+          Container(
+            margin: EdgeInsets.only(right: ehTabletReal ? 20 : 12),
+            width: ehTabletReal ? 70 : 44,
+            height: ehTabletReal ? 70 : 44,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: const BotaoAcessibilidadeGlobal(
+              textoLeituraTela: "Formulário de inscrição.",
+            ),
+          ),
           TextButton(
             onPressed: () {
               Navigator.push(
@@ -404,773 +483,986 @@ class _TelaCadastroState extends State<TelaCadastro> {
                 MaterialPageRoute(builder: (context) => const TelaSucesso()),
               );
             },
-            child: const Text(
+            child: Text(
               'PULAR',
               style: TextStyle(
-                color:
-                    Colors.white, // Ou a cor que combinar com o seu cabeçalho
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
+                fontSize: ehTabletReal ? 20 : 14,
               ),
             ),
           ),
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: ListView(
-            physics: const ClampingScrollPhysics(),
-            children: [
-              FadeInDown(
-                child: Column(
-                  children: [
-                    TextoAcessivel(
-                      texto: 'Você está se inscrevendo na escola',
-                      alinhamento: TextAlign.center,
-                      estilo: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Paleta.textoSubtituloCadastro,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextoAcessivel(
-                      texto: widget.nomeEscolaSelecionada,
-                      alinhamento: TextAlign.center,
-                      estilo: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Paleta.textoTituloCadastro,
-                      ), // <-- AQUI
-                    ),
-                    const SizedBox(height: 12),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Center(
+            child: Container(
+              constraints: BoxConstraints(maxWidth: larguraMaximaFormulario),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FadeInDown(
+                    child: Column(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 6,
+                        TextoAcessivel(
+                          texto: 'Você está se inscrevendo na escola',
+                          estilo: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Paleta.textoSubtituloCadastro,
                           ),
-                          decoration: BoxDecoration(
-                            color: Paleta.fundoTagNivelCadastro,
-                            borderRadius: BorderRadius.circular(10),
-                          ), // <-- AQUI
-                          child: Text(
-                            'Nível: ${widget.nivelSelecionado}',
-                            style: const TextStyle(
-                              color: Paleta.textoTagNivelCadastro,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ), // <-- AQUI
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 6,
+                        const SizedBox(height: 4),
+                        TextoAcessivel(
+                          texto: widget.nomeEscolaSelecionada,
+                          alinhamento: TextAlign.center,
+                          estilo: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Paleta.textoTituloCadastro,
                           ),
-                          decoration: BoxDecoration(
-                            color: Paleta.fundoTagTurnoCadastro,
-                            borderRadius: BorderRadius.circular(10),
-                          ), // <-- AQUI
-                          child: Text(
-                            'Turno: ${widget.turnoSelecionado}',
-                            style: const TextStyle(
-                              color: Paleta.textoTagTurnoCadastro,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Paleta.fundoTagNivelCadastro,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                'Nível: ${widget.nivelSelecionado}',
+                                style: const TextStyle(
+                                  color: Paleta.textoTagNivelCadastro,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                          ), // <-- AQUI
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Paleta.fundoTagTurnoCadastro,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                'Turno: ${widget.turnoSelecionado}',
+                                style: const TextStyle(
+                                  color: Paleta.textoTagTurnoCadastro,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+
+                  // ============================================================================
+                  // BLOCO 1: DADOS DE CONTATO
+                  // ============================================================================
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Paleta.sombraFormularioCadastro.withValues(
+                            alpha: 0.05,
+                          ),
+                          blurRadius: 15,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
-
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Paleta.sombraFormularioCadastro.withValues(
-                        alpha: 0.05,
-                      ),
-                      blurRadius: 15,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          if (_contatoAberto) {
-                            _contatoAberto =
-                                false; // Se já estava aberta, apenas fecha
-                          } else {
-                            _contatoAberto = true; // Abre esta
-                            _enderecoAberto =
-                                false; // Garante que o Endereço fecha
-                          }
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(20),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.person_outline_rounded,
-                              color: Paleta.iconeAcaoCadastro,
-                            ),
-                            const SizedBox(width: 10),
-                            TextoAcessivel(
-                              texto: 'DADOS DE CONTATO', 
-                              textoOcultoParaLer: 'Seção Dados de contato. Preencha seus dados pessoais abaixo. Toque na primeira caixa, Nome Completo, para iniciar.',
-                              estilo: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Paleta.textoTituloCadastro),
-                            ),
-                            const Spacer(),
-
-                            if (!_contatoAberto && !_contatoPreenchido)
-                              const Padding(
-                                padding: EdgeInsets.only(right: 12.0),
-                                child: Icon(
-                                  Icons.error_outline_rounded,
-                                  color: Colors.orange,
-                                  size: 20,
+                    child: Column(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            if (ehTelaGrandeComputador) return;
+                            setState(() {
+                              _contatoAberto = !_contatoAberto;
+                              if (_contatoAberto) _enderecoAberto = false;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.person_outline_rounded,
+                                  color: Paleta.iconeAcaoCadastro,
+                                  size: 24,
                                 ),
-                              ),
-
-                            Icon(
-                              _contatoAberto
-                                  ? Icons.keyboard_arrow_up_rounded
-                                  : Icons.keyboard_arrow_down_rounded,
-                              color: Colors.grey,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Offstage(
-                      offstage: !_contatoAberto,
-                      child: Form(
-                        key: _formContato,
-                        onChanged: () => setState(() {}),
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            bottom: 16,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [const SizedBox(height: 10),
-                              
-                              DestaqueTutorial(
-                                focusNode: _focoNome,
-                                child: TextFormField(
-                                  controller: _nomeCtrl,
-                                  focusNode: _focoNome, 
-                                  textInputAction: TextInputAction.next, 
-                                  // <-- MÁGICA DA ORDEM: Força pular pro CPF
-                                  onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_focoCpf),
-                                  decoration: InputDecoration(
-                                    labelText: 'Nome Completo', hintText: 'Digite seu nome', 
-                                    isDense: true, filled: true, fillColor: Colors.white, 
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                      borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
+                                const SizedBox(width: 10),
+                                TextoAcessivel(
+                                  texto: 'DADOS DE CONTATO',
+                                  textoOcultoParaLer:
+                                      'Seção Dados de contato. Preencha seus dados pessoais abaixo. Toque na primeira caixa, Nome Completo, para iniciar.',
+                                  estilo: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    color: Paleta.textoTituloCadastro,
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (!_contatoAberto && !_contatoPreenchido)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 12.0),
+                                    child: Icon(
+                                      Icons.error_outline_rounded,
+                                      color: Colors.orange,
+                                      size: 20,
                                     ),
                                   ),
-                                  validator: (v) => v == null || v.isEmpty ? 'Nome é obrigatório' : null,
-                                ),
+                                if (!ehTelaGrandeComputador)
+                                  Icon(
+                                    _contatoAberto
+                                        ? Icons.keyboard_arrow_up_rounded
+                                        : Icons.keyboard_arrow_down_rounded,
+                                    color: Colors.grey,
+                                    size: 24,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Offstage(
+                          offstage: !_contatoAberto && !ehTelaGrandeComputador,
+                          child: Form(
+                            key: _formContato,
+                            onChanged: () => setState(() {}),
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                                bottom: 16,
                               ),
-                              const SizedBox(height: 12),
-                              
-                              Row(
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    flex: 7,
-                                    child: DestaqueTutorial(
-                                      focusNode: _focoCpf,
-                                      child: TextFormField(
-                                        controller: _cpfCtrl,
-                                        focusNode: _focoCpf, 
-                                        textInputAction: TextInputAction.next, 
-                                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_focoIdade),
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: [MascaraCPF()],
-                                        decoration: InputDecoration(
-                                          labelText: 'CPF (Obrigatório)', hintText: '000.000.000-00', 
-                                          isDense: true, filled: true, fillColor: Colors.white, 
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
-                                            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
-                                          ),
-                                        ),
-                                        validator: (v) {
-                                          if (v == null || v.isEmpty) return 'Digite o CPF';
-                                          if (!_isCpfValido(v)) return 'CPF Inválido';
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    flex: 3,
-                                    child: DestaqueTutorial(
-                                      focusNode: _focoIdade,
-                                      child: TextFormField(
-                                        controller: _idadeCtrl, 
-                                        focusNode: _focoIdade, 
-                                        textInputAction: TextInputAction.next, 
-                                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_focoDdd),
-                                        keyboardType: TextInputType.number,
-                                        maxLength: 2,
-                                        decoration: InputDecoration(
-                                          labelText: 'Idade', counterText: '', 
-                                          isDense: true, filled: true, fillColor: Colors.white, 
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
-                                            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
-                                          ),
-                                        ),
-                                        validator: (v) {
-                                          if (v == null || v.isEmpty) return 'Falta';
-                                          int? idade = int.tryParse(v);
-                                          if (idade == null) return 'Erro';
-                                          if (widget.nivelSelecionado.contains('Fundamental') && idade < 15) return 'Mín 15';
-                                          if (widget.nivelSelecionado.contains('Médio') && idade < 18) return 'Mín 18';
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 12),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 2), padding: const EdgeInsets.all(10),
-                                    decoration: const BoxDecoration(color: Color(0xFFEDE9FE), shape: BoxShape.circle),
-                                    child: const Icon(Icons.chat_bubble_rounded, color: Paleta.iconeAcaoCadastro, size: 24),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  SizedBox(
-                                    width: 75, 
-                                    child: DestaqueTutorial(
-                                      focusNode: _focoDdd,
-                                      child: TextFormField(
-                                        controller: _dddCtrl, 
-                                        focusNode: _focoDdd, 
-                                        textInputAction: TextInputAction.next, 
-                                        keyboardType: TextInputType.number, maxLength: 2, textAlign: TextAlign.center,
-                                        decoration: InputDecoration(
-                                          labelText: 'DDD', hintText: '00', counterText: '', 
-                                          isDense: true, filled: true, fillColor: Colors.white, 
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
-                                            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
-                                          ),
-                                        ),
-                                        onChanged: (v) { if (v.length == 2) FocusScope.of(context).requestFocus(_focoNumero); },
-                                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_focoNumero),
-                                        validator: (v) => v == null || v.length < 2 ? 'Erro' : null,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: DestaqueTutorial(
-                                      focusNode: _focoNumero,
-                                      child: TextFormField(
-                                        controller: _numeroCtrl, 
-                                        focusNode: _focoNumero, 
-                                        textInputAction: TextInputAction.next, 
-                                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_focoEmail),
-                                        keyboardType: TextInputType.number, inputFormatters: [MascaraWhatsApp()],
-                                        decoration: InputDecoration(
-                                          labelText: 'Telefone (WhatsApp)', hintText: '00000-0000', 
-                                          isDense: true, filled: true, fillColor: Colors.white, 
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
-                                            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
-                                          ),
-                                        ),
-                                        validator: (v) => v == null || v.length < 10 ? 'Telefone incompleto' : null,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              DestaqueTutorial(
-                                focusNode: _focoEmail,
-                                child: TextFormField(
-                                  controller: _emailCtrl,
-                                  focusNode: _focoEmail, 
-                                  textInputAction: TextInputAction.done, 
-                                  keyboardType: TextInputType.emailAddress,
-                                  decoration: InputDecoration(
-                                    labelText: 'E-mail (Opcional)', hintText: 'exemplo@email.com', 
-                                    isDense: true, filled: true, fillColor: Colors.white, 
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                      borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
-                                    ),
-                                  ),
-                                  validator: (v) {
-                                    if (v != null && v.isNotEmpty && !v.contains('@')) return 'E-mail inválido';
-                                    return null;
-                                  },
-                                ),
-                              ),
-
-                              const SizedBox(height: 15),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton.icon(
-                                  onPressed: () {
-                                    if (_formContato.currentState!.validate()) {
-                                      FocusScope.of(context).unfocus();
-                                      setState(() {
-                                        _contatoAberto = false;
-                                        _enderecoAberto = true;
-                                      });
-                                    } else {
-                                      _mostrarErro(
-                                        'Verifique os campos em vermelho antes de avançar.',
-                                      );
-                                    }
-                                  },
-                                  icon: const Icon(
-                                    Icons.arrow_downward_rounded,
-                                    size: 18,
-                                    color: Paleta.iconeAcaoCadastro,
-                                  ),
-                                  label: const Text(
-                                    'Continuar para Endereço',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Paleta.iconeAcaoCadastro,
-                                    ),
-                                  ),
-                                ),
-                              ),],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Paleta.iconeAcaoCadastro.withValues(alpha: 0.05),
-                      blurRadius: 15,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          if (_enderecoAberto) {
-                            _enderecoAberto =
-                                false; // Se já estava aberta, apenas fecha
-                          } else {
-                            _enderecoAberto = true; // Abre esta
-                            _contatoAberto =
-                                false; // Garante que o Contato fecha
-                          }
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(20),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              color: Paleta.iconeAcaoCadastro,
-                            ),
-                            const SizedBox(width: 10),
-                            TextoAcessivel(
-                              texto: 'ENDEREÇO (Opcional)', 
-                              textoOcultoParaLer: 'Seção Endereço. Digite seu CEP ou pesquise pelo nome da rua na segunda caixa.',
-                              estilo: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Paleta.textoTituloCadastro),
-                            ),
-                            const Spacer(),
-                            // Atualizado: Só mostra o alerta laranja se ele começou a preencher e parou no meio
-                            if (!_enderecoAberto &&
-                                !_enderecoPreenchido &&
-                                !_enderecoVazio)
-                              const Padding(
-                                padding: EdgeInsets.only(right: 12.0),
-                                child: Icon(
-                                  Icons.error_outline_rounded,
-                                  color: Colors.orange,
-                                  size: 20,
-                                ),
-                              ),
-
-                            Icon(
-                              _enderecoAberto
-                                  ? Icons.keyboard_arrow_up_rounded
-                                  : Icons.keyboard_arrow_down_rounded,
-                              color: Colors.grey,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Offstage(
-                      offstage: !_enderecoAberto,
-                      child: Form(
-                        key: _formEndereco,
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            bottom: 16,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [const SizedBox(height: 10),
-                              DropdownButtonFormField<String>(
-                                initialValue: _cidadeSelecionada,
-                                decoration: InputDecoration(
-                                  labelText: 'Cidade',
-                                  isDense: true,
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                ),
-                                items: _cidadesPermitidas
-                                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                                    .toList(),
-                                onChanged: (v) {
-                                  setState(() { _cidadeSelecionada = v!; });
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: DestaqueTutorial(
-                                      focusNode: _focoCep,
-                                      child: TextFormField(
-                                        controller: _cepCtrl, 
-                                        focusNode: _focoCep, 
-                                        textInputAction: TextInputAction.next,
-                                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_focoRua),
-                                        keyboardType: TextInputType.number, inputFormatters: [MascaraCEP()],
-                                        decoration: InputDecoration(
-                                          labelText: 'Buscar CEP', hintText: '00000-000', 
-                                          isDense: true, filled: true, fillColor: Colors.white, 
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
-                                            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
-                                          ),
-                                          suffixIcon: _buscando ? const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Paleta.iconeAcaoCadastro))) : null,
-                                        ),
-                                        onChanged: (v) {
-                                           setState(() {});
-                                           if (v.length == 9) _buscarPorCep(v);
-                                        },
-                                        validator: (v) => v == null || v.isEmpty ? 'CEP obrigatório' : null,
-                                      ),
-                                    ),
-                                  ),
-                                  if (_camposEndTravados)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 8),
-                                      child: IconButton(
-                                        onPressed: _resetarEndereco, 
-                                        icon: const Icon(Icons.edit_rounded, color: Paleta.iconeAcaoCadastro), 
-                                        tooltip: 'Editar Endereço'
-                                      ),
-                                    )
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              
-                              DestaqueTutorial(
-                                focusNode: _focoRua,
-                                child: RawAutocomplete<Map<String, String>>(
-                                  focusNode: _focoRua, 
-                                  textEditingController: _ruaCtrl, 
-                                  optionsBuilder: (TextEditingValue textEditingValue) { return _sugerirRuasGlobal(textEditingValue.text); },
-                                  displayStringForOption: (option) => option['rua']!,
-                                  onSelected: (Map<String, String> selection) {
-                                    setState(() {
-                                      _ruaCtrl.text = selection['rua']!; _bairroCtrl.text = selection['bairro']!;
-                                      _cepCtrl.text = selection['cep']!; _cidadeSelecionada = selection['cidade']!;
-                                      _camposEndTravados = true; FocusScope.of(context).requestFocus(_focoNumeroEndereco);
-                                    });
-                                  },
-                                  fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                                    if (controller.text.isEmpty && _ruaCtrl.text.isNotEmpty) controller.text = _ruaCtrl.text;
-                                    return TextFormField(
-                                      controller: controller, 
-                                      focusNode: focusNode, 
+                                  const SizedBox(height: 10),
+                                  DestaqueTutorial(
+                                    focusNode: _focoNome,
+                                    child: TextFormField(
+                                      controller: _nomeCtrl,
+                                      focusNode: _focoNome,
                                       textInputAction: TextInputAction.next,
-                                      onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_focoBairro),
-                                      readOnly: _camposEndTravados || _buscando,
-                                      decoration: InputDecoration(
-                                        labelText: 'Buscar Rua', 
-                                        hintText: _buscando ? 'Localizando endereço...' : 'Digite o nome da rua...', 
-                                        isDense: true, filled: true, 
-                                        fillColor: _camposEndTravados || _buscando ? Colors.grey.shade100 : Colors.white, 
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(15),
-                                          borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
-                                        ), 
-                                        suffixIcon: const Icon(Icons.search_rounded, size: 20)
+                                      onFieldSubmitted: (_) => FocusScope.of(
+                                        context,
+                                      ).requestFocus(_focoCpf),
+                                      decoration: _obterEstiloInput(
+                                        'Nome Completo',
+                                        'Digite seu nome',
                                       ),
-                                      validator: (v) => v == null || v.isEmpty ? 'Rua obrigatória' : null,
-                                    );
-                                  },
-                                  optionsViewBuilder: (context, onSelected, options) {
-                                    return Align(
-                                      alignment: Alignment.topLeft,
-                                      child: Material(
-                                        elevation: 4.0, borderRadius: BorderRadius.circular(15),
-                                        child: Container(
-                                          width: MediaQuery.of(context).size.width - 72, constraints: const BoxConstraints(maxHeight: 250),
-                                          child: ListView.builder(
-                                            padding: EdgeInsets.zero, shrinkWrap: true, itemCount: options.length,
-                                            itemBuilder: (context, index) {
-                                              final option = options.elementAt(index);
-                                              return ListTile(
-                                                title: Text(option['rua']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                                subtitle: Text("${option['bairro']} - ${option['cidade']}", style: const TextStyle(fontSize: 12)),
-                                                onTap: () { onSelected(option); },
-                                              );
+                                      validator: (v) => v == null || v.isEmpty
+                                          ? 'Nome é obrigatório'
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        flex: 7,
+                                        child: DestaqueTutorial(
+                                          focusNode: _focoCpf,
+                                          child: TextFormField(
+                                            controller: _cpfCtrl,
+                                            focusNode: _focoCpf,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            onFieldSubmitted: (_) =>
+                                                FocusScope.of(
+                                                  context,
+                                                ).requestFocus(_focoIdade),
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [MascaraCPF()],
+                                            decoration: _obterEstiloInput(
+                                              'CPF (Obrigatório)',
+                                              '000.000.000-00',
+                                            ),
+                                            validator: (v) =>
+                                                (v == null || v.isEmpty)
+                                                ? 'Digite o CPF'
+                                                : (!_isCpfValido(v)
+                                                      ? 'CPF Inválido'
+                                                      : null),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        flex: 3,
+                                        child: DestaqueTutorial(
+                                          focusNode: _focoIdade,
+                                          child: TextFormField(
+                                            controller: _idadeCtrl,
+                                            focusNode: _focoIdade,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            onFieldSubmitted: (_) =>
+                                                FocusScope.of(
+                                                  context,
+                                                ).requestFocus(_focoDdd),
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              LengthLimitingTextInputFormatter(
+                                                2,
+                                              ),
+                                            ],
+                                            decoration: InputDecoration(
+                                              labelText: 'Idade',
+                                              hintText: '',
+                                              counterText: '',
+                                              isDense: true,
+                                              filled: true,
+                                              fillColor: Colors.white,
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0xFF6366F1),
+                                                  width: 2.5,
+                                                ),
+                                              ),
+                                            ),
+                                            validator: (v) {
+                                              if (v == null || v.isEmpty)
+                                                return 'Falta';
+                                              int? idade = int.tryParse(v);
+                                              if (idade == null) return 'Erro';
+                                              if (widget.nivelSelecionado
+                                                      .contains(
+                                                        'Fundamental',
+                                                      ) &&
+                                                  idade < 15)
+                                                return 'Mín 15';
+                                              if (widget.nivelSelecionado
+                                                      .contains('Médio') &&
+                                                  idade < 18)
+                                                return 'Mín 18';
+                                              return null;
                                             },
                                           ),
                                         ),
                                       ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: DestaqueTutorial(
-                                      focusNode: _focoBairro,
-                                      child: TextFormField(
-                                        controller: _bairroCtrl, 
-                                        focusNode: _focoBairro,
-                                        textInputAction: TextInputAction.next,
-                                        onFieldSubmitted: (_) => FocusScope.of(context).requestFocus(_focoNumeroEndereco),
-                                        readOnly: _camposEndTravados,
-                                        decoration: InputDecoration(
-                                          labelText: 'Bairro', isDense: true, filled: true, 
-                                          fillColor: _camposEndTravados ? Colors.grey.shade100 : Colors.white, 
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
-                                            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
-                                          ),
-                                        ), 
-                                        validator: (v) => v == null || v.isEmpty ? 'Bairro obrigatório' : null,
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 2),
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFEDE9FE),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.chat_bubble_rounded,
+                                          color: Paleta.iconeAcaoCadastro,
+                                          size: 24,
+                                        ),
                                       ),
+                                      const SizedBox(width: 8),
+                                      SizedBox(
+                                        width: 75,
+                                        child: DestaqueTutorial(
+                                          focusNode: _focoDdd,
+                                          child: TextFormField(
+                                            controller: _dddCtrl,
+                                            focusNode: _focoDdd,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            keyboardType: TextInputType.number,
+                                            maxLength: 2,
+                                            textAlign: TextAlign.center,
+                                            inputFormatters: [
+                                              LengthLimitingTextInputFormatter(
+                                                2,
+                                              ),
+                                            ],
+                                            decoration: InputDecoration(
+                                              labelText: 'DDD',
+                                              hintText: '00',
+                                              counterText: '',
+                                              isDense: true,
+                                              filled: true,
+                                              fillColor: Colors.white,
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0xFF6366F1),
+                                                  width: 2.5,
+                                                ),
+                                              ),
+                                            ),
+                                            onChanged: (v) {
+                                              if (v.length == 2)
+                                                FocusScope.of(
+                                                  context,
+                                                ).requestFocus(_focoNumero);
+                                            },
+                                            onFieldSubmitted: (_) =>
+                                                FocusScope.of(
+                                                  context,
+                                                ).requestFocus(_focoNumero),
+                                            validator: (v) =>
+                                                v == null || v.length < 2
+                                                ? 'Erro'
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: DestaqueTutorial(
+                                          focusNode: _focoNumero,
+                                          child: TextFormField(
+                                            controller: _numeroCtrl,
+                                            focusNode: _focoNumero,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            onFieldSubmitted: (_) =>
+                                                FocusScope.of(
+                                                  context,
+                                                ).requestFocus(_focoEmail),
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              MascaraWhatsApp(),
+                                            ],
+                                            decoration: _obterEstiloInput(
+                                              'Telefone (WhatsApp)',
+                                              '00000-0000',
+                                            ),
+                                            validator: (v) =>
+                                                v == null || v.length < 10
+                                                ? 'Telefone incompleto'
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  DestaqueTutorial(
+                                    focusNode: _focoEmail,
+                                    child: TextFormField(
+                                      controller: _emailCtrl,
+                                      focusNode: _focoEmail,
+                                      textInputAction: TextInputAction.done,
+                                      keyboardType: TextInputType.emailAddress,
+                                      decoration: _obterEstiloInput(
+                                        'E-mail (Opcional)',
+                                        'exemplo@email.com',
+                                      ),
+                                      validator: (v) =>
+                                          (v != null &&
+                                              v.isNotEmpty &&
+                                              !v.contains('@'))
+                                          ? 'E-mail inválido'
+                                          : null,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    flex: 1,
-                                    child: DestaqueTutorial(
-                                      focusNode: _focoNumeroEndereco,
-                                      child: TextFormField(
-                                        controller: _numeroEndCtrl, 
-                                        focusNode: _focoNumeroEndereco, 
-                                        textInputAction: TextInputAction.done, 
-                                        keyboardType: TextInputType.number,
-                                        decoration: InputDecoration(
-                                          labelText: 'Nº', hintText: 'S/N', isDense: true, filled: true, fillColor: Colors.white, 
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(15),
-                                            borderSide: const BorderSide(color: Color(0xFF6366F1), width: 2.5),
+
+                                  if (!ehTelaGrandeComputador) ...[
+                                    const SizedBox(height: 15),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: TextButton.icon(
+                                        onPressed: () {
+                                          if (_formContato.currentState!
+                                              .validate()) {
+                                            FocusScope.of(context).unfocus();
+                                            setState(() {
+                                              _contatoAberto = false;
+                                              _enderecoAberto = true;
+                                            });
+                                          } else {
+                                            _mostrarErro(
+                                              'Verifique os campos em vermelho antes de avançar.',
+                                            );
+                                          }
+                                        },
+                                        icon: const Icon(
+                                          Icons.arrow_downward_rounded,
+                                          size: 18,
+                                          color: Paleta.iconeAcaoCadastro,
+                                        ),
+                                        label: const Text(
+                                          'Continuar para Endereço',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Paleta.iconeAcaoCadastro,
                                           ),
-                                        ), 
+                                        ),
                                       ),
                                     ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  // ============================================================================
+                  // BLOCO 2: ENDEREÇO
+                  // ============================================================================
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Paleta.iconeAcaoCadastro.withValues(
+                            alpha: 0.05,
+                          ),
+                          blurRadius: 15,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            if (ehTelaGrandeComputador) return;
+                            setState(() {
+                              _enderecoAberto = !_enderecoAberto;
+                              if (_enderecoAberto) _contatoAberto = false;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on_outlined,
+                                  color: Paleta.iconeAcaoCadastro,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 10),
+                                TextoAcessivel(
+                                  texto: 'ENDEREÇO (Opcional)',
+                                  textoOcultoParaLer:
+                                      'Seção Endereço. Digite seu CEP ou pesquise pelo nome da rua na segunda caixa.',
+                                  estilo: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    color: Paleta.textoTituloCadastro,
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (!_enderecoAberto &&
+                                    !_enderecoPreenchido &&
+                                    !_enderecoVazio)
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 12.0),
+                                    child: Icon(
+                                      Icons.error_outline_rounded,
+                                      color: Colors.orange,
+                                      size: 20,
+                                    ),
+                                  ),
+                                if (!ehTelaGrandeComputador)
+                                  Icon(
+                                    _enderecoAberto
+                                        ? Icons.keyboard_arrow_up_rounded
+                                        : Icons.keyboard_arrow_down_rounded,
+                                    color: Colors.grey,
+                                    size: 24,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Offstage(
+                          offstage: !_enderecoAberto && !ehTelaGrandeComputador,
+                          child: Form(
+                            key: _formEndereco,
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                                bottom: 16,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 10),
+                                  DropdownButtonFormField<String>(
+                                    value: _cidadeSelecionada,
+                                    decoration: InputDecoration(
+                                      labelText: 'Cidade',
+                                      isDense: true,
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                    ),
+                                    items: _cidadesPermitidas
+                                        .map(
+                                          (c) => DropdownMenuItem(
+                                            value: c,
+                                            child: Text(c),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (v) {
+                                      setState(() {
+                                        _cidadeSelecionada = v!;
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: DestaqueTutorial(
+                                          focusNode: _focoCep,
+                                          child: TextFormField(
+                                            controller: _cepCtrl,
+                                            focusNode: _focoCep,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            onFieldSubmitted: (_) =>
+                                                FocusScope.of(
+                                                  context,
+                                                ).requestFocus(_focoRua),
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [MascaraCEP()],
+                                            decoration: InputDecoration(
+                                              labelText: 'Buscar CEP',
+                                              hintText: '00000-000',
+                                              isDense: true,
+                                              filled: true,
+                                              fillColor: Colors.white,
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                                borderSide: const BorderSide(
+                                                  color: Color(0xFF6366F1),
+                                                  width: 2.5,
+                                                ),
+                                              ),
+                                              suffixIcon: _buscando
+                                                  ? const Padding(
+                                                      padding: EdgeInsets.all(
+                                                        12,
+                                                      ),
+                                                      child: CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor:
+                                                            AlwaysStoppedAnimation<
+                                                              Color
+                                                            >(
+                                                              Paleta
+                                                                  .iconeAcaoCadastro,
+                                                            ),
+                                                      ),
+                                                    )
+                                                  : null,
+                                            ),
+                                            onChanged: (v) {
+                                              setState(() {});
+                                              if (v.length == 9)
+                                                _buscarPorCep(v);
+                                            },
+                                            validator: (v) =>
+                                                v == null || v.isEmpty
+                                                ? 'CEP obrigatório'
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
+                                      if (_camposEndTravados)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 8,
+                                          ),
+                                          child: IconButton(
+                                            onPressed: _resetarEndereco,
+                                            icon: const Icon(
+                                              Icons.edit_rounded,
+                                              color: Paleta.iconeAcaoCadastro,
+                                            ),
+                                            tooltip: 'Editar Endereço',
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  DestaqueTutorial(
+                                    focusNode: _focoRua,
+                                    child: RawAutocomplete<Map<String, String>>(
+                                      textEditingController:
+                                          _autocompleteTextCtrl,
+                                      focusNode: _autocompleteFocusNode,
+                                      optionsBuilder:
+                                          (TextEditingValue textEditingValue) =>
+                                              _sugerirRuasGlobal(
+                                                textEditingValue.text,
+                                              ),
+                                      displayStringForOption: (option) =>
+                                          option['rua']!,
+                                      onSelected:
+                                          (Map<String, String> selection) {
+                                            setState(() {
+                                              _ruaCtrl.text = selection['rua']!;
+                                              _bairroCtrl.text =
+                                                  selection['bairro']!;
+                                              _cepCtrl.text = selection['cep']!;
+                                              _cidadeSelecionada =
+                                                  selection['cidade']!;
+                                              _camposEndTravados = true;
+                                              FocusScope.of(
+                                                context,
+                                              ).requestFocus(
+                                                _focoNumeroEndereco,
+                                              );
+                                            });
+                                          },
+                                      fieldViewBuilder:
+                                          (
+                                            context,
+                                            controller,
+                                            focusNode,
+                                            onFieldSubmitted,
+                                          ) {
+                                            if (controller.text.isEmpty &&
+                                                _ruaCtrl.text.isNotEmpty) {
+                                              controller.text = _ruaCtrl.text;
+                                            }
+                                            return TextFormField(
+                                              controller: controller,
+                                              focusNode: focusNode,
+                                              textInputAction:
+                                                  TextInputAction.next,
+                                              onFieldSubmitted: (_) =>
+                                                  FocusScope.of(
+                                                    context,
+                                                  ).requestFocus(_focoBairro),
+                                              readOnly:
+                                                  _camposEndTravados ||
+                                                  _buscando,
+                                              decoration: InputDecoration(
+                                                labelText: 'Buscar Rua',
+                                                hintText: _buscando
+                                                    ? 'Localizando endereço...'
+                                                    : 'Digite o nome da rua...',
+                                                isDense: true,
+                                                filled: true,
+                                                fillColor:
+                                                    _camposEndTravados ||
+                                                        _buscando
+                                                    ? Colors.grey.shade100
+                                                    : Colors.white,
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            15,
+                                                          ),
+                                                      borderSide:
+                                                          const BorderSide(
+                                                            color: Color(
+                                                              0xFF6366F1,
+                                                            ),
+                                                            width: 2.5,
+                                                          ),
+                                                    ),
+                                                suffixIcon: const Icon(
+                                                  Icons.search_rounded,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              validator: (v) =>
+                                                  v == null || v.isEmpty
+                                                  ? 'Rua obrigatória'
+                                                  : null,
+                                            );
+                                          },
+                                      optionsViewBuilder:
+                                          (context, onSelected, options) {
+                                            return Align(
+                                              alignment: Alignment.topLeft,
+                                              child: Material(
+                                                elevation: 4.0,
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                                child: Container(
+                                                  width:
+                                                      larguraMaximaFormulario -
+                                                      72,
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                        maxHeight: 250,
+                                                      ),
+                                                  child: ListView.builder(
+                                                    padding: EdgeInsets.zero,
+                                                    shrinkWrap: true,
+                                                    itemCount: options.length,
+                                                    itemBuilder: (context, index) {
+                                                      final option = options
+                                                          .elementAt(index);
+                                                      return ListTile(
+                                                        title: Text(
+                                                          option['rua']!,
+                                                          style:
+                                                              const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 14,
+                                                              ),
+                                                        ),
+                                                        subtitle: Text(
+                                                          "${option['bairro']} - ${option['cidade']}",
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 12,
+                                                              ),
+                                                        ),
+                                                        onTap: () =>
+                                                            onSelected(option),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: DestaqueTutorial(
+                                          focusNode: _focoBairro,
+                                          child: TextFormField(
+                                            controller: _bairroCtrl,
+                                            focusNode: _focoBairro,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                            onFieldSubmitted: (_) =>
+                                                FocusScope.of(
+                                                  context,
+                                                ).requestFocus(
+                                                  _focoNumeroEndereco,
+                                                ),
+                                            readOnly: _camposEndTravados,
+                                            decoration: _obterEstiloInput(
+                                              'Bairro',
+                                              '',
+                                            ),
+                                            validator: (v) =>
+                                                v == null || v.isEmpty
+                                                ? 'Bairro obrigatório'
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        flex: 1,
+                                        child: DestaqueTutorial(
+                                          focusNode: _focoNumeroEndereco,
+                                          child: TextFormField(
+                                            controller: _numeroEndCtrl,
+                                            focusNode: _focoNumeroEndereco,
+                                            textInputAction:
+                                                TextInputAction.done,
+                                            keyboardType: TextInputType.number,
+                                            decoration: _obterEstiloInput(
+                                              'Nº',
+                                              'S/N',
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
-                              ),],
+                              ),
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // BOTÃO DE ENVIO
+                  FadeInUp(
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 60,
+                      child: Builder(
+                        builder: (context) {
+                          Color corBotao;
+                          if (_contatoPreenchido && _enderecoPreenchido) {
+                            corBotao = Paleta.botaoPrincipalCadastro;
+                          } else if (_contatoPreenchido && _enderecoVazio) {
+                            corBotao = Paleta.botaoPrincipalCadastro.withValues(
+                              alpha: 0.5,
+                            );
+                          } else {
+                            corBotao = Colors.grey.shade400;
+                          }
+
+                          bool podeEnviar =
+                              _contatoPreenchido &&
+                              (_enderecoPreenchido || _enderecoVazio) &&
+                              !_enviandoDados;
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 400),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                if (podeEnviar)
+                                  BoxShadow(
+                                    color: Paleta.botaoPrincipalCadastro
+                                        .withValues(alpha: 0.5),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: corBotao,
+                                disabledBackgroundColor: Colors.grey.shade300,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                elevation: 0,
+                              ),
+                              onPressed: !podeEnviar
+                                  ? null
+                                  : () {
+                                      bool contatoValido = _formContato
+                                          .currentState!
+                                          .validate();
+                                      bool enderecoValido =
+                                          _enderecoVazio ||
+                                          _formEndereco.currentState!
+                                              .validate();
+
+                                      int? idade = int.tryParse(
+                                        _idadeCtrl.text,
+                                      );
+                                      bool erroIdade = false;
+                                      if (idade != null) {
+                                        if (widget.nivelSelecionado.contains(
+                                              'Fundamental',
+                                            ) &&
+                                            idade < 15) {
+                                          erroIdade = true;
+                                        }
+                                        if (widget.nivelSelecionado.contains(
+                                              'Médio',
+                                            ) &&
+                                            idade < 18) {
+                                          erroIdade = true;
+                                        }
+                                      }
+
+                                      if (contatoValido &&
+                                          enderecoValido &&
+                                          !erroIdade) {
+                                        _enviarInscricao();
+                                      } else {
+                                        setState(() {
+                                          if (!contatoValido) {
+                                            _contatoAberto = true;
+                                            _enderecoAberto = false;
+                                          } else if (!enderecoValido) {
+                                            _enderecoAberto = true;
+                                            _contatoAberto = false;
+                                          }
+                                        });
+
+                                        if (erroIdade) {
+                                          _mostrarErro(
+                                            'Você não tem a idade mínima necessária para a EJA, procure a Secretaria de Educação.',
+                                          );
+                                        } else {
+                                          _mostrarErro(
+                                            'Por favor, corrija os campos marcados em vermelho.',
+                                          );
+                                        }
+                                      }
+                                    },
+                              child: _enviandoDados
+                                  ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 3,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Realizar Pré-Inscrição',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              FadeInUp(
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 60,
-                  // O Builder entra aqui, dentro do SizedBox!
-                  child: Builder(
-                    builder: (context) {
-                      // Define a cor do botão baseado no preenchimento
-                      Color corBotao;
-                      if (_contatoPreenchido && _enderecoPreenchido) {
-                        corBotao = Paleta
-                            .botaoPrincipalCadastro; // Ideal: Totalmente colorido
-                      } else if (_contatoPreenchido && _enderecoVazio) {
-                        corBotao = Paleta.botaoPrincipalCadastro.withValues(
-                          alpha: 0.5,
-                        ); // <-- AQUI
-                      } else {
-                        corBotao = Colors
-                            .grey
-                            .shade400; // Faltando dados de contato (Bloqueado)
-                      }
-
-                      // Regra para liberar o clique do botão
-                      bool podeEnviar =
-                          _contatoPreenchido &&
-                          (_enderecoPreenchido || _enderecoVazio) &&
-                          !_enviandoDados;
-
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 400),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            if (podeEnviar)
-                              BoxShadow(
-                                color: Paleta.botaoPrincipalCadastro.withValues(
-                                  alpha: 0.5,
-                                ),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: corBotao,
-                            disabledBackgroundColor: Colors.grey.shade300,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: !podeEnviar
-                              ? null
-                              : () {
-                                  bool contatoValido = _formContato
-                                      .currentState!
-                                      .validate();
-                                  // Se o endereço estiver totalmente vazio, não valida ele (já que é opcional)
-                                  bool enderecoValido =
-                                      _enderecoVazio ||
-                                      _formEndereco.currentState!.validate();
-
-                                  // Checagem silenciosa da idade para disparar a mensagem completa
-                                  int? idade = int.tryParse(_idadeCtrl.text);
-                                  bool erroIdade = false;
-                                  if (idade != null) {
-                                    if (widget.nivelSelecionado.contains(
-                                          'Fundamental',
-                                        ) &&
-                                        idade < 15)
-                                      erroIdade = true;
-                                    if (widget.nivelSelecionado.contains(
-                                          'Médio',
-                                        ) &&
-                                        idade < 18)
-                                      erroIdade = true;
-                                  }
-
-                                  if (contatoValido &&
-                                      enderecoValido &&
-                                      !erroIdade) {
-                                    _enviarInscricao();
-                                  } else {
-                                    setState(() {
-                                      if (!contatoValido) {
-                                        _contatoAberto = true;
-                                        _enderecoAberto = false;
-                                      } else if (!enderecoValido) {
-                                        _enderecoAberto = true;
-                                        _contatoAberto = false;
-                                      }
-                                    });
-
-                                    if (erroIdade) {
-                                      _mostrarErro(
-                                        'Você não tem a idade mínima necessária para a EJA, procure a Secretaria de Educação.',
-                                      );
-                                    } else {
-                                      _mostrarErro(
-                                        'Por favor, corrija os campos marcados em vermelho.',
-                                      );
-                                    }
-                                  }
-                                },
-                          child: _enviandoDados
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 3,
-                                  ),
-                                )
-                              : const Text(
-                                  'Realizar Pré-Inscrição',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                        ),
-                      );
-                    },
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1234,15 +1526,15 @@ class MascaraCEP extends TextInputFormatter {
   }
 }
 
-
-// ============================================================================
-// WIDGET DE DESTAQUE TUTORIAL (GAMIFICAÇÃO)
-// ============================================================================
 class DestaqueTutorial extends StatelessWidget {
   final FocusNode focusNode;
   final Widget child;
 
-  const DestaqueTutorial({super.key, required this.focusNode, required this.child});
+  const DestaqueTutorial({
+    super.key,
+    required this.focusNode,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1257,12 +1549,12 @@ class DestaqueTutorial extends StatelessWidget {
             boxShadow: focado
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.6), // Sombra neon super visível
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.6),
                       blurRadius: 20,
                       spreadRadius: 5,
-                    )
+                    ),
                   ]
-                : [], // Sem sombra se não estiver focado
+                : [],
           ),
           child: childWidget,
         );

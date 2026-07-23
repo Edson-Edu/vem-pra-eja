@@ -561,11 +561,11 @@ class _TelaAberturaState extends State<TelaAbertura>
               ),
 
               // ====================================================================
-              // ACESSIBILIDADE: BOTÃO GLOBAL + TOOLTIP ANIMADO
+              // ACESSIBILIDADE: BOTÃO GLOBAL + TOOLTIP ANIMADO (Calibrado para Tablet)
               // ====================================================================
               Positioned(
-                top: 16,
-                right: 16,
+                top: MediaQuery.of(context).size.shortestSide >= 600 ? 24 : 16,
+                right: MediaQuery.of(context).size.shortestSide >= 600 ? 24 : 16,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -575,8 +575,13 @@ class _TelaAberturaState extends State<TelaAbertura>
                       child: FadeTransition(
                         opacity: _animTooltipOpacity,
                         child: Container(
-                          margin: const EdgeInsets.only(right: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          margin: EdgeInsets.only(
+                            right: MediaQuery.of(context).size.shortestSide >= 600 ? 16 : 12,
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.shortestSide >= 600 ? 22 : 16, 
+                            vertical: MediaQuery.of(context).size.shortestSide >= 600 ? 12 : 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
@@ -587,15 +592,18 @@ class _TelaAberturaState extends State<TelaAbertura>
                             style: GoogleFonts.inter(
                               color: Colors.white, 
                               fontWeight: FontWeight.w600, 
-                              fontSize: 14,
+                              fontSize: MediaQuery.of(context).size.shortestSide >= 600 ? 18 : 14,
                             ),
                           ),
                         ),
                       ),
                     ),
                     
-                    // O Botão Redondo
+                    // O Botão Redondo com Proporção Controlada
                     Container(
+                      // UNIFICADO SIMÉTRICO: 70 pixels no tablet e 40 pixels estáveis no celular
+                      width: MediaQuery.of(context).size.shortestSide >= 600 ? 70 : 40,
+                      height: MediaQuery.of(context).size.shortestSide >= 600 ? 70 : 40,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
