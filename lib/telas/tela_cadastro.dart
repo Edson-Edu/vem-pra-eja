@@ -57,6 +57,22 @@ class _TelaCadastroState extends State<TelaCadastro> {
   final TextEditingController _autocompleteTextCtrl = TextEditingController();
   final FocusNode _autocompleteFocusNode = FocusNode();
 
+  String _expandirSiglasParaAudio(String texto) {
+    if (texto.isEmpty) return texto;
+    String limpo = texto;
+
+    limpo = limpo.replaceAll(RegExp(r'\bCEJA\b', caseSensitive: false), 'Centro de Educação de Jovens e Adultos')
+                 .replaceAll(RegExp(r'\bEBM\b', caseSensitive: false), 'Escola Básica Municipal')
+                 .replaceAll(RegExp(r'\bE\.B\.M\.?\b', caseSensitive: false), 'Escola Básica Municipal')
+                 .replaceAll(RegExp(r'\bCEM\b', caseSensitive: false), 'Centro Educacional Municipal')
+                 .replaceAll(RegExp(r'\bC\.E\.M\.?\b', caseSensitive: false), 'Centro Educacional Municipal')
+                 .replaceAll(RegExp(r'\bEEB\b', caseSensitive: false), 'Escola de Educação Básica')
+                 .replaceAll(RegExp(r'\bEJA\b', caseSensitive: false), 'Êja');
+    limpo = limpo.replaceAll('Seg', 'segunda').replaceAll('Ter', 'terça').replaceAll('Qua', 'quarta').replaceAll('Qui', 'quinta').replaceAll('Sex', 'sexta').replaceAll('Sab', 'sábado').replaceAll('Sáb', 'sábado').replaceAll('Dom', 'domingo');
+    limpo = limpo.replaceAll(' - ', ' a ').replaceAll(' – ', ' a ').replaceAll('-', ' a ').replaceAll('–', ' a ');
+    return limpo;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -79,7 +95,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
       if (acessibilidadeAtivada.value) {
         await pararVoz();
         await gerenciadorVoz.speak(
-          "Você está se inscrevendo na escola ${widget.nomeEscolaSelecionada}, "
+          "Você está se inscrevendo na escola ${_expandirSiglasParaAudio(widget.nomeEscolaSelecionada)}, "
           "no nível ${widget.nivelSelecionado} e no turno ${widget.turnoSelecionado}. "
           "Preencha os dados de contato abaixo.",
         );
@@ -509,6 +525,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                       children: [
                         TextoAcessivel(
                           texto: 'Você está se inscrevendo na escola',
+                          ocultarIcone: true, // MÁGICA 1: Oculta o ícone de áudio do subtítulo (Filho)
                           estilo: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -518,6 +535,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
                         const SizedBox(height: 4),
                         TextoAcessivel(
                           texto: widget.nomeEscolaSelecionada,
+                          // MÁGICA 2: O Pai lê o pacote completo e limpo (usando a função anti-bug)!
+                          textoOcultoParaLer: 'Você está se inscrevendo na escola ${_expandirSiglasParaAudio(widget.nomeEscolaSelecionada)}, no nível ${widget.nivelSelecionado} e no turno ${widget.turnoSelecionado}.',
                           alinhamento: TextAlign.center,
                           estilo: GoogleFonts.inter(
                             fontSize: 18,
@@ -749,7 +768,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                             ),
                                             validator: (v) {
                                               if (v == null || v.isEmpty)
-                                                return 'Falta';
+                                                return 'Informe sua idade!';
                                               int? idade = int.tryParse(v);
                                               if (idade == null) return 'Erro';
                                               if (widget.nivelSelecionado
@@ -907,9 +926,26 @@ class _TelaCadastroState extends State<TelaCadastro> {
                                               _enderecoAberto = true;
                                             });
                                           } else {
-                                            _mostrarErro(
-                                              'Verifique os campos em vermelho antes de avançar.',
-                                            );
+                                            int? idade = int.tryParse(_idadeCtrl.text);
+                                            bool erroIdade = false;
+                                            if (idade != null) {
+                                              if (widget.nivelSelecionado.contains('Fundamental') && idade < 15) {
+                                                erroIdade = true;
+                                              }
+                                              if (widget.nivelSelecionado.contains('Médio') && idade < 18) {
+                                                erroIdade = true;
+                                              }
+                                            }
+
+                                            if (erroIdade) {
+                                              _mostrarErro(
+                                                'Você não tem a idade mínima necessária para a EJA, procure a Secretaria de Educação.',
+                                              );
+                                            } else {
+                                              _mostrarErro(
+                                                'Verifique os campos em vermelho antes de avançar.',
+                                              );
+                                            }
                                           }
                                         },
                                         icon: const Icon(

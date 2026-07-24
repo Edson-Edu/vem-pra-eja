@@ -85,9 +85,9 @@ class _TelaNivelState extends State<TelaNivel> {
       width: usarLayoutComputador
           ? 310
           : double.infinity, // Caixas compactadas estáveis
-      height: usarLayoutComputador
-          ? 240
-          : null, // Mesma altura idêntica para Desktop
+      constraints: BoxConstraints(
+        minHeight: usarLayoutComputador ? 240 : 0,
+      ), // Altura mínima igual no Desktop, mas cresce se o texto precisar
       decoration: BoxDecoration(
         color: Paleta.cardBranco,
         borderRadius: BorderRadius.circular(24 * escalaMestre),
@@ -149,38 +149,32 @@ class _TelaNivelState extends State<TelaNivel> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            TextoAcessivel(
-                              texto: nivel,
-                              textoOcultoParaLer:
-                                  "${textoOcultoNivel ?? nivel}. ${textoOcultoSubtitulo ?? subtitulo}",
-                              estilo: GoogleFonts.inter(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                color: Paleta.textoDestaque,
-                              ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextoAcessivel(
+                            texto: nivel,
+                            textoOcultoParaLer:
+                                "${textoOcultoNivel ?? nivel}. ${textoOcultoSubtitulo ?? subtitulo}",
+                            estilo: GoogleFonts.inter(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Paleta.textoDestaque,
                             ),
-                            const SizedBox(height: 8),
-                            Expanded(
-                              child: Text(
-                                subtitulo,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Paleta.textoDestaque.withValues(
-                                    alpha: 0.75,
-                                  ),
-                                  height: 1.3,
-                                ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            subtitulo,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Paleta.textoDestaque.withValues(
+                                alpha: 0.75,
                               ),
+                              height: 1.3,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   )
@@ -277,7 +271,9 @@ class _TelaNivelState extends State<TelaNivel> {
         isDispositivoMovel && screenSize.shortestSide >= 600;
     final bool ehTelaGrandeComputador =
         !isDispositivoMovel && screenSize.width > 1280;
-    double escalaDinamica = ehTabletReal ? 1.6 : 1.0;
+    double escalaDinamica = ehTabletReal
+        ? 1.6
+        : (screenSize.width < 390 ? 0.85 : 1.0);
     double larguraMaximaContainer = ehTelaGrandeComputador
         ? 1200
         : (ehTabletReal ? 850 : 500);
@@ -425,12 +421,12 @@ class _TelaNivelState extends State<TelaNivel> {
                                   ),
                                   _botaoNivel(
                                     context: context,
-                                    nivel: 'Ensino Fundamental (1º Grau)',
+                                    nivel: 'Ensino Fundamental\n(1º\u00A0Grau)',
                                     textoOcultoNivel:
                                         'Opção 2: Ensino Fundamental, o antigo primeiro grau.',
                                     nivelFiltro: 'Ensino Fundamental',
                                     subtitulo:
-                                        'Inclui do 1º ao 5º ano (antigo Primário) e do 6º ao 9º ano (antigo Ginásio).',
+                                        'Do 1º ao 5º ano (antigo Primário)\ne do 6º ao 9º ano (antigo Ginásio).',
                                     textoOcultoSubtitulo:
                                         'Inclui do primeiro ao quinto ano, antigo primário, e do sexto ao nono ano, antigo ginásio. Toque para escolher.',
                                     icone: Icons.menu_book_rounded,
@@ -440,12 +436,12 @@ class _TelaNivelState extends State<TelaNivel> {
                                   ),
                                   _botaoNivel(
                                     context: context,
-                                    nivel: 'Ensino Médio (2º Grau)',
+                                    nivel: 'Ensino Médio\n(2º\u00A0Grau)',
                                     textoOcultoNivel:
                                         'Opção 3: Ensino Médio, o antigo segundo grau.',
                                     nivelFiltro: 'Ensino Médio',
                                     subtitulo:
-                                        'Já conclui o Ensino Fundamental(1º grau/ginásio) e quero continuar os estudos no Ensino Medio(antigo Colegial).',
+                                        'Já concluí o 1º Grau (Fundamental)\ne quero cursar o 2º Grau (Médio).',
                                     textoOcultoSubtitulo:
                                         'Para quem já concluiu o Ensino Fundamental, o antigo ginásio, e quer continuar os estudos no Ensino Médio, o antigo colegial. Toque para escolher.',
                                     icone: Icons.school_rounded,
@@ -474,12 +470,12 @@ class _TelaNivelState extends State<TelaNivel> {
                                   SizedBox(height: ehTabletReal ? 20 : 16),
                                   _botaoNivel(
                                     context: context,
-                                    nivel: 'Ensino Fundamental (1º Grau)',
+                                    nivel: 'Ensino Fundamental\n(1º\u00A0Grau)',
                                     textoOcultoNivel:
                                         'Opção 2: Ensino Fundamental, o antigo primeiro grau.',
                                     nivelFiltro: 'Ensino Fundamental',
                                     subtitulo:
-                                        'Inclui do 1º ao 5º ano (antigo Primário) e do 6º ao 9º ano (antigo Ginásio).',
+                                        'Do 1º ao 5º ano (antigo Primário) e do 6º ao 9º ano (antigo Ginásio).',
                                     textoOcultoSubtitulo:
                                         'Inclui do primeiro ao quinto ano, antigo primário, e do sexto ao nono ano, antigo ginásio. Toque para escolher.',
                                     icone: Icons.menu_book_rounded,
@@ -490,12 +486,12 @@ class _TelaNivelState extends State<TelaNivel> {
                                   SizedBox(height: ehTabletReal ? 20 : 16),
                                   _botaoNivel(
                                     context: context,
-                                    nivel: 'Ensino Médio (2º Grau)',
+                                    nivel: 'Ensino Médio\n(2º\u00A0Grau)',
                                     textoOcultoNivel:
                                         'Opção 3: Ensino Médio, o antigo segundo grau.',
                                     nivelFiltro: 'Ensino Médio',
                                     subtitulo:
-                                        'Já conclui o Ensino Fundamental(1º grau/ginásio) e quero continuar os estudos no Ensino Medio(antigo Colegial).',
+                                        'Já concluí o 1º Grau (Fundamental) e quero cursar o 2º Grau (Médio).',
                                     textoOcultoSubtitulo:
                                         'Para quem já concluiu o Ensino Fundamental, o antigo ginásio, e quer continuar os estudos no Ensino Médio, o antigo colegial. Toque para escolher.',
                                     icone: Icons.school_rounded,
@@ -545,10 +541,10 @@ class _TelaNivelState extends State<TelaNivel> {
                               child: Text.rich(
                                 TextSpan(
                                   style: GoogleFonts.inter(
-                                    fontSize: ehTabletReal ? 15 : 14,
+                                    fontSize: ehTabletReal ? 14 : 12.5,
                                     fontWeight: FontWeight.w500,
                                     color: Paleta.textoSecundario,
-                                    height: 1.5,
+                                    height: 1.4,
                                   ),
                                   children: const [
                                     TextSpan(text: 'Todas as escolas são '),
@@ -561,15 +557,14 @@ class _TelaNivelState extends State<TelaNivel> {
                                     ),
                                     TextSpan(text: ' e possuem '),
                                     TextSpan(
-                                      text: 'auxílios\n',
+                                      text: 'auxílios ',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.blue,
                                       ),
                                     ),
                                     TextSpan(
-                                      text:
-                                          'para que você consiga concluir com sucesso.',
+                                      text: 'para concluir com sucesso.',
                                     ),
                                   ],
                                 ),

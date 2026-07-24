@@ -484,7 +484,7 @@ class _TelaAberturaState extends State<TelaAbertura>
 
                       // O texto
                       Text(
-                        'carregando',
+                        'Carregando...',
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

@@ -51,36 +51,19 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
   // ============================================================================
   // TRADUTOR INTELIGENTE PARA O ÁUDIO (SIGLAS E DIAS)
   // ============================================================================
+// ============================================================================
+  // TRADUTOR INTELIGENTE PARA O ÁUDIO (SIGLAS E DIAS)
+  // ============================================================================
   String _expandirSiglasParaAudio(String texto) {
     if (texto.isEmpty) return texto;
     String limpo = texto;
 
-    // 1. Siglas Escolares (Maiúsculas e minúsculas)
-    limpo = limpo.replaceAll(
-      RegExp(r'\bCEJA\b', caseSensitive: false),
-      'Centro de Educação de Jovens e Adultos',
-    );
-    limpo = limpo.replaceAll(
-      RegExp(r'\bEBM\b', caseSensitive: false),
-      'Escola Básica Municipal',
-    );
-    limpo = limpo.replaceAll(
-      RegExp(r'\bE.\B.\M\.?\b', caseSensitive: false),
-      'Escola Básica Municipal',
-    );
-    limpo = limpo.replaceAll(
-      RegExp(r'\bCEM\b', caseSensitive: false),
-      'Centro Educacional Municipal',
-    );
-    limpo = limpo.replaceAll(
-      RegExp(r'\bC\.E\.M\.?\b', caseSensitive: false),
-      'Centro Educacional Municipal',
-    );
-    limpo = limpo.replaceAll(
-      RegExp(r'\bEEB\b', caseSensitive: false),
-      'Escola de Educação Básica',
-    );
-    limpo = limpo.replaceAll(RegExp(r'\bEJA\b', caseSensitive: false), 'Êja');
+    // 1. Siglas Escolares
+    limpo = limpo.replaceAll(RegExp(r'C[^\w]*E[^\w]*J[^\w]*A[^\w]*', caseSensitive: false), 'Centro de Educação de Jovens e Adultos ')
+                 .replaceAll(RegExp(r'E[^\w]*B[^\w]*M[^\w]*', caseSensitive: false), 'Escola Básica Municipal ')
+                 .replaceAll(RegExp(r'C[^\w]*E[^\w]*M[^\w]*', caseSensitive: false), 'Centro Educacional Municipal ')
+                 .replaceAll(RegExp(r'E[^\w]*E[^\w]*B[^\w]*', caseSensitive: false), 'Escola de Educação Básica ')
+                 .replaceAll(RegExp(r'E[^\w]*J[^\w]*A[^\w]*', caseSensitive: false), 'Êja ');
 
     // 2. Dias da Semana
     limpo = limpo
@@ -96,7 +79,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
     // 3. O SEGREDO DO TRAÇO: Troca qualquer formato de traço por " a "
     limpo = limpo
         .replaceAll(' - ', ' a ')
-        .replaceAll(' – ', ' a ') // En-dash
+        .replaceAll(' – ', ' a ') 
         .replaceAll('-', ' a ')
         .replaceAll('–', ' a ');
 
@@ -318,11 +301,21 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
   // ============================================================================
   // BOTTOM SHEET DE DETALHES DO AUXÍLIO
   // ============================================================================
+  // ============================================================================
+  // BOTTOM SHEET DE DETALHES DO AUXÍLIO
+  // ============================================================================
   void _abrirDetalheAuxilio(
     String titulo,
     _AuxilioVisual visual,
     double escala,
   ) {
+    // MÁGICA 3: Dispara o áudio automaticamente assim que o modal abre (sem travar a tela)
+    if (acessibilidadeAtivada.value) {
+      pararVoz().then((_) {
+        gerenciadorVoz.speak("$titulo. ${visual.explicacao}");
+      });
+    }
+
     // Mecanismo para detectar se a tela se comporta como Desktop/Web Grande
     final bool modoComputador =
         MediaQuery.of(context).size.width > 1280 &&
@@ -363,9 +356,10 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: Text(
-                          titulo,
-                          style: GoogleFonts.inter(
+                        child: TextoAcessivel(
+                          texto: titulo,
+                          textoOcultoParaLer: "$titulo. ${visual.explicacao}",
+                          estilo: GoogleFonts.inter(
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
                             color: const Color(0xFF1E1B4B),
@@ -375,9 +369,10 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    visual.explicacao,
-                    style: GoogleFonts.inter(
+                  TextoAcessivel(
+                    texto: visual.explicacao,
+                    ocultarIcone: true, // Filho oculto!
+                    estilo: GoogleFonts.inter(
                       fontSize: 16,
                       color: const Color(0xFF455A64),
                       height: 1.6,
@@ -395,7 +390,10 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                         ),
                         elevation: 0,
                       ),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        pararVoz(); // Para a voz ao fechar
+                        Navigator.pop(context);
+                      },
                       child: const Text(
                         'Entendi',
                         style: TextStyle(
@@ -463,9 +461,10 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                     ),
                     SizedBox(width: 16 * escala),
                     Expanded(
-                      child: Text(
-                        titulo,
-                        style: GoogleFonts.inter(
+                      child: TextoAcessivel(
+                        texto: titulo,
+                        textoOcultoParaLer: "$titulo. ${visual.explicacao}",
+                        estilo: GoogleFonts.inter(
                           fontSize: 22 * escala,
                           fontWeight: FontWeight.w900,
                           color: const Color(0xFF1E1B4B),
@@ -475,9 +474,10 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                   ],
                 ),
                 SizedBox(height: 20 * escala),
-                Text(
-                  visual.explicacao,
-                  style: GoogleFonts.inter(
+                TextoAcessivel(
+                  texto: visual.explicacao,
+                  ocultarIcone: true, // Filho oculto!
+                  estilo: GoogleFonts.inter(
                     fontSize: 16 * escala,
                     color: const Color(0xFF455A64),
                     height: 1.6,
@@ -495,7 +495,10 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                       ),
                       elevation: 0,
                     ),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      pararVoz(); // Para a voz ao fechar
+                      Navigator.pop(context);
+                    },
                     child: Text(
                       'Entendi',
                       style: TextStyle(
@@ -734,6 +737,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
             childCustom ??
                 TextoAcessivel(
                   texto: conteudo ?? '',
+                  ocultarIcone: true, // MÁGICA 1: Esconde o ícone de áudio do texto filho!
                   estilo: GoogleFonts.inter(
                     fontSize: 15 * escala,
                     color: const Color(0xFF455A64),
@@ -975,9 +979,10 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                 children: [
                     TextoAcessivel(
                       texto: widget.nomeEscola,
+                      textoOcultoParaLer: _expandirSiglasParaAudio(widget.nomeEscola), // MÁGICA AQUI: O botão local agora usa o filtro!
                       corIcone: Colors.white,
                       estilo: GoogleFonts.inter(
                         fontSize: 26 * escalaMestre,
@@ -1383,6 +1388,7 @@ class _TelaDetalhesState extends State<TelaDetalhes> {
                                       ),
                                       child: _cardInfoModerno(
                                         titulo: 'Como funciona',
+                                        textoOcultoTitulo: 'Como funciona. ${_turnoSelecionado!.descricao}', // MÁGICA 2: O Pai lê o próprio título e a descrição!
                                         iconeHeader: Icons.info_outline_rounded,
                                         corIcone: const Color(0xFF2563EB),
                                         corFundoIcone: const Color(0xFFEFF6FF),

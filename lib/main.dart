@@ -16,8 +16,8 @@ Future<void> main() async {
 
   // INICIALIZAÇÃO DO SUPABASE 
   await Supabase.initialize(
-    url: 'https://uoeguwnhqalhnzolhism.supabase.co',
-    anonKey: 'sb_publishable_LjkQhUE_XAiq9EHMDCM4PQ_c9vT_TZU',
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
   // MÁGICA ACONTECE AQUI: Envolvemos o app no DevicePreview
