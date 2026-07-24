@@ -331,22 +331,42 @@ class _TelaHomeState extends State<TelaHome> {
   }
 
   Future<void> _buscarMinhaLocalizacao() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+    try {
+      debugPrint('📍 [GPS] Iniciando busca de localização...');
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      
+      if (!serviceEnabled) {
+        debugPrint('📍 [GPS] Serviço de localização está desativado no aparelho/navegador.');
+        return;
+      }
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
-    }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          debugPrint('📍 [GPS] Permissão de localização foi NEGADA pelo usuário.');
+          return;
+        }
+      }
 
-    Position posicaoAtual = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (permission == LocationPermission.deniedForever) {
+        debugPrint('📍 [GPS] Permissão negada permanentemente. Não é possível buscar.');
+        return;
+      }
 
-    if (mounted) {
-      setState(() {
-        _minhaLocalizacao = posicaoAtual;
-      });
-      await _calcularDistanciasEGerarMarcadores();
+      Position posicaoAtual = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      
+      debugPrint('📍 [GPS] Sucesso! Localização encontrada: ${posicaoAtual.latitude}, ${posicaoAtual.longitude}');
+      
+      if (mounted) {
+        setState(() {
+          _minhaLocalizacao = posicaoAtual;
+        });
+        await _calcularDistanciasEGerarMarcadores();
+      }
+    } catch (e) {
+      // Captura qualquer erro feio e transforma numa mensagem limpa!
+      debugPrint('🚨 [ERRO GPS] Falha ao tentar obter a localização: $e');
     }
   }
 

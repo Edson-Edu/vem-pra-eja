@@ -99,7 +99,7 @@ class MotorVozAzure {
         );
 
         if (resposta.statusCode == 200) {
-          debugPrint("Sucesso: Áudio processado. Tocando item da fila...");
+          debugPrint("🔊 [ÁUDIO] ✅ Sucesso! Áudio gerado e tocando a fila...");
           final blob = html.Blob([resposta.bodyBytes], 'audio/mpeg');
           final blobUrl = html.Url.createObjectUrlFromBlob(blob);
 
@@ -118,7 +118,7 @@ class MotorVozAzure {
           sub.cancel(); // Limpa o sensor
         }
       } catch (e) {
-        debugPrint("Erro na leitura: $e");
+        debugPrint("🚨 [ERRO ÁUDIO] Falha ao comunicar com a Azure: $e");
       }
     }
 

@@ -18,7 +18,10 @@ Future<void> main() async {
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    debug: false,
   );
+
+  debugPrint('🗄️ [BANCO DE DADOS] ✅ Supabase conectado com sucesso!');
 
   // MÁGICA ACONTECE AQUI: Envolvemos o app no DevicePreview
   runApp(
