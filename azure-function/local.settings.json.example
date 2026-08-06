@@ -1,0 +1,10 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AZURE_SPEECH_KEY": "cole-a-chave-do-servico-de-fala-aqui",
+    "AZURE_SPEECH_REGION": "centralus",
+    "ALLOWED_ORIGINS": "http://localhost:3000,https://vempraeja-novo.web.app,https://vempraeja-novo.firebaseapp.com"
+  }
+}

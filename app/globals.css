@@ -1,0 +1,506 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-azul-principal: #0257a0;
+  --color-fundo-claro: #f2f3f6;
+  --color-texto-principal: #1e293b;
+}
+
+* { box-sizing: border-box; }
+
+html, body { min-height: 100%; margin: 0; }
+
+body {
+  background: var(--color-fundo-claro);
+  color: var(--color-texto-principal);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Evita frestas entre os tiles do Leaflet em telas grandes e escalas fracionadas. */
+.leaflet-tile { outline: 1px solid transparent; }
+
+/* Os três recursos globais usam uma única régua em todas as telas. */
+:root {
+  --eja-controle-acessibilidade: 44px;
+  --eja-espaco-entre-controles: 8px;
+  --eja-topo-controles: 16px;
+  --eja-direita-controles: 20px;
+}
+
+/* Mantém o ícone oficial do VLibras proporcional ao botão de audiodescrição. */
+[vw-access-button],
+[vw-access-button] .vp-access-button,
+[vw-access-button] img {
+  display: block !important;
+  width: var(--eja-controle-acessibilidade) !important;
+  min-width: var(--eja-controle-acessibilidade) !important;
+  height: var(--eja-controle-acessibilidade) !important;
+  max-height: var(--eja-controle-acessibilidade) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+}
+
+/* Identidade do projeto dentro do painel oficial, sem interferir nos controles do VLibras. */
+[vw-plugin-wrapper] [vp-box] .marca-vem-pra-eja {
+  position: absolute !important;
+  z-index: 20;
+  top: 3px;
+  left: 50%;
+  display: flex;
+  min-height: 38px;
+  min-width: 124px;
+  transform: translateX(-50%);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 12px;
+  border-radius: 0 0 12px 12px;
+  background: #0f53a5;
+  color: #fff;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.05;
+  pointer-events: none;
+}
+
+[vw-plugin-wrapper] .marca-vem-pra-eja strong {
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: -0.35px;
+}
+
+[vw-plugin-wrapper] .marca-vem-pra-eja span {
+  margin-top: 2px;
+  color: #dbeafe;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.25px;
+}
+
+@media (max-width: 767px) {
+  [vw-plugin-wrapper] [vp-box] .marca-vem-pra-eja {
+    min-width: 0;
+    padding: 5px 8px;
+  }
+
+  [vw-plugin-wrapper] .marca-vem-pra-eja strong { font-size: 12px; }
+  [vw-plugin-wrapper] .marca-vem-pra-eja span { display: none; }
+}
+
+/* Os três recursos globais formam sempre o mesmo grupo: contraste, Libras e áudio. */
+button[aria-pressed]:not([data-eja-alto-contraste]) {
+  position: fixed !important;
+  z-index: 1302 !important;
+  top: var(--eja-topo-controles) !important;
+  right: var(--eja-direita-controles) !important;
+  display: inline-flex !important;
+  width: var(--eja-controle-acessibilidade) !important;
+  min-width: var(--eja-controle-acessibilidade) !important;
+  height: var(--eja-controle-acessibilidade) !important;
+  min-height: var(--eja-controle-acessibilidade) !important;
+  flex: 0 0 var(--eja-controle-acessibilidade) !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  transform: translateZ(0) !important;
+  will-change: transform;
+}
+
+/* Em telas longas, o áudio é preso ao viewport — nunca ao conteúdo que rola. */
+[data-eja-audio-global] {
+  position: fixed !important;
+  inset: var(--eja-topo-controles) var(--eja-direita-controles) auto auto !important;
+}
+
+/* O mesmo retorno visual é aplicado tanto ao componente novo quanto aos
+   controles legados durante a migração gradual das telas. */
+[data-eja-audio-global][data-eja-audio-carregando] > svg {
+  visibility: hidden;
+}
+
+[data-eja-audio-global][data-eja-audio-carregando]::after {
+  content: "";
+  position: absolute;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: eja-audio-carregando 0.7s linear infinite;
+}
+
+@keyframes eja-audio-carregando {
+  to { transform: rotate(360deg); }
+}
+
+/* O controle de áudio não muda de aparência durante a navegação entre telas. */
+html:not(.alto-contraste) button[aria-pressed]:not([data-eja-alto-contraste]) {
+  background-color: #fff !important;
+  border-color: transparent !important;
+  color: #4e8afb !important;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%) !important;
+}
+
+button[aria-pressed]:not([data-eja-alto-contraste]) svg {
+  width: 21px !important;
+  height: 21px !important;
+}
+
+/* O texto da abertura ocupa sua própria faixa: nunca concorre com os três ícones. */
+[data-eja-rotulo-acessibilidade] {
+  position: fixed;
+  z-index: 1300;
+  top: var(--eja-topo-controles);
+  right: calc(var(--eja-direita-controles) + 178px);
+  display: inline-flex;
+  height: var(--eja-controle-acessibilidade);
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* O atalho oficial fechado segue a mesma régua; o painel aberto conserva seu espaço próprio. */
+[vw]:not(:has([vw-plugin-wrapper].active)) [vw-access-button] {
+  position: fixed !important;
+  z-index: 1300 !important;
+  top: var(--eja-topo-controles) !important;
+  right: calc(var(--eja-direita-controles) + 52px) !important;
+  bottom: auto !important;
+  left: auto !important;
+}
+
+@media (max-width: 767px) {
+  [data-eja-rotulo-acessibilidade] {
+    top: 20px;
+    right: auto;
+    left: 16px;
+    height: 36px;
+    padding-inline: 12px;
+    font-size: 12px;
+  }
+}
+
+/* O título do mapa fica no centro mesmo com o áudio fora do fluxo do cabeçalho. */
+main:has([aria-label="Mapa das escolas"]) > header > h1 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* No celular, título e trio global ocupam faixas independentes. */
+@media (max-width: 767px) {
+  main:has([aria-label="Mapa das escolas"]) > header {
+    height: 96px !important;
+    align-items: flex-start;
+    padding-top: 12px;
+  }
+
+  main:has([aria-label="Mapa das escolas"]) > header > h1 {
+    position: absolute;
+    top: 61px;
+    right: 16px;
+    left: 16px;
+    transform: none;
+    text-align: center;
+    font-size: 16px !important;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+}
+
+/* Na tela de nível, o VLibras só pode capturar os cinco blocos pedagógicos definidos. */
+.vlibras-bloco {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  color: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  overflow: hidden;
+  user-select: none;
+}
+
+body:has([vw-plugin-wrapper].active) .vlibras-bloco {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* A leitura do card é um bloco, mas o botão de avanço continua uma ação real. */
+body:has([vw-plugin-wrapper].active) button[data-vlibras-acao] {
+  position: relative;
+  z-index: 30;
+}
+
+/* O conteúdo real desses termos é a forma que o VLibras deve traduzir. A
+   pseudo-camada preserva na tela a expressão completa que a pessoa lê. */
+.eja-vlibras-termo {
+  position: relative;
+  display: inline-block;
+  width: var(--eja-vlibras-largura);
+  vertical-align: baseline;
+}
+
+.eja-vlibras-valor { color: transparent !important; }
+
+.eja-vlibras-termo::after {
+  position: absolute;
+  inset: 0 auto auto 0;
+  color: inherit;
+  content: attr(data-eja-vlibras-visivel);
+  pointer-events: none;
+  white-space: pre;
+}
+
+/* Controle global de alto contraste. O widget oficial do VLibras fica fora
+   destes seletores para manter sua própria interface utilizável. */
+.botao-alto-contraste {
+  position: fixed;
+  z-index: 1301;
+  top: var(--eja-topo-controles);
+  right: calc(var(--eja-direita-controles) + 104px);
+  display: grid;
+  width: var(--eja-controle-acessibilidade);
+  height: var(--eja-controle-acessibilidade);
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #0257a0;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+  cursor: pointer;
+  transition: background-color 160ms ease-out, color 160ms ease-out, box-shadow 160ms ease-out;
+}
+
+/* Evita um salto dos controles globais enquanto a abertura dá lugar à tela de nível. */
+@media (prefers-reduced-motion: reduce) {
+  .botao-alto-contraste {
+    transition: none;
+  }
+}
+
+.botao-alto-contraste:hover,
+.botao-alto-contraste:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 3px #facc15, 0 2px 8px rgb(0 0 0 / 12%);
+}
+
+.botao-alto-contraste[aria-pressed="true"] {
+  background: #facc15;
+  color: #000;
+  box-shadow: inset 0 0 0 2px #07111f, 0 2px 8px rgb(0 0 0 / 12%);
+}
+
+.botao-alto-contraste svg { width: 23px; height: 23px; }
+
+html.alto-contraste { color-scheme: dark; }
+
+/* Alto contraste não precisa ser preto e branco. A base azul-marinho reduz o brilho,
+   enquanto amarelo e branco preservam hierarquia, foco e áreas de ação. */
+html.alto-contraste body,
+html.alto-contraste main {
+  background-color: #07111f !important;
+  color: #f8fafc !important;
+}
+
+html.alto-contraste main [class*="bg-white"],
+html.alto-contraste main [class*="bg-fundo"],
+html.alto-contraste main [class*="bg-[#f2f3f6]"],
+html.alto-contraste main [class*="bg-slate"],
+html.alto-contraste main [class*="bg-[#e6f0fa]"],
+html.alto-contraste main [class*="bg-[#d6e8fa]"] {
+  background-color: #10233a !important;
+  color: #f8fafc !important;
+}
+
+html.alto-contraste main [class*="bg-azul-principal"],
+html.alto-contraste main [class*="bg-[#0257a0]"] {
+  background-color: #0b2945 !important;
+  color: #fff !important;
+}
+
+html.alto-contraste main [class*="bg-[#008bff]"],
+html.alto-contraste main button[style*="background-color"] {
+  background-color: #facc15 !important;
+  color: #07111f !important;
+}
+
+html.alto-contraste main [class*="text-"],
+html.alto-contraste main [class*="text-[#"] {
+  color: #f8fafc !important;
+}
+
+html.alto-contraste main [class*="border-"] {
+  border-color: #facc15 !important;
+}
+
+html.alto-contraste main [class*="shadow"] {
+  box-shadow: 0 16px 30px rgb(0 0 0 / 38%) !important;
+}
+
+html.alto-contraste main :is(button, input, select, textarea) {
+  border: 2px solid #facc15 !important;
+  background-color: #10233a !important;
+  color: #fff !important;
+}
+
+html.alto-contraste main button {
+  border-radius: 14px !important;
+}
+
+html.alto-contraste main button:hover,
+html.alto-contraste main button:focus-visible,
+html.alto-contraste main button[aria-pressed="true"] {
+  background-color: #facc15 !important;
+  color: #07111f !important;
+  outline: 3px solid #fff !important;
+  outline-offset: 2px;
+}
+
+html.alto-contraste main button[aria-pressed] {
+  border-radius: 999px !important;
+}
+
+/* Ações principais ficam amarelas desde o início, sem perder o texto escuro. */
+html.alto-contraste main button[class*="bg-[#008bff]"],
+html.alto-contraste main button[style*="background-color"] {
+  background-color: #facc15 !important;
+  border-color: #facc15 !important;
+  color: #07111f !important;
+}
+
+html.alto-contraste main button[class*="bg-[#008bff]"] :is(svg, span),
+html.alto-contraste main button[style*="background-color"] :is(svg, span) {
+  color: #07111f !important;
+}
+
+/* Benefícios precisam manter contraste entre fundo e texto, inclusive nos cards do mapa. */
+html.alto-contraste main [class*="bg-green-100"] {
+  background-color: #14532d !important;
+  border: 1px solid #86efac !important;
+  color: #fff !important;
+}
+
+html.alto-contraste main [class*="text-green-700"] {
+  color: #fff !important;
+}
+
+/* Chips de turno do mapa: azul mais vivo, texto branco e ícone ciano. */
+html.alto-contraste main [data-turno-disponivel] {
+  background-color: #164e63 !important;
+  border: 1px solid #7dd3fc !important;
+  color: #fff !important;
+}
+
+html.alto-contraste main [data-turno-disponivel] svg {
+  color: #7dd3fc !important;
+}
+
+/* Um turno marcado é uma escolha atual, não uma ação de alerta: azul escuro, texto claro. */
+html.alto-contraste main button[data-turno-selecionado="true"] {
+  background-color: #0e4b66 !important;
+  border-color: #7dd3fc !important;
+  color: #fff !important;
+}
+
+html.alto-contraste main button[data-turno-selecionado="true"] :is(svg, span) {
+  color: #fff !important;
+}
+
+/* Ícones de contexto voltam a ter contraste próprio nos blocos informativos. */
+html.alto-contraste main [class*="bg-amber-100"] {
+  background-color: #1b334f !important;
+  border: 1px solid #facc15 !important;
+}
+
+html.alto-contraste main [class*="text-amber-600"] {
+  color: #facc15 !important;
+}
+
+html.alto-contraste main :is(input, textarea)::placeholder { color: #cbd5e1 !important; opacity: 1; }
+html.alto-contraste main a { color: #fde68a !important; }
+html.alto-contraste main :is(input, select, textarea):focus-visible { outline: 3px solid #facc15 !important; outline-offset: 2px; }
+html.alto-contraste .leaflet-container { filter: contrast(1.15) brightness(.9) saturate(1.15); }
+html.alto-contraste main img:not(.leaflet-tile) { filter: contrast(1.08) saturate(1.06); }
+
+
+/* Cadastro: em desktop, os blocos viram uma página única, ampla e legível. */
+@media (min-width: 1024px) {
+  form:has(> div section) > button:last-child {
+    display: block;
+    max-width: 820px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  section:has(> div > h1) > div:first-child {
+    margin-top: 2rem !important;
+  }
+}
+
+/* Confirmação: em celulares mais altos e modernos há espaço para uma página
+   aberta. Em telas pequenas, o cartão compacto acima continua sendo usado para
+   que todos os textos caibam sem rolagem. */
+@media (min-width: 360px) and (min-height: 680px) and (max-width: 1023px) {
+  .sucesso-tela {
+    align-items: flex-start;
+    padding: 0;
+    background:
+      radial-gradient(circle at 50% 14%, rgb(0 139 255 / 11%), transparent 29rem),
+      #f2f3f6;
+  }
+
+  .sucesso-cartao {
+    max-width: 660px;
+    overflow: visible;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: clamp(7rem, 14dvh, 10rem) clamp(1.5rem, 7vw, 3.5rem) clamp(1.5rem, 4dvh, 3rem);
+  }
+
+  .sucesso-selo {
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+
+  .sucesso-selo svg {
+    width: 3.4rem;
+    height: 3.4rem;
+  }
+
+  .sucesso-resumo h1 {
+    font-size: clamp(2rem, 7vw, 2.75rem);
+  }
+
+  .sucesso-resumo p {
+    max-width: 36rem;
+    font-size: clamp(1rem, 3.9vw, 1.2rem);
+    line-height: 1.45;
+  }
+
+  .sucesso-etapas {
+    margin-top: clamp(2rem, 5dvh, 3.25rem);
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .sucesso-etapas article {
+    border-color: rgb(191 219 254);
+    background: rgb(255 255 255 / 88%);
+    padding: 1rem;
+    box-shadow: 0 10px 24px rgb(2 87 160 / 8%);
+  }
+
+  .sucesso-voltar {
+    margin-top: clamp(1.5rem, 4dvh, 2.5rem);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    box-shadow: 0 12px 22px rgb(0 139 255 / 22%);
+  }
+}

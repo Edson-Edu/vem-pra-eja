@@ -1,17 +1,37 @@
-# eja_nome
+# Vem Pra EJA — versão web
 
-A new Flutter project.
+Aplicação web responsiva do Vem Pra EJA, desenvolvida com Next.js e React.
+Ela substitui a versão anterior em Flutter e permite escolher o nível de
+ensino, encontrar escolas no mapa, consultar turnos e realizar a pré-inscrição.
 
-## Getting Started
+## Tecnologias
 
-This project is a starting point for a Flutter application.
+- Next.js 16 e React 19
+- Supabase para escolas, turnos e pré-inscrições
+- Azure Speech por Azure Function para leitura assistida
+- VLibras e modo de alto contraste
+- Firebase Hosting para publicação estática
 
-A few resources to get you started if this is your first Flutter project:
+## Executar localmente
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+npm install
+npm run dev
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Crie um arquivo `.env.local` com as chaves públicas do Supabase:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+## Produção
+
+```bash
+npm run build
+npx firebase-tools deploy --only hosting
+```
+
+As credenciais privadas do Azure ficam somente nas Variáveis de ambiente da
+Function App; não devem ser adicionadas ao repositório.
