@@ -45,13 +45,22 @@ function definirEstadoDaReproducao(carregando: boolean, tocando: boolean) {
 function marcarCarregamentoDoAudio() { definirEstadoDaReproducao(true, false); }
 function marcarInicioDoAudio() { definirEstadoDaReproducao(false, true); }
 function marcarFimDoAudio() { definirEstadoDaReproducao(false, false); }
-function parar() {
+function parar({ preservarDesbloqueio = false }: { preservarDesbloqueio?: boolean } = {}) {
   versaoDaFila++;
   try { fonteDeAudio?.stop(); } catch { /* A fonte já pode ter terminado. */ }
   fonteDeAudio = null;
   tocador?.pause();
-  reprodutorNativo?.pause();
-  audioDeDesbloqueio = null;
+  // `pointerdown` e `click` pertencem ao mesmo gesto. No iOS, pausar entre
+  // esses dois eventos pode revogar a autorização que acabamos de obter para
+  // o elemento silencioso. Preservamos somente esse elemento — nunca um MP3
+  // real que já esteja tocando.
+  const preservarElementoSilencioso = preservarDesbloqueio
+    && audioDeDesbloqueio === reprodutorNativo
+    && tocador !== reprodutorNativo;
+  if (!preservarElementoSilencioso) {
+    reprodutorNativo?.pause();
+    audioDeDesbloqueio = null;
+  }
   try { window.speechSynthesis?.cancel(); } catch { /* síntese indisponível */ }
   if (urlDoAudio) URL.revokeObjectURL(urlDoAudio);
   tocador = null;
@@ -127,7 +136,7 @@ export function prepararAudioNoGestoUsuario() {
     desbloqueioDoAudio = retomar;
   }
 
-  if (!audioFoiDesbloqueado) {
+  if (!audioFoiDesbloqueado && !audioDeDesbloqueio) {
     const audio = obterReprodutorNativo();
     // No iOS, mídia marcada como `muted` pode não liberar a reprodução
     // audível posterior. O volume quase nulo mantém a reprodução imperceptível
@@ -314,9 +323,9 @@ export function useAudioDescricao() {
     window.addEventListener(EVENTO_DE_REPRODUCAO_DO_AUDIO, atualizar);
     return () => window.removeEventListener(EVENTO_DE_REPRODUCAO_DO_AUDIO, atualizar);
   }, []);
-  const alternar = useCallback(async (texto: string) => { if (estaAtiva()) { parar(); definirAtiva(false); avisar(); return; } parar(); prepararAudioNoGestoUsuario(); definirAtiva(true); avisar(); await enfileirar(texto); }, []);
+  const alternar = useCallback(async (texto: string) => { if (estaAtiva()) { parar(); definirAtiva(false); avisar(); return; } parar({ preservarDesbloqueio: true }); prepararAudioNoGestoUsuario(); definirAtiva(true); avisar(); await enfileirar(texto); }, []);
   const falar = useCallback((texto: string) => estaAtiva() ? enfileirar(texto) : Promise.resolve(), []);
-  const falarAgora = useCallback((texto: string) => { if (!estaAtiva()) return Promise.resolve(); parar(); prepararAudioNoGestoUsuario(); return enfileirar(texto); }, []);
+  const falarAgora = useCallback((texto: string) => { if (!estaAtiva()) return Promise.resolve(); parar({ preservarDesbloqueio: true }); prepararAudioNoGestoUsuario(); return enfileirar(texto); }, []);
   const interromper = useCallback(() => parar(), []);
   return { ativo, carregando: estadoDeReproducao.carregando, tocando: estadoDeReproducao.tocando, alternar, falar, falarAgora, interromper };
 }
