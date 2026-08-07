@@ -91,7 +91,8 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
   }, [animacaoConcluida, localizacaoRespondida, onComplete]);
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
       {!saindo && (
         <motion.main
           initial={{ opacity: 1 }}
@@ -108,13 +109,6 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
             >
               Acessibilidade
           </motion.span>
-          <BotaoAudio
-            texto="Seja bem-vindo. Estamos carregando as informações para você."
-            ariaLabel="Ativar audiodescrição"
-            tamanhoIcone={24}
-            className="flex cursor-pointer items-center justify-center rounded-full border border-white/30 bg-white/15 text-white transition-colors hover:bg-white/25 disabled:cursor-wait disabled:opacity-75"
-          />
-
           <div className="flex flex-1 flex-col items-center justify-center">
             <div className="flex items-center gap-2">
               <motion.span
@@ -182,6 +176,15 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
           </motion.footer>
         </motion.main>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+      {/* Fica fora do fade da abertura: o controle permanece visível até a
+          rota Nível renderizar seu controle global na mesma posição. */}
+      <BotaoAudio
+        texto="Seja bem-vindo. Estamos carregando as informações para você."
+        ariaLabel="Ativar audiodescrição"
+        tamanhoIcone={24}
+        className="flex cursor-pointer items-center justify-center rounded-full border border-white/30 bg-white/15 text-white transition-colors hover:bg-white/25 disabled:cursor-wait disabled:opacity-75"
+      />
+    </>
   );
 }
