@@ -1,7 +1,7 @@
 "use client";
 
 import { LoaderCircle, Volume2, VolumeX } from "lucide-react";
-import { textoParaAudio, useAudioDescricao } from "./useAudioDescricao";
+import { prepararAudioNoGestoUsuario, textoParaAudio, useAudioDescricao } from "./useAudioDescricao";
 
 type BotaoAudioProps = {
   /** Texto ou pacote pai-filho que será reproduzido. */
@@ -48,6 +48,7 @@ export default function BotaoAudio({
       aria-pressed={global ? ativo : undefined}
       aria-busy={carregando}
       disabled={carregando}
+      onPointerDown={() => prepararAudioNoGestoUsuario()}
       onClick={aoClicar}
       className={className}
     >

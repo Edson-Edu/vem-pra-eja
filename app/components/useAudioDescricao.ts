@@ -10,6 +10,7 @@ let fonteDeAudio: AudioBufferSourceNode | null = null;
 let contextoDeAudio: AudioContext | null = null;
 let urlDoAudio: string | null = null;
 let reprodutorNativo: HTMLAudioElement | null = null;
+let audioDeDesbloqueio: HTMLAudioElement | null = null;
 let audioFoiDesbloqueado = false;
 let desbloqueioDoAudio: Promise<boolean> = Promise.resolve(false);
 let versaoDaFila = 0;
@@ -20,6 +21,8 @@ let estadoDaReproducao = { carregando: false, tocando: false };
 // WAV curto e silencioso: iniciado no gesto da pessoa para liberar a mídia
 // posterior no Safari e em alguns navegadores Android.
 const AUDIO_SILENCIOSO = "data:audio/wav;base64,UklGRiUAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQEAAACA";
+const TEMPO_MAXIMO_DE_RESPOSTA = 18_000;
+const TEMPO_MAXIMO_DE_INICIO = 6_000;
 
 function estaAtiva() {
   if (acessibilidadeAtiva) return true;
@@ -48,6 +51,7 @@ function parar() {
   fonteDeAudio = null;
   tocador?.pause();
   reprodutorNativo?.pause();
+  audioDeDesbloqueio = null;
   try { window.speechSynthesis?.cancel(); } catch { /* síntese indisponível */ }
   if (urlDoAudio) URL.revokeObjectURL(urlDoAudio);
   tocador = null;
@@ -59,10 +63,29 @@ function parar() {
 function obterReprodutorNativo() {
   if (reprodutorNativo) return reprodutorNativo;
   const audio = new Audio();
-  audio.preload = "auto";
+  audio.preload = "none";
   audio.setAttribute("playsinline", "");
+  audio.setAttribute("webkit-playsinline", "");
   reprodutorNativo = audio;
   return audio;
+}
+
+function comPrazo<T>(promessa: Promise<T>, prazo: number, mensagem: string) {
+  return new Promise<T>((resolver, rejeitar) => {
+    const limite = window.setTimeout(() => rejeitar(new Error(mensagem)), prazo);
+    promessa.then(
+      (valor) => { window.clearTimeout(limite); resolver(valor); },
+      (erro: unknown) => { window.clearTimeout(limite); rejeitar(erro); },
+    );
+  });
+}
+
+function encerrarAudioDeDesbloqueio() {
+  if (!audioDeDesbloqueio) return;
+  audioDeDesbloqueio.pause();
+  audioDeDesbloqueio.currentTime = 0;
+  audioDeDesbloqueio.loop = false;
+  audioDeDesbloqueio = null;
 }
 
 /**
@@ -70,7 +93,13 @@ function obterReprodutorNativo() {
  * sido liberado durante o toque. O botão global chama esta rotina no mesmo
  * gesto do usuário e depois o Azure pode responder sem ser bloqueado.
  */
-function prepararAudioNoGesto() {
+/**
+ * Deve ser chamada dentro do toque/clique real da pessoa. O WebKit do iOS
+ * expira a permissão de mídia depois de uma operação assíncrona (como o fetch
+ * ao Azure), por isso o contexto e o mesmo elemento HTMLAudio são liberados
+ * antes de iniciar a requisição.
+ */
+export function prepararAudioNoGestoUsuario() {
   if (typeof window === "undefined") return;
   const navegador = window as typeof window & { webkitAudioContext?: typeof AudioContext };
   const Construtor = window.AudioContext ?? navegador.webkitAudioContext;
@@ -83,10 +112,13 @@ function prepararAudioNoGesto() {
     // Em iOS, criar e iniciar uma fonte dentro do gesto é mais confiável do
     // que somente chamar resume(). A fonte é muda e dura menos de um quadro.
     try {
-      const silencio = contextoDeAudio.createBuffer(1, 1, contextoDeAudio.sampleRate || 22050);
+      const silencio = contextoDeAudio.createBuffer(1, Math.max(1, Math.floor((contextoDeAudio.sampleRate || 22050) / 20)), contextoDeAudio.sampleRate || 22050);
       const fonte = contextoDeAudio.createBufferSource();
+      const ganho = contextoDeAudio.createGain();
       fonte.buffer = silencio;
-      fonte.connect(contextoDeAudio.destination);
+      ganho.gain.value = 0;
+      fonte.connect(ganho);
+      ganho.connect(contextoDeAudio.destination);
       fonte.start(0);
     } catch { /* a alternativa HTMLAudio abaixo continua disponível */ }
     desbloqueioDoAudio = retomar;
@@ -94,19 +126,21 @@ function prepararAudioNoGesto() {
 
   if (!audioFoiDesbloqueado) {
     const audio = obterReprodutorNativo();
-    audio.muted = true;
-    audio.volume = 0;
+    // No iOS, mídia marcada como `muted` pode não liberar a reprodução
+    // audível posterior. O volume quase nulo mantém a reprodução imperceptível
+    // sem esconder do WebKit que o gesto autorizou áudio.
+    audio.muted = false;
+    audio.volume = 0.001;
+    audio.loop = true;
     audio.src = AUDIO_SILENCIOSO;
-    // A chamada a play acontece sincronicamente no clique. Depois disso, o
-    // mesmo elemento pode reproduzir o MP3 que chegar da Function.
+    audio.load();
+    audioDeDesbloqueio = audio;
+    // A chamada a play acontece sincronicamente no gesto. O áudio silencioso
+    // permanece ativo até o MP3 chegar para manter a autorização no WebKit.
     const liberar = audio.play()
       .then(() => true)
       .catch(() => false)
       .then((liberado) => {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.muted = false;
-        audio.volume = 1;
         audioFoiDesbloqueado = liberado;
         return liberado;
       });
@@ -121,7 +155,11 @@ async function tocarNoContexto(dados: ArrayBuffer, versao: number) {
     await desbloqueioDoAudio;
     if (contexto.state === "suspended") await contexto.resume();
     if (contexto.state !== "running") return false;
-    const buffer = await contexto.decodeAudioData(dados.slice(0));
+    const buffer = await comPrazo(
+      contexto.decodeAudioData(dados.slice(0)),
+      TEMPO_MAXIMO_DE_INICIO,
+      "O navegador demorou para decodificar o áudio.",
+    );
     if (versao !== versaoDaFila || !estaAtiva()) return true;
     await new Promise<void>((resolver) => {
       const fonte = contexto.createBufferSource();
@@ -133,6 +171,7 @@ async function tocarNoContexto(dados: ArrayBuffer, versao: number) {
       };
       fonteDeAudio = fonte;
       fonte.start();
+      encerrarAudioDeDesbloqueio();
       marcarInicioDoAudio();
     });
     if (fonteDeAudio) fonteDeAudio = null;
@@ -146,12 +185,15 @@ async function tocarNoElementoNativo(url: string, versao: number) {
   const audio = obterReprodutorNativo();
   audio.pause();
   audio.currentTime = 0;
+  audio.loop = false;
   audio.src = url;
   audio.muted = false;
   audio.volume = 1;
+  audio.load();
   tocador = audio;
   try {
-    await audio.play();
+    await comPrazo(audio.play(), TEMPO_MAXIMO_DE_INICIO, "O navegador não iniciou o áudio.");
+    audioDeDesbloqueio = null;
     marcarInicioDoAudio();
   } catch {
     marcarFimDoAudio();
@@ -176,18 +218,34 @@ function tocarComSinteseDoNavegador(texto: string, versao: number) {
   }
   return new Promise<boolean>((resolver) => {
     const fala = new SpeechSynthesisUtterance(texto);
+    let finalizada = false;
+    let limite: number | null = null;
+    const finalizar = (tocou: boolean) => {
+      if (finalizada) return;
+      finalizada = true;
+      if (limite !== null) window.clearTimeout(limite);
+      if (versao === versaoDaFila) marcarFimDoAudio();
+      resolver(tocou);
+    };
     fala.lang = "pt-BR";
     fala.rate = 0.92;
-    fala.onstart = () => marcarInicioDoAudio();
-    fala.onend = () => {
-      if (versao === versaoDaFila) marcarFimDoAudio();
-      resolver(versao === versaoDaFila && estaAtiva());
+    fala.onstart = () => {
+      if (limite !== null) window.clearTimeout(limite);
+      marcarInicioDoAudio();
     };
-    fala.onerror = () => {
-      if (versao === versaoDaFila) marcarFimDoAudio();
-      resolver(false);
-    };
-    try { window.speechSynthesis.speak(fala); } catch { marcarFimDoAudio(); resolver(false); }
+    fala.onend = () => finalizar(versao === versaoDaFila && estaAtiva());
+    fala.onerror = () => finalizar(false);
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+      window.speechSynthesis.speak(fala);
+      // Safari pode manter `speak()` pendente sem disparar erro. O prazo evita
+      // que o botão permaneça em carregamento para sempre.
+      limite = window.setTimeout(() => {
+        try { window.speechSynthesis.cancel(); } catch { /* síntese indisponível */ }
+        finalizar(false);
+      }, TEMPO_MAXIMO_DE_INICIO);
+    } catch { finalizar(false); }
   });
 }
 
@@ -197,7 +255,20 @@ async function tocar(texto: string, versao: number) {
   // text/plain evita a pré-validação CORS de navegadores móveis. O corpo segue
   // sendo JSON e a Function o interpreta normalmente.
   try {
-    const resposta = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify({ texto }), cache: "no-store" });
+    const controlador = new AbortController();
+    const limite = window.setTimeout(() => controlador.abort(), TEMPO_MAXIMO_DE_RESPOSTA);
+    let resposta: Response;
+    try {
+      resposta = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        body: JSON.stringify({ texto }),
+        cache: "no-store",
+        signal: controlador.signal,
+      });
+    } finally {
+      window.clearTimeout(limite);
+    }
     if (versao !== versaoDaFila || !estaAtiva()) {
       marcarFimDoAudio();
       return;
@@ -235,9 +306,9 @@ export function useAudioDescricao() {
     window.addEventListener(EVENTO_DE_REPRODUCAO_DO_AUDIO, atualizar);
     return () => window.removeEventListener(EVENTO_DE_REPRODUCAO_DO_AUDIO, atualizar);
   }, []);
-  const alternar = useCallback(async (texto: string) => { if (estaAtiva()) { parar(); definirAtiva(false); avisar(); return; } parar(); prepararAudioNoGesto(); definirAtiva(true); avisar(); await enfileirar(texto); }, []);
+  const alternar = useCallback(async (texto: string) => { if (estaAtiva()) { parar(); definirAtiva(false); avisar(); return; } parar(); prepararAudioNoGestoUsuario(); definirAtiva(true); avisar(); await enfileirar(texto); }, []);
   const falar = useCallback((texto: string) => estaAtiva() ? enfileirar(texto) : Promise.resolve(), []);
-  const falarAgora = useCallback((texto: string) => { if (!estaAtiva()) return Promise.resolve(); parar(); prepararAudioNoGesto(); return enfileirar(texto); }, []);
+  const falarAgora = useCallback((texto: string) => { if (!estaAtiva()) return Promise.resolve(); parar(); prepararAudioNoGestoUsuario(); return enfileirar(texto); }, []);
   const interromper = useCallback(() => parar(), []);
   return { ativo, carregando: estadoDeReproducao.carregando, tocando: estadoDeReproducao.tocando, alternar, falar, falarAgora, interromper };
 }
