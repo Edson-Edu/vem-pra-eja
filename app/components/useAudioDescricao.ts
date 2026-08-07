@@ -106,7 +106,7 @@ export function prepararAudioNoGestoUsuario() {
   if (Construtor) {
     contextoDeAudio ??= new Construtor();
     const retomar = contextoDeAudio.state === "suspended"
-      ? contextoDeAudio.resume().then(() => true).catch(() => false)
+      ? comPrazo(contextoDeAudio.resume(), TEMPO_MAXIMO_DE_INICIO, "O navegador não liberou o áudio.").then(() => true).catch(() => false)
       : Promise.resolve(contextoDeAudio.state === "running");
 
     // Em iOS, criar e iniciar uma fonte dentro do gesto é mais confiável do
@@ -121,6 +121,9 @@ export function prepararAudioNoGestoUsuario() {
       ganho.connect(contextoDeAudio.destination);
       fonte.start(0);
     } catch { /* a alternativa HTMLAudio abaixo continua disponível */ }
+    // A reprodução pelo AudioContext depende somente deste desbloqueio. Não
+    // espere o `HTMLAudioElement.play()` abaixo: em algumas versões do Safari
+    // essa promessa pode permanecer pendente mesmo depois de um toque válido.
     desbloqueioDoAudio = retomar;
   }
 
@@ -137,14 +140,19 @@ export function prepararAudioNoGestoUsuario() {
     audioDeDesbloqueio = audio;
     // A chamada a play acontece sincronicamente no gesto. O áudio silencioso
     // permanece ativo até o MP3 chegar para manter a autorização no WebKit.
-    const liberar = audio.play()
+    const liberar = comPrazo(audio.play(), TEMPO_MAXIMO_DE_INICIO, "O navegador não liberou o elemento de áudio.")
       .then(() => true)
       .catch(() => false)
       .then((liberado) => {
         audioFoiDesbloqueado = liberado;
         return liberado;
       });
-    desbloqueioDoAudio = Promise.all([desbloqueioDoAudio, liberar]).then(([contexto, elemento]) => contexto || elemento);
+    // Sem AudioContext (navegadores muito antigos), o elemento nativo continua
+    // sendo a alternativa de desbloqueio. Nos navegadores atuais, inclusive
+    // iOS, ele é mantido em paralelo e nunca pode travar a fila de voz.
+    if (!Construtor) {
+      desbloqueioDoAudio = liberar;
+    }
   }
 }
 
