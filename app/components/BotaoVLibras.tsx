@@ -194,7 +194,10 @@ function expandirSiglasParaLibras(texto: string) {
   // entregar o bloco ao VLibras, evitando que ele datilografe as siglas.
   return texto
     .replace(/\bC\s*\.?\s*E\s*\.?\s*J\s*\.?\s*A\b\.?/gi, "Centro de Educação de Jovens e Adultos")
-    .replace(/\bE\s*\.?\s*E\s*\.?\s*B\b\.?/gi, "Escola de Educação Básica")
+    // O dicionário do VLibras ignora "Básica" em "Escola de Educação
+    // Básica". Esta forma mantém o sinal de escola básica ao traduzir E.E.B.
+    // sem alterar a sigla exibida para a pessoa na interface.
+    .replace(/\bE\s*\.?\s*E\s*\.?\s*B\b\.?/gi, "Escola Básica Estadual")
     .replace(/\bE\s*\.?\s*B\s*\.?\s*M\b\.?/gi, "Escola Básica Municipal")
     .replace(/\bI\s*\.?\s*F\s*\.?\s*C\b\.?/gi, "Instituto Federal Catarinense");
 }
