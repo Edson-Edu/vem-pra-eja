@@ -2,6 +2,7 @@ import type { Escola, Turno } from "./escolas";
 
 const imagemPadrao = "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=1200&auto=format&fit=crop";
 const fotosFornecidas: Array<{ termo: string; urls: string[] }> = [
+  { termo: "amadio dalago", urls: ["https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/amadio_1.png", "https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/amadio_2.png"] },
   { termo: "anita bernardes", urls: ["https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/anita1.png", "https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/anita2.png"] },
   { termo: "deputado doutel", urls: ["https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/deputado_1.png", "https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/deputado_2.png"] },
   { termo: "rogerio leonardo", urls: ["https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/rogerio_1.png", "https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/rogerio_2.png"] },

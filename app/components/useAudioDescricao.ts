@@ -335,6 +335,7 @@ export function textoParaAudio(texto: string) {
     .replace(/\bSeg\s*[-–]\s*Sex\b/gi, "segunda a sexta")
     .replace(/\bSeg\s*[-–]\s*Qui\b/gi, "segunda a quinta")
     .replace(/\bSeg\s*[-–]\s*Qua\b/gi, "segunda a quarta")
+    .replace(/\bE\.?\s*E\.?\s*B\.?\b/gi, "Escola de Educação Básica")
     .replace(/\bE\.?\s*B\.?\s*M\.?\b/gi, "Escola Básica Municipal")
     .replace(/\bC\.?\s*E\.?\s*J\.?\s*A\.?\b/gi, "Centro de Educação de Jovens e Adultos")
     .replace(/\bI\.?\s*F\.?\s*C\.?\b/gi, "Instituto Federal Catarinense")

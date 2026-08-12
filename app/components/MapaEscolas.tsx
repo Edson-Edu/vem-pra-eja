@@ -25,7 +25,7 @@ type Props = {
 };
 
 function nomeCurto(nome: string) {
-  return nome.replace(/^E\.?B\.?M\.?\s*/i, "").replace(/^CEJA\s*/i, "").replace(/\s*-\s*Campus.*$/i, "").trim().split(/\s+/).slice(0, 3).join(" ");
+  return nome.replace(/^E\.?E\.?B\.?\s*/i, "").replace(/^E\.?B\.?M\.?\s*/i, "").replace(/^CEJA\s*/i, "").replace(/\s*-\s*Campus.*$/i, "").trim().split(/\s+/).slice(0, 3).join(" ");
 }
 
 function escaparHtml(texto: string) {
