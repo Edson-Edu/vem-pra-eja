@@ -164,13 +164,13 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
               {semLogoPrefeitura ? (
                 <Building2 aria-label="Prefeitura" className="h-[55px] w-[55px] text-white/70" />
               ) : (
-                <Image src="/logo_prefeitura.png" alt="Prefeitura" width={160} height={55} className="h-[55px] w-auto object-contain" onError={() => setSemLogoPrefeitura(true)} />
+                <Image src="https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/logos/logo_prefeitura.png" alt="Prefeitura" width={160} height={55} className="h-[55px] w-auto object-contain" onError={() => setSemLogoPrefeitura(true)} />
               )}
               <span aria-hidden="true" className="h-[45px] w-px bg-white/25" />
               {semLogoIfc ? (
                 <GraduationCap aria-label="Instituto Federal Catarinense" className="h-[65px] w-[65px] translate-y-2 text-white/70" />
               ) : (
-                <Image src="/logo_ifc.png" alt="Instituto Federal Catarinense" width={160} height={65} className="h-[65px] w-auto translate-y-2 object-contain" onError={() => setSemLogoIfc(true)} />
+                <Image src="https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/logos/logo_ifc.png" alt="Instituto Federal Catarinense" width={160} height={65} className="h-[65px] w-auto translate-y-2 object-contain" onError={() => setSemLogoIfc(true)} />
               )}
             </div>
           </motion.footer>

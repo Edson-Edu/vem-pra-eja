@@ -88,7 +88,7 @@ body {
 }
 
 /* Os três recursos globais formam sempre o mesmo grupo: contraste, Libras e áudio. */
-button[aria-pressed]:not([data-eja-alto-contraste]) {
+button[data-eja-audio-global] {
   position: fixed !important;
   z-index: 1302 !important;
   top: var(--eja-topo-controles) !important;
@@ -136,14 +136,14 @@ button[aria-pressed]:not([data-eja-alto-contraste]) {
 }
 
 /* O controle de áudio não muda de aparência durante a navegação entre telas. */
-html:not(.alto-contraste) button[aria-pressed]:not([data-eja-alto-contraste]) {
+html:not(.alto-contraste) button[data-eja-audio-global] {
   background-color: #fff !important;
   border-color: transparent !important;
   color: #4e8afb !important;
   box-shadow: 0 2px 8px rgb(0 0 0 / 12%) !important;
 }
 
-button[aria-pressed]:not([data-eja-alto-contraste]) svg {
+button[data-eja-audio-global] svg {
   width: 21px !important;
   height: 21px !important;
 }

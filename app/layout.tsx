@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
-import BotaoAltoContraste from "./components/BotaoAltoContraste";
-import BotaoVLibras from "./components/BotaoVLibras";
-import GerenciadorFeedbackAudio from "./components/GerenciadorFeedbackAudio";
+import ControlesGlobais from "./components/ControlesGlobais";
+
+const idDoGoogleAnalytics = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID ?? "G-SEU_CODIGO_AQUI";
 
 export const metadata: Metadata = {
   title: "Vem pra EJA",
@@ -18,9 +19,8 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         {children}
-        <GerenciadorFeedbackAudio />
-        <BotaoAltoContraste />
-        <BotaoVLibras />
+        <ControlesGlobais />
+        {idDoGoogleAnalytics !== "G-SEU_CODIGO_AQUI" && <GoogleAnalytics gaId={idDoGoogleAnalytics} />}
       </body>
     </html>
   );

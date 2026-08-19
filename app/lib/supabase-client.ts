@@ -54,7 +54,9 @@ function mapearEscola(linha: Linha, nivel: Turno["nivel"]): Escola {
 
 export async function buscarEscolas(nivel: Turno["nivel"], id?: string | null) {
   const { url, headers } = configuracao();
-  const filtro = id ? `id=eq.${encodeURIComponent(id)}` : `niveis_oferecidos=cs.%7B${encodeURIComponent(nivel)}%7D`;
+  const filtro = id
+    ? `ativa=eq.true&id=eq.${encodeURIComponent(id)}`
+    : `ativa=eq.true&niveis_oferecidos=cs.%7B${encodeURIComponent(nivel)}%7D`;
   const resposta = await fetch(`${url}/rest/v1/escolas?select=*,turnos_escola(*)&${filtro}`, { headers });
   if (!resposta.ok) throw new Error("Não foi possível obter as escolas.");
   const linhas = await resposta.json() as Linha[];

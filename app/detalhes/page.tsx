@@ -3,7 +3,9 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TelaDetalhes from "../components/TelaDetalhes";
-import { type Escola, type Turno } from "../lib/escolas";
+import { type Escola } from "../lib/escolas";
+import { registrarTurno, useFluxoAutorizado } from "../lib/fluxo-navegacao";
+import { registrarEventoAnalytics } from "../lib/analytics";
 import { buscarEscolas } from "../lib/supabase-client";
 
 export default function PaginaDetalhes() {
@@ -14,11 +16,20 @@ function Conteudo() {
   const router = useRouter();
   const params = useSearchParams();
   const id = params.get("escola");
-  const nivel = (params.get("nivel") === "Ensino Médio" ? "Ensino Médio" : "Ensino Fundamental") as Turno["nivel"];
+  const nivelInformado = params.get("nivel");
+  const nivel = nivelInformado === "Ensino Fundamental" || nivelInformado === "Ensino Médio"
+    ? nivelInformado
+    : null;
+  const fluxoAutorizado = useFluxoAutorizado({ nivel, escolaId: id });
   const [escola, setEscola] = useState<Escola | null>(null);
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
+    if (!id || !nivel || !fluxoAutorizado) {
+      router.replace("/");
+      return;
+    }
+
     let ativo = true;
     let escolaDaLista: Escola | null = null;
 
@@ -32,11 +43,6 @@ function Conteudo() {
       }
     } catch {
       // O detalhe continua disponível pela consulta ao banco abaixo.
-    }
-
-    if (!id) {
-      setCarregando(false);
-      return () => { ativo = false; };
     }
 
     setCarregando(!escolaDaLista);
@@ -55,8 +61,9 @@ function Conteudo() {
       });
 
     return () => { ativo = false; };
-  }, [id, nivel]);
+  }, [fluxoAutorizado, id, nivel, router]);
 
+  if (!id || !nivel || !fluxoAutorizado) return <Carregando />;
   if (carregando) return <Carregando />;
   if (!escola) {
     return (
@@ -70,7 +77,7 @@ function Conteudo() {
     );
   }
 
-  return <TelaDetalhes escola={escola} nivel={nivel} onVoltar={() => router.back()} onInscrever={(turno) => router.push(`/cadastro?escola=${escola.id}&turno=${turno.id}&nivel=${encodeURIComponent(nivel)}`)} />;
+  return <TelaDetalhes escola={escola} nivel={nivel} onVoltar={() => router.back()} onInscrever={(turno) => { registrarTurno(turno.id); registrarEventoAnalytics("iniciou_cadastro", { nivel, escola_id: escola.id, turno: turno.turno }); router.push(`/cadastro?escola=${escola.id}&turno=${turno.id}&nivel=${encodeURIComponent(nivel)}`); }} />;
 }
 
 function Carregando() {
