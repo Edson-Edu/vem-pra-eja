@@ -1,14 +1,6 @@
 import type { Escola, Turno } from "./escolas";
 
 const imagemPadrao = "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=1200&auto=format&fit=crop";
-const fotosFornecidas: Array<{ termo: string; urls: string[] }> = [
-  { termo: "amadio dalago", urls: ["https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/amadio_1.png", "https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/amadio_2.png"] },
-  { termo: "anita bernardes", urls: ["https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/anita1.png", "https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/anita2.png"] },
-  { termo: "deputado doutel", urls: ["https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/deputado_1.png", "https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/deputado_2.png"] },
-  { termo: "rogerio leonardo", urls: ["https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/rogerio_1.png", "https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/rogerio_2.png"] },
-  { termo: "ceja", urls: ["https://raw.githubusercontent.com/Edson-Edu/vem-pra-eja/main/assets/escolas/ceja_1.png"] },
-];
-
 type Linha = Record<string, unknown>;
 export type DadosInscricao = {
   escola_id: string; nivel_selecionado: string; turno_selecionado: string;
@@ -30,9 +22,6 @@ function numeroValido(valor: unknown, reserva: number) {
 }
 
 function fotosDaEscola(linha: Linha) {
-  const nome = String(linha.nome ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const cadastradas = fotosFornecidas.find((foto) => nome.includes(foto.termo))?.urls;
-  if (cadastradas) return cadastradas;
   const valor = linha.fotos ?? linha.imagens ?? linha.image_url ?? linha.imagem_url ?? linha.foto_url;
   const urls = Array.isArray(valor) ? valor : typeof valor === "string" ? valor.replace(/^\{|\}$/g, "").split(",") : [];
   const validas = urls.filter((url): url is string => typeof url === "string" && /^https?:\/\//.test(url.trim())).map((url) => url.trim());

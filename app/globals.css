@@ -160,14 +160,27 @@ button[data-eja-audio-global] svg {
   white-space: nowrap;
 }
 
-/* O atalho oficial fechado segue a mesma régua; o painel aberto conserva seu espaço próprio. */
-[vw]:not(:has([vw-plugin-wrapper].active)) [vw-access-button] {
+/* O atalho oficial fechado segue a mesma régua. Posicionamos o contêiner
+   inteiro porque o CSS do VLibras transforma esse ancestral e, com isso,
+   faria um filho `position: fixed` voltar para o centro lateral. */
+[vw]:not(:has([vw-plugin-wrapper].active)) {
   position: fixed !important;
   z-index: 1300 !important;
   top: var(--eja-topo-controles) !important;
   right: calc(var(--eja-direita-controles) + 52px) !important;
   bottom: auto !important;
   left: auto !important;
+  width: var(--eja-controle-acessibilidade) !important;
+  min-width: var(--eja-controle-acessibilidade) !important;
+  height: var(--eja-controle-acessibilidade) !important;
+  min-height: var(--eja-controle-acessibilidade) !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+[vw]:not(:has([vw-plugin-wrapper].active)) [vw-access-button] {
+  position: absolute !important;
+  inset: 0 !important;
 }
 
 @media (max-width: 767px) {

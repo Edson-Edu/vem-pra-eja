@@ -6,14 +6,17 @@ import { definirEstadoVLibras, observarEstadoVLibras, obterEstadoVLibras } from 
 declare global {
   interface Window {
     VLibras?: { Widget: new (url: string) => unknown };
+    VLibrasWidget?: unknown;
     __ejaVlibrasInstalacao?: Promise<void>;
   }
 }
 
 let instalacao: Promise<void> | null = null;
-// Mantém o navegador longe de uma cópia antiga do carregador oficial, que
-// apontava recursos para um CDN hoje sujeito a redirecionamentos em loop.
-const URL_DO_SCRIPT_VLIBRAS = "https://vlibras.gov.br/app/vlibras-plugin.js?v=20260806";
+// Mantém o widget na última versão compatível com as integrações específicas
+// deste site. A URL oficial publica atualizações sem preservar a versão
+// anterior, por isso o pacote validado fica hospedado junto com a aplicação.
+const RAIZ_DO_VLIBRAS = "/vlibras";
+const URL_DO_SCRIPT_VLIBRAS = `${RAIZ_DO_VLIBRAS}/vlibras-plugin.js?v=6.0.0`;
 let sequenciaDeTentativaDoScript = 0;
 
 function urlDoScriptVLibras() {
@@ -352,7 +355,22 @@ function adicionarMarcaVemPraEja() {
   caixa.appendChild(marca);
 }
 
+/** Remove a interface 7.x, que usa Shadow DOM e pode sobreviver ao hot reload. */
+function removerVersaoIncompativelDoVLibras() {
+  const interfaceIncompativel = document.querySelector("#vlibras-access-wrapper, #vlibras-app-root");
+  if (!interfaceIncompativel) return;
+
+  document.querySelectorAll("#vlibras-access-wrapper, #vlibras-app-root").forEach((elemento) => elemento.remove());
+  document.querySelectorAll<HTMLScriptElement>("script[src*='vlibras-plugin-app.js'], script[src^='https://vlibras.gov.br/app/vlibras-plugin.js']")
+    .forEach((script) => script.remove());
+  delete window.VLibras;
+  delete window.VLibrasWidget;
+  instalacao = null;
+  window.__ejaVlibrasInstalacao = undefined;
+}
+
 function instalarVLibras() {
+  removerVersaoIncompativelDoVLibras();
   const acessoExistente = document.querySelector("[vw-access-button]");
   if (instalacao && acessoExistente) return instalacao;
   if (window.__ejaVlibrasInstalacao && acessoExistente) return window.__ejaVlibrasInstalacao;
@@ -388,7 +406,7 @@ function instalarVLibras() {
     script.onload = () => {
       try {
         if (!window.VLibras) throw new Error("O script do VLibras não foi inicializado.");
-        new window.VLibras.Widget("https://vlibras.gov.br/app");
+        new window.VLibras.Widget(RAIZ_DO_VLIBRAS);
         // O widget oficial prepara sua interface no window.onload. Como o app já
         // hidratou, executamos essa rotina oficial imediatamente uma única vez.
         const inicializar = window.onload;
@@ -555,12 +573,13 @@ export default function BotaoVLibras() {
           acesso.style.top = "0";
           acesso.style.right = "0";
         } else {
-          widget.style.width = "";
-          widget.style.minWidth = "";
-          widget.style.height = "";
+          widget.style.width = "var(--eja-controle-acessibilidade)";
+          widget.style.minWidth = "var(--eja-controle-acessibilidade)";
+          widget.style.height = "var(--eja-controle-acessibilidade)";
           if (painel) { painel.style.width = ""; painel.style.height = ""; painel.style.float = ""; }
-          widget.style.left = "0";
-          widget.style.top = "0";
+          widget.style.left = "auto";
+          widget.style.right = "calc(var(--eja-direita-controles) + 52px)";
+          widget.style.top = "var(--eja-topo-controles)";
           acesso.style.top = "0";
           acesso.style.left = "auto";
           acesso.style.right = "0";

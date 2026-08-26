@@ -8,6 +8,7 @@ export type InscricaoAdministrativa = {
   nome: string;
   bairro: string;
   cidade: string;
+  escolaId: string;
   escola: string;
   nivel: string;
   turno: string;
@@ -109,6 +110,7 @@ export async function carregarInscricoesAdministrativas(): Promise<InscricaoAdmi
     nome: valorTexto(inscricao.nome_completo),
     bairro: valorTexto(inscricao.bairro),
     cidade: valorTexto(inscricao.cidade),
+    escolaId: valorTexto(inscricao.escola_id),
     escola: escolasPorId.get(valorTexto(inscricao.escola_id)) || "Escola não encontrada",
     nivel: valorTexto(inscricao.nivel_selecionado),
     turno: valorTexto(inscricao.turno_selecionado),
