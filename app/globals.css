@@ -194,35 +194,6 @@ button[data-eja-audio-global] svg {
   }
 }
 
-/* O título do mapa fica no centro mesmo com o áudio fora do fluxo do cabeçalho. */
-main:has([aria-label="Mapa das escolas"]) > header > h1 {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-/* No celular, título e trio global ocupam faixas independentes. */
-@media (max-width: 767px) {
-  main:has([aria-label="Mapa das escolas"]) > header {
-    height: 96px !important;
-    align-items: flex-start;
-    padding-top: 12px;
-  }
-
-  main:has([aria-label="Mapa das escolas"]) > header > h1 {
-    position: absolute;
-    top: 61px;
-    right: 16px;
-    left: 16px;
-    transform: none;
-    text-align: center;
-    font-size: 16px !important;
-    line-height: 1.25;
-    white-space: nowrap;
-  }
-}
-
 /* Na tela de nível, o VLibras só pode capturar os cinco blocos pedagógicos definidos. */
 .vlibras-bloco {
   position: absolute;
@@ -377,6 +348,14 @@ html.alto-contraste main button[aria-pressed] {
   border-radius: 999px !important;
 }
 
+html.alto-contraste main button[data-nivel-acao],
+html.alto-contraste main button[data-nivel-acao]:hover,
+html.alto-contraste main button[data-nivel-acao]:focus-visible {
+  border: 0 !important;
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
 /* Ações principais ficam amarelas desde o início, sem perder o texto escuro. */
 html.alto-contraste main button[class*="bg-[#008bff]"],
 html.alto-contraste main button[style*="background-color"] {
@@ -423,6 +402,21 @@ html.alto-contraste main button[data-turno-selecionado="true"] :is(svg, span) {
   color: #fff !important;
 }
 
+html.alto-contraste main [data-eja-progresso] > span > span {
+  background-color: #facc15 !important;
+}
+
+html.alto-contraste main button:disabled {
+  border-color: #64748b !important;
+  background-color: #334155 !important;
+  color: #cbd5e1 !important;
+  outline: none !important;
+}
+
+html.alto-contraste .sucesso-etapas article {
+  background-color: #10233a !important;
+}
+
 /* Ícones de contexto voltam a ter contraste próprio nos blocos informativos. */
 html.alto-contraste main [class*="bg-amber-100"] {
   background-color: #1b334f !important;
@@ -439,6 +433,50 @@ html.alto-contraste main :is(input, select, textarea):focus-visible { outline: 3
 html.alto-contraste .leaflet-container { filter: contrast(1.15) brightness(.9) saturate(1.15); }
 html.alto-contraste main img:not(.leaflet-tile) { filter: contrast(1.08) saturate(1.06); }
 
+
+/* Somente smartphones: o espaço entre o título e o rodapé é dividido entre
+   três cards iguais. A altura mínima vem do texto; em telas muito baixas ou
+   com fonte ampliada, a página cresce em vez de cortar ou sobrepor conteúdo. */
+@media (max-width: 767px) {
+  [data-nivel-tela] {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  [data-nivel-tela] > header {
+    flex: none;
+  }
+
+  [data-nivel-conteudo] {
+    flex: 1;
+    display: grid;
+    grid-template-rows: auto minmax(min-content, 1fr) auto;
+    gap: clamp(12px, 2.4dvh, 28px);
+    max-width: none;
+    padding-inline: clamp(12px, 4vw, 24px);
+    padding-bottom: max(12px, 2dvh, env(safe-area-inset-bottom));
+  }
+
+  [data-nivel-opcoes] {
+    display: grid;
+    grid-template-rows: repeat(3, minmax(min-content, 1fr));
+    gap: clamp(12px, 2.4dvh, 28px);
+    margin: 0;
+  }
+
+  [data-nivel-opcao] {
+    min-height: min-content;
+    padding-block: clamp(12px, 1.6dvh, 20px);
+    padding-left: clamp(56px, 16vw, 72px);
+    padding-right: clamp(40px, 10vw, 48px);
+  }
+
+  [data-nivel-conteudo] > footer {
+    align-self: end;
+    margin: 0;
+  }
+}
 
 /* Cadastro: em desktop, os blocos viram uma página única, ampla e legível. */
 @media (min-width: 1024px) {
@@ -462,7 +500,7 @@ html.alto-contraste main img:not(.leaflet-tile) { filter: contrast(1.08) saturat
 @media (min-width: 360px) and (min-height: 680px) and (max-width: 1023px) {
   .sucesso-tela {
     align-items: flex-start;
-    padding: 0;
+    padding: 136px 0 0;
     background:
       radial-gradient(circle at 50% 14%, rgb(0 139 255 / 11%), transparent 29rem),
       #f2f3f6;
@@ -474,7 +512,7 @@ html.alto-contraste main img:not(.leaflet-tile) { filter: contrast(1.08) saturat
     border-radius: 0;
     background: transparent;
     box-shadow: none;
-    padding: clamp(7rem, 14dvh, 10rem) clamp(1.5rem, 7vw, 3.5rem) clamp(1.5rem, 4dvh, 3rem);
+    padding: clamp(1.25rem, 3dvh, 2rem) clamp(1.5rem, 7vw, 3.5rem) clamp(1.5rem, 4dvh, 3rem);
   }
 
   .sucesso-selo {

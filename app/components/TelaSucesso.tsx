@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { ClipboardCheck, FileCheck2, Home, PhoneCall } from "lucide-react";
 import BotaoAudio from "./BotaoAudio";
+import CabecalhoFluxo from "./CabecalhoFluxo";
 import { useAudioDescricao } from "./useAudioDescricao";
 
 type Props = { onInicio: () => void };
@@ -31,7 +32,7 @@ const etapas = [
 
 export default function TelaSucesso({ onInicio }: Props) {
   const textoConfirmacao = "Pré-inscrição enviada. Próximos passos.";
-  const resumo = `${textoConfirmacao} ${etapas.map((etapa) => `${etapa.numero}. ${etapa.titulo}. ${etapa.descricao}`).join(" ")}`;
+  const resumo = `Etapa 4 de 4 concluída. ${textoConfirmacao} ${etapas.map((etapa) => `${etapa.numero}. ${etapa.titulo}. ${etapa.descricao}`).join(" ")}`;
   const { ativo, falarAgora, interromper } = useAudioDescricao();
 
   useEffect(() => {
@@ -40,8 +41,8 @@ export default function TelaSucesso({ onInicio }: Props) {
   }, [falarAgora, resumo]);
 
   return (
-    <main className="sucesso-tela relative flex min-h-dvh items-center justify-center overflow-hidden bg-fundo-claro p-4 sm:p-5">
-      <BotaoAudio texto={resumo} ariaLabel="Ativar ou desativar leitura assistida" className="rounded-full bg-white p-3 text-[#008bff] disabled:cursor-wait disabled:opacity-75" />
+    <main className="sucesso-tela relative flex min-h-dvh items-center justify-center overflow-hidden bg-fundo-claro p-4 pt-[136px] sm:p-5 sm:pt-[136px]">
+      <CabecalhoFluxo etapa={4} concluido textoAudio={resumo} posicao="absolute" />
       <section className="sucesso-cartao relative mx-auto w-full max-w-xl overflow-hidden rounded-3xl bg-white px-5 py-6 text-center shadow-xl shadow-[#0257a0]/10 sm:px-7 sm:py-7">
         <div data-vlibras-pai="sucesso-resumo" data-vlibras-texto={textoConfirmacao} className="sucesso-resumo relative">
           <ConfirmacaoAnimada />
@@ -56,7 +57,7 @@ export default function TelaSucesso({ onInicio }: Props) {
 
         <div className="sucesso-etapas relative mt-5 space-y-2 text-left sm:mt-6 sm:space-y-3">
           {etapas.map((etapa) => (
-            <Passo key={etapa.numero} {...etapa} ativo={ativo} falarAgora={falarAgora} />
+            <Passo key={etapa.numero} {...etapa} ativo={ativo} />
           ))}
         </div>
 
@@ -107,13 +108,12 @@ function BotaoPai({ texto }: { texto: string }) {
   );
 }
 
-function Passo({ numero, icone, titulo, descricao, ativo, falarAgora }: {
+function Passo({ numero, icone, titulo, descricao, ativo }: {
   numero: string;
   icone: ReactNode;
   titulo: string;
   descricao: string;
   ativo: boolean;
-  falarAgora: (texto: string) => Promise<void>;
 }) {
   const texto = `${numero}. ${titulo}. ${descricao}`;
   return (

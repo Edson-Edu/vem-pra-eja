@@ -2,7 +2,6 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  ArrowLeft,
   Bus,
   CalendarDays,
   ChevronRight,
@@ -16,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import BotaoAudio from "./BotaoAudio";
+import CabecalhoFluxo from "./CabecalhoFluxo";
 import type { Escola, Turno } from "../lib/escolas";
 import { distanciaEmMetros, formatarDistancia, useLocalizacaoUsuario } from "../lib/localizacao";
 import TextoAcessivel from "./TextoAcessivel";
@@ -55,7 +55,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
   const { ativo, falarAgora, interromper } = useAudioDescricao();
   const { localizacao } = useLocalizacaoUsuario();
   const turnos = escola.turnos.filter((turno) => turno.nivel === nivel);
-  const leituraInicial = `${textoParaAudio(escola.nome)}, no bairro ${escola.bairro}, em ${escola.cidade}. Selecione um turno para conhecer horários, dias de aula, como funciona e auxílios.`;
+  const leituraInicial = `Etapa 3 de 4. ${textoParaAudio(escola.nome)}, no bairro ${escola.bairro}, em ${escola.cidade}. Selecione um turno para conhecer horários, dias de aula, como funciona e auxílios.`;
   const textoDistancia = localizacao
     ? formatarDistancia(distanciaEmMetros(localizacao, escola))
     : "Confira no mapa";
@@ -76,24 +76,15 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
 
   return (
     <main className="min-h-dvh bg-[#f2f3f6]">
-      <header className="sticky top-0 z-[1100] bg-[#0257a0] pb-7 pt-5 text-white">
-        <div className="flex items-center justify-between px-5 md:px-10">
-          <button type="button" onClick={() => { interromper(); onVoltar(); }} aria-label="Voltar" className="rounded-full bg-white/15 p-3">
-            <ArrowLeft className="size-5" />
-          </button>
-          <BotaoAudio texto={resumo} ariaLabel="Ativar ou desativar leitura assistida" className="rounded-full bg-white p-3 text-[#0257a0] disabled:cursor-wait disabled:opacity-75" />
-        </div>
+      <CabecalhoFluxo etapa={3} textoAudio={resumo} onVoltar={() => { interromper(); onVoltar(); }} />
 
-        <div data-vlibras-pai="resumo-escola" className="mx-auto mt-4 max-w-3xl px-6 text-center">
+      <section className="mx-auto max-w-3xl bg-[#f2f3f6] px-5 pb-40 pt-5">
+        <div data-vlibras-pai="resumo-escola" className="mb-6 text-center">
           <h1 className="text-2xl font-black leading-tight sm:text-3xl">
-            <TextoAcessivel texto={escola.nome} textoOcultoParaLer={leituraInicial} corIcone="text-white" />
+            <TextoAcessivel texto={escola.nome} textoOcultoParaLer={leituraInicial} corIcone="text-[#4e8afb]" />
           </h1>
-          <p className="mt-2 text-sm text-white/80">{escola.bairro} · {escola.cidade} · SC</p>
+          <p className="mt-2 text-sm text-slate-500">{escola.bairro} · {escola.cidade} · SC</p>
         </div>
-      </header>
-
-      <section className="mx-auto -mt-3 max-w-3xl rounded-t-[34px] bg-[#f2f3f6] px-5 pb-40 pt-3">
-        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-slate-300" />
         <p data-vlibras-pai="instrucao-turnos" className="text-sm font-bold text-[#1e1b4b]">Selecione um turno:</p>
 
         <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">

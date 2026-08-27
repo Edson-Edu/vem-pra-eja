@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  allowedDevOrigins: ["10.170.0.18"],
+  
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,

@@ -274,7 +274,7 @@ function agruparBlocosDaTelaNivel() {
   if (rotaAtual() !== "/nivel") return;
   const pergunta = document.querySelector<HTMLElement>("main h1");
   if (pergunta?.innerText) criarBlocoDeTraducao(pergunta, "Você estudar até série ou ano qual?");
-  const opcoes = document.querySelectorAll<HTMLElement>("main [role=button][tabindex=\"0\"]");
+  const opcoes = document.querySelectorAll<HTMLElement>("main [data-nivel-opcao]");
   const opcoesParaLibras = [
     "Eu nunca estudar.",
     "TERMINAR ESTUDAR SÉRIE 1 ATÉ 9",
@@ -286,6 +286,13 @@ function agruparBlocosDaTelaNivel() {
   });
   const fraseFinal = document.querySelector<HTMLElement>("main footer p");
   if (fraseFinal?.innerText) criarBlocoDeTraducao(fraseFinal, "Todas as escolas são gratuitas. Todas oferecem auxílios para concluir os estudos.");
+}
+
+function agruparIndicadoresDeProgresso() {
+  document.querySelectorAll<HTMLElement>("[data-eja-progresso]").forEach((indicador) => {
+    const texto = indicador.dataset.vlibrasTexto ?? textoVisivelDoBloco(indicador);
+    if (texto) criarBlocoDeTraducao(indicador, texto);
+  });
 }
 
 function agruparBlocosDaTelaDeMapa() {
@@ -332,6 +339,7 @@ function agruparBlocosDaTelaSucesso() {
 }
 
 function agruparBlocosDaPagina() {
+  agruparIndicadoresDeProgresso();
   agruparBlocosDaTelaNivel();
   agruparBlocosDaTelaDeMapa();
   agruparBlocosDaTelaDetalhes();

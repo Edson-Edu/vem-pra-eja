@@ -10,12 +10,12 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
-  ArrowLeft,
   CheckCircle2,
   Clock3,
   LocateFixed,
   MapPin,
 } from "lucide-react";
+import CabecalhoFluxo from "./CabecalhoFluxo";
 import BotaoAudio from "./BotaoAudio";
 import MapaEscolas from "./MapaEscolas";
 import { textoParaAudio, useAudioDescricao } from "./useAudioDescricao";
@@ -67,7 +67,7 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
     }
   }, []);
 
-  const orientacao = `Encontramos ${escolas.length} escolas prontas para você. Navegue pelo mapa ou toque no nome de uma escola para ouvir seus detalhes.`;
+  const orientacao = `Etapa 2 de 4. Encontramos ${escolas.length} escolas prontas para você. Navegue pelo mapa ou toque no nome de uma escola para ouvir seus detalhes.`;
 
   const comecarArrasteLista = (evento: ReactPointerEvent<HTMLButtonElement>) => {
     if (window.innerWidth >= 1280 || !listaRef.current) return;
@@ -138,35 +138,22 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
           onClick={redefinirEnquadramento}
           aria-label="Mostrar todas as escolas no mapa"
           title="Mostrar todas as escolas"
-          className="absolute left-4 top-[108px] z-[1090] flex size-11 items-center justify-center rounded-full bg-white text-[#0257a0] shadow-lg transition hover:scale-105 xl:top-24"
+          className="absolute left-4 top-[184px] z-[1090] flex size-11 items-center justify-center rounded-full bg-white text-[#0257a0] shadow-lg transition hover:scale-105"
         >
           <LocateFixed className="size-5" />
         </button>
       )}
 
-      <header
-        ref={cabecalhoRef}
-        className="absolute inset-x-0 top-0 z-[1100] flex h-[74px] items-center justify-between bg-white px-5 shadow-sm"
-      >
-        <button
-          type="button"
-          onClick={() => {
-            interromper();
-            onVoltar();
-          }}
-          aria-label="Voltar"
-          className="rounded-full bg-slate-100 p-3 text-[#4e8afb]"
-        >
-          <ArrowLeft className="size-5" />
-        </button>
-        <h1 className="font-black text-[#1e293b]">Escolha sua escola</h1>
-        <BotaoAudio texto={orientacao} ariaLabel="Ativar ou desativar leitura assistida" className="rounded-full bg-slate-100 p-3 text-[#4e8afb] disabled:cursor-wait disabled:opacity-75" />
-      </header>
+      <CabecalhoFluxo etapa={2} textoAudio={orientacao} onVoltar={() => { interromper(); onVoltar(); }} posicao="absolute" referencia={cabecalhoRef} />
+
+      <h1 className="absolute left-1/2 top-[132px] z-[1090] -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 px-4 py-2 text-sm font-black text-[#1e293b] shadow-md backdrop-blur-sm sm:text-base">
+        Escolha sua escola
+      </h1>
 
       <section
         ref={listaRef}
         style={alturaDaLista ? { height: `${alturaDaLista}px` } : undefined}
-        className="absolute inset-x-0 bottom-0 z-[1100] flex h-[61dvh] min-h-[260px] max-h-[82dvh] flex-col overflow-hidden rounded-t-[30px] bg-[#f2f3f6] shadow-[0_-8px_22px_rgb(0_0_0/0.14)] xl:bottom-8 xl:left-auto xl:right-8 xl:top-24 xl:h-auto xl:max-h-none xl:w-[440px] xl:rounded-3xl"
+        className="absolute inset-x-0 bottom-0 z-[1100] flex h-[59dvh] min-h-[260px] max-h-[80dvh] flex-col overflow-hidden rounded-t-[30px] bg-[#f2f3f6] shadow-[0_-8px_22px_rgb(0_0_0/0.14)] xl:bottom-8 xl:left-auto xl:right-8 xl:top-32 xl:h-auto xl:max-h-none xl:w-[440px] xl:rounded-3xl"
       >
         <div className="shrink-0 border-b border-slate-200 bg-[#f2f3f6] shadow-[0_2px_8px_rgb(15_23_42/0.04)]">
           <button
