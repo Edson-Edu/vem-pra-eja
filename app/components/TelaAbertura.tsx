@@ -7,6 +7,7 @@ import { Building2, GraduationCap } from "lucide-react";
 import BotaoAudio from "./BotaoAudio";
 import { useLocalizacaoUsuario } from "../lib/localizacao";
 import { buscarEscolas } from "../lib/supabase-client";
+import { useMenuAcessibilidadeAberto } from "./estadoMenuAcessibilidade";
 
 type TelaAberturaProps = {
   /** Executado após o fade final. Use para abrir a próxima tela. */
@@ -37,6 +38,7 @@ function precarregarImagem(url: string) {
 }
 
 export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
+  const menuAberto = useMenuAcessibilidadeAberto();
   const [saindo, setSaindo] = useState(false);
   const { solicitarLocalizacao } = useLocalizacaoUsuario({ solicitarAutomaticamente: false });
   const [semLogoPrefeitura, setSemLogoPrefeitura] = useState(false);
@@ -81,14 +83,14 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
   }, [onComplete, solicitarLocalizacao]);
 
   useEffect(() => {
-    if (!onComplete || !animacaoConcluida || !localizacaoRespondida) return;
+    if (!onComplete || !animacaoConcluida || !localizacaoRespondida || menuAberto) return;
     const inicioSaida = window.setTimeout(() => setSaindo(true), 350);
     const fimSaida = window.setTimeout(onComplete, 1000);
     return () => {
       window.clearTimeout(inicioSaida);
       window.clearTimeout(fimSaida);
     };
-  }, [animacaoConcluida, localizacaoRespondida, onComplete]);
+  }, [animacaoConcluida, localizacaoRespondida, onComplete, menuAberto]);
 
   return (
     <>
@@ -100,15 +102,6 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
           transition={{ duration: 0.6, ease: "easeIn" }}
           className="relative flex min-h-dvh flex-col overflow-hidden bg-azul-principal"
         >
-          <motion.span
-            data-eja-rotulo-acessibilidade
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1.5, duration: 0.8, ease: "easeOut" }}
-              className="pointer-events-none rounded-full border border-white/30 bg-white/15 px-4 text-sm font-semibold text-white md:px-5 md:text-base"
-            >
-              Acessibilidade
-          </motion.span>
           <div className="flex flex-1 flex-col items-center justify-center">
             <div className="flex items-center gap-2">
               <motion.span

@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import BotaoAltoContraste from "./BotaoAltoContraste";
 import BotaoVLibras from "./BotaoVLibras";
-import GerenciadorFeedbackAudio from "./GerenciadorFeedbackAudio";
+import MenuAcessibilidade from "./MenuAcessibilidade";
 
 export default function ControlesGlobais() {
   const pathname = usePathname();
@@ -14,7 +14,7 @@ export default function ControlesGlobais() {
 
   return (
     <>
-      <GerenciadorFeedbackAudio />
+      <MenuAcessibilidade />
       <BotaoAltoContraste />
       <BotaoVLibras />
     </>

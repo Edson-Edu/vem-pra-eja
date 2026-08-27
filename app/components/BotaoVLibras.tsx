@@ -97,7 +97,8 @@ function criarBlocoDeTraducao(elemento: HTMLElement, texto: string, adaptarTexto
     else delete existente.dataset.vlibrasGloss;
     return;
   }
-  elemento.style.position = "relative";
+  // Mantém âncoras absolutas/fixas (como a legenda sobre o mapa).
+  if (getComputedStyle(elemento).position === "static") elemento.style.position = "relative";
   const camada = document.createElement("span");
   camada.className = "vlibras-bloco";
   camada.setAttribute("aria-hidden", "true");
@@ -297,6 +298,9 @@ function agruparIndicadoresDeProgresso() {
 
 function agruparBlocosDaTelaDeMapa() {
   if (rotaAtual() !== "/escolas") return;
+  document.querySelectorAll<HTMLElement>("[data-eja-nome-mapa]").forEach((nome) => {
+    criarBlocoDeTraducao(nome, textoVisivelDoBloco(nome));
+  });
   const botoesDeDetalhes = [...document.querySelectorAll<HTMLButtonElement>("button")].filter((botao) => botao.textContent?.trim() === "Ver escola");
   botoesDeDetalhes.forEach((botao) => {
     const cartao = botao.closest<HTMLElement>("[class*='overflow-hidden']");
@@ -340,6 +344,10 @@ function agruparBlocosDaTelaSucesso() {
 
 function agruparBlocosDaPagina() {
   agruparIndicadoresDeProgresso();
+  document.querySelectorAll<HTMLElement>("[data-eja-legenda-mapa]").forEach((bloco) => {
+    const texto = bloco.dataset.vlibrasTexto;
+    if (texto) criarBlocoDeTraducao(bloco, texto);
+  });
   agruparBlocosDaTelaNivel();
   agruparBlocosDaTelaDeMapa();
   agruparBlocosDaTelaDetalhes();
@@ -474,6 +482,22 @@ export default function BotaoVLibras() {
     const retomadasDoPainel: number[] = [];
     const verificacoesDeFechamento: number[] = [];
     let cancelado = false;
+    let retomarCaptura = 0;
+    // O pacote oficial intercepta cliques para traduzir textos. Os comandos
+    // do aplicativo precisam continuar acionáveis, sobretudo para desligá-lo.
+    // Usamos os eventos do próprio widget, sem modificar a versão vendorizada.
+    const preservarAcoes = (evento: MouseEvent) => {
+      if (!(evento.target instanceof Element)) return;
+      if (!evento.target.closest(".eja-acessibilidade-abrir, .eja-acessibilidade-dialogo, button[data-vlibras-acao]")) return;
+      window.dispatchEvent(new Event("vp-disable-text-capture"));
+      window.clearTimeout(retomarCaptura);
+      retomarCaptura = window.setTimeout(() => {
+        if (obterEstadoVLibras() && !document.querySelector(".eja-acessibilidade-dialogo[open]")) {
+          window.dispatchEvent(new Event("vp-enable-text-capture"));
+        }
+      }, 0);
+    };
+    window.addEventListener("click", preservarAcoes, true);
     const deveManterAberto = () => obterEstadoVLibras();
     const cancelarRetomadas = () => {
       retomadasDoPainel.splice(0).forEach((retomada) => window.clearTimeout(retomada));
@@ -505,6 +529,14 @@ export default function BotaoVLibras() {
 
     const sincronizarPainelComEstadoGlobal = () => {
       window.clearTimeout(sincronizacaoDoPainel);
+      if (!deveManterAberto()) {
+        cancelarRetomadas();
+        window.dispatchEvent(new Event("vp-disable-text-capture"));
+        const acesso = document.querySelector<HTMLElement>("[vw-access-button]");
+        if (painelVLibrasEstaAberto() && acesso) alternarPainelPelaSincronizacao(acesso);
+        posicionar();
+        return;
+      }
       sincronizacaoDoPainel = window.setTimeout(() => {
         if (cancelado) return;
         const painelAtual = document.querySelector<HTMLElement>("[vw-plugin-wrapper]");
@@ -669,6 +701,8 @@ export default function BotaoVLibras() {
       window.clearTimeout(sincronizacaoDoPainel);
       window.clearTimeout(fimDaSincronizacaoVisual);
       window.clearTimeout(vigiaDeProntidao);
+      window.clearTimeout(retomarCaptura);
+      window.removeEventListener("click", preservarAcoes, true);
       retomadasDoPainel.forEach((retomada) => window.clearTimeout(retomada));
       verificacoesDeFechamento.forEach((verificacao) => window.clearTimeout(verificacao));
       pararDeObservarEstado();

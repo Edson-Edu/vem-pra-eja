@@ -6,10 +6,11 @@ type Props = {
 };
 
 const TOTAL_DE_ETAPAS = 4;
+const NOMES_DAS_ETAPAS = { 1: "Nível", 2: "Escola", 3: "Turno", 4: "Cadastro" };
 
 export default function IndicadorProgresso({ etapa, concluido = false, inverso = false, className = "" }: Props) {
   const percentual = Math.round((etapa / TOTAL_DE_ETAPAS) * 100);
-  const rotulo = concluido ? `Etapa ${etapa} de ${TOTAL_DE_ETAPAS}, concluída` : `Etapa ${etapa} de ${TOTAL_DE_ETAPAS}`;
+  const rotulo = concluido ? "Cadastro concluído. Etapa 4 de 4." : `Etapa ${etapa} de ${TOTAL_DE_ETAPAS}: ${NOMES_DAS_ETAPAS[etapa]}`;
 
   return (
     <div
@@ -25,7 +26,7 @@ export default function IndicadorProgresso({ etapa, concluido = false, inverso =
       <span className={`h-2 min-w-0 flex-1 overflow-hidden rounded-full ${inverso ? "bg-white/25" : "bg-slate-200"}`} aria-hidden="true">
         <span className={`block h-full rounded-full transition-[width] duration-500 ${inverso ? "bg-white" : "bg-[#4e8afb]"}`} style={{ width: `${percentual}%` }} />
       </span>
-      <strong className={`shrink-0 text-xs font-black ${inverso ? "text-white" : "text-[#0257a0]"}`}>{concluido ? "Concluído" : `${etapa} de ${TOTAL_DE_ETAPAS}`}</strong>
+      <strong className={`shrink-0 text-xs font-black ${inverso ? "text-white" : "text-[#0257a0]"}`}>{concluido ? "Concluído" : `${etapa} de ${TOTAL_DE_ETAPAS} · ${NOMES_DAS_ETAPAS[etapa]}`}</strong>
     </div>
   );
 }

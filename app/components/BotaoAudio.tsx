@@ -30,6 +30,10 @@ export default function BotaoAudio({
   const { ativo, carregando, alternar, falarAgora } = useAudioDescricao();
   const global = modo === "alternar";
 
+  // O menu global usa o resumo da tela atual; os leitores de bloco continuam
+  // sendo botões independentes, sem perder o texto preparado para a voz.
+  if (global) return <span hidden data-eja-audio-texto={textoParaAudio(texto)} />;
+
   const aoClicar = (evento: React.MouseEvent<HTMLButtonElement>) => {
     if (interromperEvento) evento.stopPropagation();
     const textoPreparado = textoParaAudio(texto);
@@ -43,6 +47,7 @@ export default function BotaoAudio({
   return (
     <button
       type="button"
+      data-vlibras-acao="pronto"
       data-eja-audio-global={global ? "pronto" : undefined}
       aria-label={carregando ? "Preparando áudio" : ariaLabel}
       aria-pressed={global ? ativo : undefined}

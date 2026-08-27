@@ -1,9 +1,10 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import type { Escola } from "../lib/escolas";
 import type { LocalizacaoUsuario } from "../lib/localizacao";
+import { distribuirPinos } from "../lib/distribuir-pinos";
 
 declare global {
   interface Window { L?: any; }
@@ -24,31 +25,35 @@ type Props = {
   onVisaoAlterada: (alterada: boolean) => void;
 };
 
-function nomeCurto(nome: string) {
-  return nome.replace(/^E\.?E\.?B\.?\s*/i, "").replace(/^E\.?B\.?M\.?\s*/i, "").replace(/^CEJA\s*/i, "").replace(/\s*-\s*Campus.*$/i, "").trim().split(/\s+/).slice(0, 3).join(" ");
-}
-
 function escaparHtml(texto: string) {
   return texto.replace(/[&<>"']/g, (caractere) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" })[caractere] ?? caractere);
 }
 
 function carregarLeaflet() {
-  if (window.L) return Promise.resolve();
   if (leafletEmCarregamento) return leafletEmCarregamento;
-  leafletEmCarregamento = new Promise<void>((resolve, reject) => {
+  const estilos = new Promise<void>((resolve, reject) => {
+    const existente = document.querySelector<HTMLLinkElement>("link[data-eja-leaflet]");
+    if (existente?.sheet) return resolve();
+    const css = existente ?? document.createElement("link");
+    css.rel = "stylesheet";
+    css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    css.dataset.ejaLeaflet = "pronto";
+    css.addEventListener("load", () => resolve(), { once: true });
+    css.addEventListener("error", () => { css.remove(); reject(new Error("Não foi possível carregar o estilo do mapa.")); }, { once: true });
+    if (!existente) document.head.appendChild(css);
+  });
+  const codigo = new Promise<void>((resolve, reject) => {
     if (window.L) return resolve();
-    if (!document.querySelector("link[data-eja-leaflet]")) {
-      const css = document.createElement("link");
-      css.rel = "stylesheet";
-      css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      css.dataset.ejaLeaflet = "pronto";
-      document.head.appendChild(css);
-    }
     const script = document.createElement("script");
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     script.onload = () => { if (window.L) resolve(); else reject(new Error("Não foi possível inicializar o mapa.")); };
     script.onerror = () => { leafletEmCarregamento = null; reject(new Error("Não foi possível carregar o mapa.")); };
     document.head.appendChild(script);
+  });
+  // Sem o CSS, os ícones podem ser medidos/posicionados como elementos comuns.
+  leafletEmCarregamento = Promise.all([estilos, codigo]).then(() => undefined).catch((erro) => {
+    leafletEmCarregamento = null;
+    throw erro;
   });
   return leafletEmCarregamento;
 }
@@ -57,33 +62,39 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
   const elementRef = useRef<HTMLDivElement>(null);
   const mapaRef = useRef<any>(null);
   const marcadoresRef = useRef<any[]>([]);
+  const ligacoesRef = useRef<any[]>([]);
   const marcadorDoUsuarioRef = useRef<any>(null);
   const escolasEnquadradasRef = useRef("");
   const ultimaSelecaoRef = useRef<string | undefined>(undefined);
   const usuarioInteragiuRef = useRef(false);
   const aplicandoEnquadramentoRef = useRef(false);
+  const enquadrarAtualRef = useRef<() => void>(() => undefined);
   const [pronto, setPronto] = useState(false);
 
-  const areaVisivel = () => {
+  const areaVisivel = useCallback(() => {
     const mapa = elementRef.current?.getBoundingClientRect();
     if (!mapa) return null;
 
-    let esquerda = mapa.left;
+    const esquerda = mapa.left;
     let topo = mapa.top;
     let direita = mapa.right;
     let base = mapa.bottom;
     const cabecalho = cabecalhoRef.current?.getBoundingClientRect();
     const lista = listaRef.current?.getBoundingClientRect();
 
-    if (cabecalho && cabecalho.bottom > topo) topo = Math.min(mapa.bottom, cabecalho.bottom);
+    // Reserva a faixa do título flutuante, sem alterar o tamanho do mapa.
+    if (cabecalho && cabecalho.bottom > topo) topo = Math.min(mapa.bottom, cabecalho.bottom + (window.innerWidth < 768 ? 48 : 0));
     if (lista) {
       const ocupaLarguraToda = lista.left <= mapa.left + 1 && lista.right >= mapa.right - 1;
-      if (ocupaLarguraToda) base = Math.max(topo, Math.min(base, lista.top));
+      if (ocupaLarguraToda) {
+        const legenda = window.innerWidth < 768 ? listaRef.current?.querySelector("[data-eja-legenda-mapa]")?.getBoundingClientRect() : null;
+        base = Math.max(topo, Math.min(base, legenda ? legenda.top - 8 : lista.top));
+      }
       else if (lista.right >= mapa.right - 1) direita = Math.max(esquerda, Math.min(direita, lista.left));
     }
 
     return { mapa, esquerda, topo, direita, base };
-  };
+  }, [cabecalhoRef, listaRef]);
 
   const enquadrarEscolas = (forcar = false) => {
     const mapa = mapaRef.current;
@@ -96,9 +107,9 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
     }
     const larguraVisivel = area.direita - area.esquerda;
     const alturaVisivel = area.base - area.topo;
+    mapa.invalidateSize({ pan: false });
     const tamanhoDoMapa = mapa.getSize();
     if (tamanhoDoMapa.x < 2 || tamanhoDoMapa.y < 2 || larguraVisivel < 2 || alturaVisivel < 2) return;
-    mapa.invalidateSize({ pan: false });
     const pontos = escolas
       .map((escola) => [Number(escola.latitude), Number(escola.longitude)] as [number, number])
       .filter(([latitude, longitude]) => Number.isFinite(latitude) && Number.isFinite(longitude));
@@ -108,8 +119,11 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
     if (!pontos.length) return;
     const bounds = L.latLngBounds(pontos);
     if (!bounds.isValid()) return;
-    let paddingTopLeft: [number, number] = [Math.min(tamanhoDoMapa.x - 2, Math.max(0, area.esquerda - area.mapa.left + 24)), Math.min(tamanhoDoMapa.y - 2, Math.max(0, area.topo - area.mapa.top + 24))];
-    let paddingBottomRight: [number, number] = [Math.min(tamanhoDoMapa.x - 2, Math.max(0, area.mapa.right - area.direita + 24)), Math.min(tamanhoDoMapa.y - 2, Math.max(0, area.mapa.bottom - area.base + 24))];
+    const celular = window.innerWidth < 768;
+    const margemHorizontal = celular ? 80 : 24;
+    const margemSuperior = celular ? Math.min(84, alturaVisivel * 0.45) : 24;
+    const paddingTopLeft: [number, number] = [Math.min(tamanhoDoMapa.x - 2, Math.max(0, area.esquerda - area.mapa.left + margemHorizontal)), Math.min(tamanhoDoMapa.y - 2, Math.max(0, area.topo - area.mapa.top + margemSuperior))];
+    const paddingBottomRight: [number, number] = [Math.min(tamanhoDoMapa.x - 2, Math.max(0, area.mapa.right - area.direita + margemHorizontal)), Math.min(tamanhoDoMapa.y - 2, Math.max(0, area.mapa.bottom - area.base + 24))];
     // O Leaflet exige que a soma das duas margens seja menor que o mapa.
     // Durante a transição de rota, o painel ainda pode ocupar toda a altura.
     const limitarEixo = (inicio: number, fim: number, tamanho: number): [number, number] => {
@@ -125,12 +139,15 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
       aplicandoEnquadramentoRef.current = true;
       onVisaoAlterada(false);
       mapa.once("moveend", () => { aplicandoEnquadramentoRef.current = false; });
-      mapa.fitBounds(bounds, { paddingTopLeft, paddingBottomRight, maxZoom: 14 });
+      mapa.fitBounds(bounds, { paddingTopLeft, paddingBottomRight, maxZoom: 14, ...(celular ? { animate: false } : {}) });
+      if (celular) aplicandoEnquadramentoRef.current = false;
     } catch {
       aplicandoEnquadramentoRef.current = false;
       // Aguarda o ResizeObserver quando o mapa terminar de ocupar a tela.
     }
   };
+
+  useEffect(() => { enquadrarAtualRef.current = enquadrarEscolas; });
 
   const centralizarNaAreaVisivel = (escola: Escola, aproximar = false) => {
     const mapa = mapaRef.current;
@@ -192,9 +209,10 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
         updateWhenZooming: false,
       }).addTo(mapa);
       mapaRef.current = mapa;
+      escolasEnquadradasRef.current = "";
       // O VLibras pode alterar a área de pintura durante a troca de tela. Revalidar
       // o tamanho e redesenhar os tiles evita um primeiro carregamento em branco.
-      const estabilizarMapa = (redesenhar = false) => { if (!ativo || mapaRef.current !== mapa) return; mapa.invalidateSize({ pan: false }); if (redesenhar) camadaBase.redraw(); enquadrarEscolas(); };
+      const estabilizarMapa = (redesenhar = false) => { if (!ativo || mapaRef.current !== mapa) return; mapa.invalidateSize({ pan: false }); if (redesenhar) camadaBase.redraw(); enquadrarAtualRef.current(); };
       mapa.on("dragstart", () => {
         usuarioInteragiuRef.current = true;
         onVisaoAlterada(true);
@@ -224,9 +242,13 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
       const ativo = escola.id === selecionada;
       const tamanho = ativo ? 38 : 34;
       const cor = ativo ? "#008BFF" : "#E44335";
-      const rotulo = escaparHtml(nomeCurto(escola.nome));
-      const icone = L.divIcon({ className: "", html: `<div style="position:relative;width:142px;height:72px;font-family:Inter,Arial,sans-serif"><span style="position:absolute;top:0;left:50%;max-width:142px;transform:translateX(-50%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;background:#fff;padding:3px 8px;color:#17325c;font-size:11px;font-weight:800;box-shadow:0 1px 5px #0004">${rotulo}</span><div style="position:absolute;top:28px;left:50%;width:${tamanho}px;height:${tamanho}px;transform:translateX(-50%) rotate(-45deg);display:flex;align-items:center;justify-content:center;border:3px solid white;border-radius:50% 50% 50% 0;background:${cor};box-shadow:0 2px 7px #0005"><span style="transform:rotate(45deg);color:white;font-size:15px;font-weight:900;line-height:1">${indice + 1}</span></div></div>`, iconSize: [142, 72], iconAnchor: [71, 64] });
-      return L.marker([escola.latitude, escola.longitude], { icon: icone }).addTo(mapa).on("click", () => onMarcadorClick(escola.id));
+      const rotulo = escaparHtml(escola.nome);
+      const icone = L.divIcon({ className: "eja-marcador-escola", html: `<div class="eja-marcador-conteudo"><span class="eja-marcador-nome"><span data-eja-nome-mapa>${rotulo}</span></span><div class="eja-marcador-pino" style="width:${tamanho}px;height:${tamanho}px;background:${cor}"><span>${indice + 1}</span></div></div>`, iconSize: [142, 44], iconAnchor: [71, 44] });
+      const marcador = L.marker([escola.latitude, escola.longitude], { icon: icone, title: `${indice + 1}. ${escola.nome}`, alt: escola.nome, keyboard: true, zIndexOffset: ativo ? 1000 : 0 }).addTo(mapa).on("click", () => onMarcadorClick(escola.id));
+      const elemento = marcador.getElement();
+      elemento?.setAttribute("aria-label", `${indice + 1}. ${escola.nome}${ativo ? ". Selecionada" : ""}`);
+      elemento?.setAttribute("aria-pressed", String(ativo));
+      return marcador;
     });
     const chaveDasEscolas = `${escolas.map((escola) => `${escola.id}:${escola.latitude}:${escola.longitude}`).join("|")}|usuario:${localizacaoUsuario ? `${localizacaoUsuario.latitude}:${localizacaoUsuario.longitude}` : ""}`;
     if (escolasEnquadradasRef.current !== chaveDasEscolas) {
@@ -234,6 +256,14 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
       ultimaSelecaoRef.current = selecionada;
       enquadrarEscolas();
     }
+    // O primeiro enquadramento deve ocorrer também depois de os ícones terem
+    // entrado no DOM, sem depender de toque ou do carregamento dos tiles.
+    const quadro = requestAnimationFrame(() => {
+      if (mapaRef.current !== mapa) return;
+      marcadoresRef.current.forEach((marcador) => marcador.update());
+      enquadrarAtualRef.current();
+    });
+    return () => cancelAnimationFrame(quadro);
   }, [escolas, localizacaoUsuario, onMarcadorClick, selecionada, pronto]);
 
   useEffect(() => {
@@ -270,14 +300,65 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
   }, [reenquadrar, onVisaoAlterada]);
 
   useEffect(() => {
-    const atualizarEnquadramento = () => enquadrarEscolas();
+    const atualizarEnquadramento = () => enquadrarAtualRef.current();
     const observador = new ResizeObserver(atualizarEnquadramento);
     if (elementRef.current) observador.observe(elementRef.current);
     if (cabecalhoRef.current) observador.observe(cabecalhoRef.current);
     if (listaRef.current) observador.observe(listaRef.current);
+    const legenda = listaRef.current?.querySelector("[data-eja-legenda-mapa]");
+    if (legenda) observador.observe(legenda);
     window.addEventListener("resize", atualizarEnquadramento);
     return () => { observador.disconnect(); window.removeEventListener("resize", atualizarEnquadramento); };
   }, [escolas, pronto]);
+
+  useEffect(() => {
+    const mapa = mapaRef.current;
+    if (!mapa || !pronto) return;
+    let quadro = 0;
+    const ajustar = () => {
+      ligacoesRef.current.forEach((linha) => linha.remove());
+      ligacoesRef.current = [];
+      const marcadores = marcadoresRef.current;
+      marcadores.forEach((marcador) => {
+        const elemento = marcador.getElement();
+        if (elemento) { elemento.style.marginLeft = "-71px"; elemento.style.marginTop = "-44px"; }
+      });
+      if (window.innerWidth >= 768 || usuarioInteragiuRef.current) return;
+      const area = areaVisivel();
+      if (!area) return;
+      const pontos = marcadores.map((marcador) => mapa.latLngToContainerPoint(marcador.getLatLng()));
+      const base = area.base - area.mapa.top - 12;
+      const topo = Math.min(base, area.topo - area.mapa.top + 90);
+      const distribuidos = distribuirPinos(pontos, { esquerda: 32, direita: area.mapa.width - 32, topo, base });
+      marcadores.forEach((marcador, indice) => {
+        const ponto = pontos[indice];
+        const destino = distribuidos[indice];
+        const dx = destino.x - ponto.x;
+        const dy = destino.y - ponto.y;
+        const elemento = marcador.getElement();
+        if (!elemento) return;
+        elemento.style.marginLeft = `${-71 + dx}px`;
+        elemento.style.marginTop = `${-44 + dy}px`;
+        if (Math.hypot(dx, dy) > 2) {
+          const linha = window.L.polyline([marcador.getLatLng(), mapa.containerPointToLatLng([destino.x, destino.y])], {
+            color: "#0257a0", weight: 1.5, dashArray: "3 3", interactive: false,
+          }).addTo(mapa);
+          ligacoesRef.current.push(linha);
+        }
+      });
+    };
+    const agendar = () => { cancelAnimationFrame(quadro); quadro = requestAnimationFrame(ajustar); };
+    mapa.on("moveend resize", agendar);
+    window.addEventListener("resize", agendar);
+    agendar();
+    return () => {
+      cancelAnimationFrame(quadro);
+      mapa.off("moveend resize", agendar);
+      window.removeEventListener("resize", agendar);
+      ligacoesRef.current.forEach((linha) => linha.remove());
+      ligacoesRef.current = [];
+    };
+  }, [pronto, escolas, selecionada, onMarcadorClick, areaVisivel]);
 
   return <div ref={elementRef} className="absolute inset-0 bg-[#dbeafe]" aria-label="Mapa das escolas" />;
 }

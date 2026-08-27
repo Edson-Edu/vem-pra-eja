@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { definirRecursoAtivo, obterRecursoAtivo, registrarInterrupcaoAudio } from "./estadoRecursosAssistivos";
 
 const evento = "eja-acessibilidade";
 export const EVENTO_DE_REPRODUCAO_DO_AUDIO = "eja-audio-reproducao";
-const chaveDePersistencia = "eja-audio-ativo";
 let tocador: HTMLAudioElement | null = null;
 let fonteDeAudio: AudioBufferSourceNode | null = null;
 let contextoDeAudio: AudioContext | null = null;
@@ -15,7 +15,6 @@ let audioFoiDesbloqueado = false;
 let desbloqueioDoAudio: Promise<boolean> = Promise.resolve(false);
 let versaoDaFila = 0;
 let fila = Promise.resolve();
-let acessibilidadeAtiva = false;
 let estadoDaReproducao = { carregando: false, tocando: false };
 
 // WAV curto e silencioso: iniciado no gesto da pessoa para liberar a mídia
@@ -25,14 +24,11 @@ const TEMPO_MAXIMO_DE_RESPOSTA = 18_000;
 const TEMPO_MAXIMO_DE_INICIO = 6_000;
 
 function estaAtiva() {
-  if (acessibilidadeAtiva) return true;
-  try { return typeof window !== "undefined" && sessionStorage.getItem(chaveDePersistencia) === "true"; } catch { return false; }
+  return obterRecursoAtivo() === "audio";
 }
 function definirAtiva(valor: boolean) {
-  acessibilidadeAtiva = valor;
-  try { sessionStorage.setItem(chaveDePersistencia, valor ? "true" : "false"); } catch { /* armazenamento indisponível */ }
+  definirRecursoAtivo("audio", valor);
 }
-function avisar() { window.dispatchEvent(new Event(evento)); }
 function avisarEstadoDaReproducao() {
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent(EVENTO_DE_REPRODUCAO_DO_AUDIO, { detail: estadoDaReproducao }));
@@ -68,6 +64,8 @@ function parar({ preservarDesbloqueio = false }: { preservarDesbloqueio?: boolea
   fila = Promise.resolve();
   marcarFimDoAudio();
 }
+
+registrarInterrupcaoAudio(parar);
 
 function obterReprodutorNativo() {
   if (reprodutorNativo) return reprodutorNativo;
@@ -199,6 +197,7 @@ async function tocarNoContexto(dados: ArrayBuffer, versao: number) {
 }
 
 async function tocarNoElementoNativo(url: string, versao: number) {
+  if (versao !== versaoDaFila || !estaAtiva()) return true;
   const audio = obterReprodutorNativo();
   audio.pause();
   audio.currentTime = 0;
@@ -210,6 +209,7 @@ async function tocarNoElementoNativo(url: string, versao: number) {
   tocador = audio;
   try {
     await comPrazo(audio.play(), TEMPO_MAXIMO_DE_INICIO, "O navegador não iniciou o áudio.");
+    if (versao !== versaoDaFila || !estaAtiva()) return true;
     audioDeDesbloqueio = null;
     marcarInicioDoAudio();
   } catch {
@@ -229,6 +229,7 @@ async function tocarNoElementoNativo(url: string, versao: number) {
 }
 
 function tocarComSinteseDoNavegador(texto: string, versao: number) {
+  if (versao !== versaoDaFila || !estaAtiva()) return Promise.resolve(false);
   if (!("speechSynthesis" in window)) {
     marcarFimDoAudio();
     return Promise.resolve(false);
@@ -247,6 +248,7 @@ function tocarComSinteseDoNavegador(texto: string, versao: number) {
     fala.lang = "pt-BR";
     fala.rate = 0.92;
     fala.onstart = () => {
+      if (versao !== versaoDaFila || !estaAtiva()) { window.speechSynthesis.cancel(); finalizar(false); return; }
       if (limite !== null) window.clearTimeout(limite);
       marcarInicioDoAudio();
     };
@@ -267,6 +269,7 @@ function tocarComSinteseDoNavegador(texto: string, versao: number) {
 }
 
 async function tocar(texto: string, versao: number) {
+  if (versao !== versaoDaFila || !estaAtiva()) return;
   const endpoint = process.env.NEXT_PUBLIC_AZURE_VOICE_FUNCTION_URL || (process.env.NODE_ENV === "development" ? "/api/voz" : "");
   if (!endpoint) { await tocarComSinteseDoNavegador(texto, versao); return; }
   // text/plain evita a pré-validação CORS de navegadores móveis. O corpo segue
@@ -297,6 +300,7 @@ async function tocar(texto: string, versao: number) {
       return;
     }
     if (await tocarNoContexto(dados, versao)) return;
+    if (versao !== versaoDaFila || !estaAtiva()) return;
     if (urlDoAudio) URL.revokeObjectURL(urlDoAudio);
     urlDoAudio = URL.createObjectURL(new Blob([dados], { type: "audio/mpeg" }));
     if (await tocarNoElementoNativo(urlDoAudio, versao)) return;
@@ -323,7 +327,7 @@ export function useAudioDescricao() {
     window.addEventListener(EVENTO_DE_REPRODUCAO_DO_AUDIO, atualizar);
     return () => window.removeEventListener(EVENTO_DE_REPRODUCAO_DO_AUDIO, atualizar);
   }, []);
-  const alternar = useCallback(async (texto: string) => { if (estaAtiva()) { parar(); definirAtiva(false); avisar(); return; } parar({ preservarDesbloqueio: true }); prepararAudioNoGestoUsuario(); definirAtiva(true); avisar(); await enfileirar(texto); }, []);
+  const alternar = useCallback(async (texto: string) => { if (estaAtiva()) { definirAtiva(false); return; } parar({ preservarDesbloqueio: true }); definirAtiva(true); prepararAudioNoGestoUsuario(); await enfileirar(texto); }, []);
   const falar = useCallback((texto: string) => estaAtiva() ? enfileirar(texto) : Promise.resolve(), []);
   const falarAgora = useCallback((texto: string) => { if (!estaAtiva()) return Promise.resolve(); parar({ preservarDesbloqueio: true }); prepararAudioNoGestoUsuario(); return enfileirar(texto); }, []);
   const interromper = useCallback(() => parar(), []);

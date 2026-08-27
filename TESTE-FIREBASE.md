@@ -4,6 +4,12 @@
 
 TESTE PUBLICADO E VERIFICADO em 27/08/2026. Aguardando decisão do usuário.
 
+### Atualização do teste autorizada em 27/08/2026
+
+O usuário solicitou publicar a revisão de UI/acessibilidade atualmente validada no localhost. A nova publicação substitui somente o teste, não a reserva original `5035a9d7ef5659de`. Build e oito testes passaram. A preparação preserva separadamente fonte e build; os identificadores da nova publicação serão registrados após confirmação do Hosting.
+
+Os comandos **PUBLICAR TESTE OFICIALMENTE** e **PUBLICAR OFICIALMENTE O TESTE** têm o mesmo significado: aprovar a última versão de teste publicada e registrada neste documento, sem incorporar alterações locais posteriores. **CANCELAR TESTE** continua apontando para `5035a9d7ef5659de`.
+
 ## Teste em avaliação
 
 - URL pública: https://vempraeja-novo.web.app

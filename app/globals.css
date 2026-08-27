@@ -19,6 +19,19 @@ body {
 /* Evita frestas entre os tiles do Leaflet em telas grandes e escalas fracionadas. */
 .leaflet-tile { outline: 1px solid transparent; }
 
+/* O nome inteiro fica acima da ponta, sem abreviação nem altura limitada. */
+.eja-marcador-conteudo { position: relative; width: 142px; height: 44px; font-family: inherit; }
+.eja-marcador-nome { position: absolute; bottom: 100%; left: 50%; width: max-content; max-width: min(180px, 45vw); transform: translateX(-50%); margin-bottom: 6px; padding: 5px 9px; border-radius: 12px; background: #fff; color: #17325c; font-size: 11px; font-weight: 800; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; text-align: center; box-shadow: 0 1px 5px #0004; }
+.eja-marcador-pino { position: absolute; bottom: 5px; left: 50%; display: flex; align-items: center; justify-content: center; transform: translateX(-50%) rotate(-45deg); border: 3px solid #fff; border-radius: 50% 50% 50% 0; box-shadow: 0 2px 7px #0005; }
+.eja-marcador-pino > span { transform: rotate(45deg); color: #fff; font-size: 15px; font-weight: 900; line-height: 1; }
+.eja-marcador-escola:focus-visible { outline: 3px solid #0257a0; outline-offset: 6px; }
+/* Em mapas pequenos, nomes sobrepostos ficam ilegíveis. O selecionado é
+   mostrado inteiro; os demais aparecem também ao focar/passar o ponteiro. */
+@media (max-width: 767px) {
+  .eja-marcador-escola:not([aria-pressed="true"]):not(:hover):not(:focus-visible) .eja-marcador-nome { visibility: hidden; }
+}
+html.alto-contraste .eja-marcador-nome { background: #07111f; color: #fff; border: 1px solid #facc15; }
+
 /* Os três recursos globais usam uma única régua em todas as telas. */
 :root {
   --eja-controle-acessibilidade: 44px;
@@ -434,6 +447,85 @@ html.alto-contraste .leaflet-container { filter: contrast(1.15) brightness(.9) s
 html.alto-contraste main img:not(.leaflet-tile) { filter: contrast(1.08) saturate(1.06); }
 
 
+/* Entrada única; os controles originais continuam como ponte para o widget
+   local estável, sem botões flutuantes duplicados ou focos invisíveis. */
+body > [data-eja-alto-contraste],
+body [vw-access-button] { display: none !important; }
+[vw]:not(:has([vw-plugin-wrapper].active)) { visibility: hidden; pointer-events: none; }
+
+.eja-acessibilidade-abrir {
+  position: fixed;
+  top: var(--eja-topo-controles);
+  right: var(--eja-direita-controles);
+  z-index: 1400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #d6e2ef;
+  border-radius: 999px;
+  background: #fff;
+  color: #0257a0;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  cursor: pointer;
+}
+.eja-acessibilidade-dialogo {
+  width: min(480px, calc(100% - 32px));
+  max-width: none;
+  max-height: min(90dvh, 680px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid #d6e2ef;
+  border-radius: 24px;
+  background: #fff;
+  color: #1e293b;
+  box-shadow: 0 16px 60px #0004;
+  overscroll-behavior: contain;
+}
+.eja-acessibilidade-dialogo::backdrop { background: rgb(8 24 43 / 55%); }
+.eja-acessibilidade-painel { padding: 12px 20px max(20px, env(safe-area-inset-bottom)); }
+.eja-acessibilidade-alca { display: block; width: 40px; height: 5px; margin: 0 auto 8px; border-radius: 999px; background: #dce5ef; }
+.eja-acessibilidade-cabecalho { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+.eja-acessibilidade-cabecalho h2 { font-size: 18px; font-weight: 800; }
+.eja-acessibilidade-cabecalho button { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 999px; color: #0257a0; cursor: pointer; }
+.eja-acessibilidade-opcao { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 100px; padding: 16px 0; border-top: 1px solid #e2e8f0; text-align: left; cursor: pointer; }
+.eja-acessibilidade-icone { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: #edf4fb; color: #0257a0; }
+.eja-acessibilidade-texto { flex: 1; min-width: 0; }
+.eja-acessibilidade-texto strong { display: block; font-size: 14px; line-height: 1.4; }
+.eja-acessibilidade-texto > span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.5; color: #52657b; }
+.eja-acessibilidade-chave { display: flex; flex: none; flex-direction: column; align-items: center; gap: 4px; width: 60px; font-size: 11px; font-weight: 700; color: #52657b; }
+.eja-acessibilidade-trilho { display: flex; width: 46px; height: 26px; padding: 3px; border-radius: 999px; background: #75859a; }
+.eja-acessibilidade-trilho > span { width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 150ms; }
+.eja-acessibilidade-opcao[aria-checked="true"] .eja-acessibilidade-trilho { background: #0257a0; }
+.eja-acessibilidade-opcao[aria-checked="true"] .eja-acessibilidade-trilho > span { transform: translateX(20px); }
+.eja-acessibilidade-status { margin-top: 12px; font-size: 12px; line-height: 1.5; color: #52657b; }
+.eja-acessibilidade-concluir { width: 100%; min-height: 44px; margin-top: 16px; padding: 10px; border-radius: 12px; background: #0257a0; color: #fff; font-weight: 700; cursor: pointer; }
+.eja-acessibilidade-abrir:focus-visible,
+.eja-acessibilidade-dialogo button:focus-visible { outline: 3px solid #008bff; outline-offset: 3px; }
+html.alto-contraste :is(.eja-acessibilidade-abrir, .eja-acessibilidade-dialogo) { background: #07111f; color: #fff; border-color: #facc15; }
+html.alto-contraste .eja-acessibilidade-dialogo :is(button, strong, p, span) { color: #fff; }
+html.alto-contraste .eja-acessibilidade-opcao { border-color: #64748b; }
+html.alto-contraste .eja-acessibilidade-icone { background: #1b334f; }
+html.alto-contraste .eja-acessibilidade-opcao[aria-checked="true"] .eja-acessibilidade-trilho { background: #facc15; }
+html.alto-contraste .eja-acessibilidade-opcao[aria-checked="true"] .eja-acessibilidade-trilho > span { background: #07111f; }
+html.alto-contraste .eja-acessibilidade-concluir { border: 1px solid #facc15; }
+
+@media (max-width: 767px) {
+  .eja-acessibilidade-dialogo { inset: auto 0 0; width: 100%; max-height: 90dvh; margin: 0; border-radius: 24px 24px 0 0; }
+  .eja-acessibilidade-painel { padding-inline: clamp(12px, 4vw, 20px); }
+  .eja-acessibilidade-opcao { gap: 8px; }
+  [data-eja-cabecalho-fluxo] [data-eja-progresso] { margin-top: 20px; flex-wrap: wrap; gap: 4px; }
+  [data-eja-cabecalho-fluxo] [data-eja-progresso] > span { flex-basis: 100%; }
+  [data-eja-cabecalho-fluxo] [data-eja-progresso] > strong { margin-left: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eja-acessibilidade-trilho > span { transition: none; }
+}
+
 /* Somente smartphones: o espaço entre o título e o rodapé é dividido entre
    três cards iguais. A altura mínima vem do texto; em telas muito baixas ou
    com fonte ampliada, a página cresce em vez de cortar ou sobrepor conteúdo. */
@@ -471,6 +563,8 @@ html.alto-contraste main img:not(.leaflet-tile) { filter: contrast(1.08) saturat
     padding-left: clamp(56px, 16vw, 72px);
     padding-right: clamp(40px, 10vw, 48px);
   }
+
+  [data-nivel-opcao]:has([data-nivel-audio]) { padding-top: 48px; }
 
   [data-nivel-conteudo] > footer {
     align-self: end;
@@ -554,4 +648,53 @@ html.alto-contraste main img:not(.leaflet-tile) { filter: contrast(1.08) saturat
     padding-bottom: 1rem;
     box-shadow: 0 12px 22px rgb(0 139 255 / 22%);
   }
+}
+
+/* Revisão exclusiva de smartphones: não muda o desenho a partir de 768px. */
+@media (max-width: 767px) {
+  .eja-nome-escola-fluido { display: block; width: 100%; }
+  .eja-nome-escola-fluido > span { max-width: 100%; }
+  .eja-nome-escola-fluido [data-eja-texto-acessivel] { flex: none; white-space: nowrap; }
+  [data-eja-lista-escolas] {
+    overflow: visible;
+    /* Preserva espaço para título, pinos e legenda mesmo nos celulares baixos. */
+    height: min(59dvh, calc(100dvh - 360px));
+    min-height: 180px;
+  }
+  [data-eja-lista-escolas] > div:first-child { border-radius: inherit; }
+  [data-eja-legenda-mapa] {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 12px;
+    right: 12px;
+    width: fit-content;
+    max-width: calc(100% - 24px);
+    margin: 0;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+  }
+  .sucesso-tela {
+    align-items: stretch;
+    padding: 76px 12px max(12px, env(safe-area-inset-bottom));
+    background: #f2f3f6;
+  }
+  .sucesso-tela [data-eja-cabecalho-fluxo] { height: 64px; box-shadow: none; }
+  .sucesso-tela [data-eja-progresso] { display: none; }
+  .sucesso-cartao {
+    display: flex;
+    flex-direction: column;
+    max-width: none;
+    min-height: calc(100dvh - 76px - max(12px, env(safe-area-inset-bottom)));
+    padding: clamp(16px, 2.5dvh, 24px) clamp(12px, 4vw, 24px);
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgb(2 87 160 / 10%);
+  }
+  .sucesso-selo { width: clamp(56px, 9dvh, 80px); height: clamp(56px, 9dvh, 80px); }
+  .sucesso-selo svg { width: 60%; height: 60%; }
+  .sucesso-resumo h1 { font-size: clamp(22px, 6vw, 28px); }
+  .sucesso-resumo p { font-size: 14px; }
+  .sucesso-etapas { display: grid; gap: 12px; margin-top: clamp(20px, 3dvh, 32px); padding-bottom: 24px; }
+  .sucesso-etapas article { margin: 0; padding: 12px; }
+  .sucesso-voltar { margin-top: auto; padding-block: 14px; }
+  html.alto-contraste .sucesso-cartao { background: #07111f; border: 1px solid #facc15; }
 }

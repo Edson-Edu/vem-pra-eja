@@ -67,7 +67,11 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
     }
   }, []);
 
-  const orientacao = `Etapa 2 de 4. Encontramos ${escolas.length} escolas prontas para você. Navegue pelo mapa ou toque no nome de uma escola para ouvir seus detalhes.`;
+  const legendaNumeros = localizacao
+    ? "1, 2…: da mais próxima à mais distante."
+    : "1, 2…: ordem da lista. Localização indisponível.";
+  const legendaMapa = `Azul: escola selecionada. Vermelho: outras escolas. ${legendaNumeros}`;
+  const orientacao = `Etapa 2 de 4: Escola. Escolha sua escola. Encontramos ${escolas.length} escolas prontas para você. ${legendaMapa} Navegue pelo mapa ou toque no nome de uma escola para ouvir seus detalhes.`;
 
   const comecarArrasteLista = (evento: ReactPointerEvent<HTMLButtonElement>) => {
     if (window.innerWidth >= 1280 || !listaRef.current) return;
@@ -151,6 +155,7 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
       </h1>
 
       <section
+        data-eja-lista-escolas
         ref={listaRef}
         style={alturaDaLista ? { height: `${alturaDaLista}px` } : undefined}
         className="absolute inset-x-0 bottom-0 z-[1100] flex h-[59dvh] min-h-[260px] max-h-[80dvh] flex-col overflow-hidden rounded-t-[30px] bg-[#f2f3f6] shadow-[0_-8px_22px_rgb(0_0_0/0.14)] xl:bottom-8 xl:left-auto xl:right-8 xl:top-32 xl:h-auto xl:max-h-none xl:w-[440px] xl:rounded-3xl"
@@ -171,6 +176,10 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
             <MapPin className="mr-2 inline size-4 text-[#4e8afb]" />
             {escolas.length} escolas prontas para te receber
           </p>
+          <aside aria-label="Legenda do mapa" data-eja-legenda-mapa data-vlibras-texto={legendaMapa} className="relative mx-4 mb-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] leading-relaxed text-slate-600">
+            <p className="flex flex-wrap gap-x-3"><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-[#008bff]" />Selecionada</span><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-[#e44335]" />Outras escolas</span></p>
+            <p>{legendaNumeros}</p>
+          </aside>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4">

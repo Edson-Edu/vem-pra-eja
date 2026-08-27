@@ -2,6 +2,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import TelaSucesso from "../components/TelaSucesso";
+import { iniciarFluxo } from "../lib/fluxo-navegacao";
 
 const semInscricaoConcluida = () => false;
 const observarInscricaoConcluida = () => () => undefined;
@@ -26,5 +27,5 @@ export default function PaginaSucesso() {
     return <main className="grid min-h-dvh place-items-center bg-[#f2f3f6]"><p className="font-bold text-[#0257a0]">Voltando ao início...</p></main>;
   }
 
-  return <TelaSucesso onInicio={() => { sessionStorage.removeItem("eja-inscricao-concluida"); router.replace("/"); }} />;
+  return <TelaSucesso onInicio={() => { sessionStorage.removeItem("eja-inscricao-concluida"); router.replace("/"); }} onNovaInscricao={() => { iniciarFluxo(); router.replace("/nivel"); }} />;
 }

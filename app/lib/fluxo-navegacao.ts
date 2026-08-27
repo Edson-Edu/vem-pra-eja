@@ -14,6 +14,7 @@ const chaves = [
   "eja-fluxo-escola",
   "eja-fluxo-turno",
   "eja-inscricao-concluida",
+  "eja-escola-selecionada",
 ];
 
 function ler(chave: string) {

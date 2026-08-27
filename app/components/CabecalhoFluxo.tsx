@@ -31,11 +31,13 @@ export default function CabecalhoFluxo({ etapa, textoAudio, onVoltar, posicao = 
         {onVoltar ? (
           <button
             type="button"
+            data-vlibras-acao="pronto"
             aria-label="Voltar"
             onClick={onVoltar}
-            className="flex size-11 items-center justify-center rounded-full bg-white text-[#0257a0] shadow-[0_2px_8px_rgb(0_0_0/0.12)] transition-transform hover:scale-105 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#008bff]"
+            className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-white px-3 text-sm font-semibold text-[#0257a0] shadow-[0_2px_8px_rgb(0_0_0/0.12)] transition-transform hover:scale-105 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#008bff]"
           >
             <ArrowLeft className="size-[22px]" aria-hidden="true" />
+            <span>Voltar</span>
           </button>
         ) : <span className="size-11" aria-hidden="true" />}
 

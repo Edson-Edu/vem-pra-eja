@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  Bus,
+  HandHeart,
   CalendarDays,
   ChevronRight,
   Clock3,
@@ -11,14 +11,14 @@ import {
   Moon,
   Sun,
   Sunset,
-  Utensils,
   X,
 } from "lucide-react";
 import BotaoAudio from "./BotaoAudio";
+import IconeAuxilio from "./IconeAuxilio";
 import CabecalhoFluxo from "./CabecalhoFluxo";
 import type { Escola, Turno } from "../lib/escolas";
 import { distanciaEmMetros, formatarDistancia, useLocalizacaoUsuario } from "../lib/localizacao";
-import TextoAcessivel from "./TextoAcessivel";
+import NomeEscolaFluido from "./NomeEscolaFluido";
 import { textoParaAudio, useAudioDescricao } from "./useAudioDescricao";
 
 type Props = {
@@ -55,7 +55,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
   const { ativo, falarAgora, interromper } = useAudioDescricao();
   const { localizacao } = useLocalizacaoUsuario();
   const turnos = escola.turnos.filter((turno) => turno.nivel === nivel);
-  const leituraInicial = `Etapa 3 de 4. ${textoParaAudio(escola.nome)}, no bairro ${escola.bairro}, em ${escola.cidade}. Selecione um turno para conhecer horários, dias de aula, como funciona e auxílios.`;
+  const leituraInicial = `Etapa 3 de 4: Turno. ${textoParaAudio(escola.nome)}, no bairro ${escola.bairro}, em ${escola.cidade}. Selecione um turno para conhecer horários, dias de aula, como funciona e auxílios.`;
   const textoDistancia = localizacao
     ? formatarDistancia(distanciaEmMetros(localizacao, escola))
     : "Confira no mapa";
@@ -81,7 +81,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
       <section className="mx-auto max-w-3xl bg-[#f2f3f6] px-5 pb-40 pt-5">
         <div data-vlibras-pai="resumo-escola" className="mb-6 text-center">
           <h1 className="text-2xl font-black leading-tight sm:text-3xl">
-            <TextoAcessivel texto={escola.nome} textoOcultoParaLer={leituraInicial} corIcone="text-[#4e8afb]" />
+            <NomeEscolaFluido nome={escola.nome} leitura={leituraInicial} />
           </h1>
           <p className="mt-2 text-sm text-slate-500">{escola.bairro} · {escola.cidade} · SC</p>
         </div>
@@ -136,7 +136,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
 
             <section data-vlibras-pai="auxilios" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <span className="rounded-xl bg-amber-100 p-3 text-amber-600"><Bus /></span>
+                <span className="rounded-xl bg-amber-100 p-3 text-amber-600"><HandHeart aria-hidden="true" /></span>
                 <h2 className="flex-1 text-xl font-black text-[#1e1b4b]">Auxílios</h2>
                 {ativo && <BotaoPai texto={`Auxílios oferecidos: ${selecionado.auxilios.join(", ") || "nenhum auxílio informado"}.`} />}
               </div>
@@ -149,7 +149,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
                     onClick={() => { setAuxilioAberto(auxilio); void falarAgora(`${auxilio}. ${descricaoAuxilio[auxilio] ?? "Converse com a escola para confirmar as condições deste auxílio."}`); }}
                     className="flex w-full items-center gap-3 py-4 text-left"
                   >
-                    <span className="rounded-lg bg-[#e6f0fa] p-2 text-[#008bff]">{auxilio === "Alimentação" ? <Utensils className="size-5" /> : <Bus className="size-5" />}</span>
+                    <span className="rounded-lg bg-[#e6f0fa] p-2 text-[#008bff]"><IconeAuxilio texto={auxilio} /></span>
                     <strong className="flex-1 text-sm text-[#1e1b4b]">{auxilio}</strong>
                     <ChevronRight className="size-5 text-violet-400" />
                   </button>

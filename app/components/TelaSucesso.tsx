@@ -2,12 +2,12 @@
 
 import { useEffect, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { ClipboardCheck, FileCheck2, Home, PhoneCall } from "lucide-react";
+import { ClipboardCheck, FileCheck2, Home, PhoneCall, UserRoundPlus } from "lucide-react";
 import BotaoAudio from "./BotaoAudio";
 import CabecalhoFluxo from "./CabecalhoFluxo";
 import { useAudioDescricao } from "./useAudioDescricao";
 
-type Props = { onInicio: () => void };
+type Props = { onInicio: () => void; onNovaInscricao: () => void };
 
 const etapas = [
   {
@@ -30,9 +30,9 @@ const etapas = [
   },
 ];
 
-export default function TelaSucesso({ onInicio }: Props) {
+export default function TelaSucesso({ onInicio, onNovaInscricao }: Props) {
   const textoConfirmacao = "Pré-inscrição enviada. Próximos passos.";
-  const resumo = `Etapa 4 de 4 concluída. ${textoConfirmacao} ${etapas.map((etapa) => `${etapa.numero}. ${etapa.titulo}. ${etapa.descricao}`).join(" ")}`;
+  const resumo = `Etapa 4 de 4 concluída. ${textoConfirmacao} ${etapas.map((etapa) => `${etapa.numero}. ${etapa.titulo}. ${etapa.descricao}`).join(" ")} Você pode voltar ao início ou tocar em Inscrever outra pessoa para começar um novo cadastro.`;
   const { ativo, falarAgora, interromper } = useAudioDescricao();
 
   useEffect(() => {
@@ -72,6 +72,15 @@ export default function TelaSucesso({ onInicio }: Props) {
         >
           <Home className="size-5" />
           Voltar ao início
+        </button>
+        <button
+          data-vlibras-acao="pronto"
+          type="button"
+          onClick={() => { interromper(); onNovaInscricao(); }}
+          className="relative mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-[#008bff] px-3 py-3 font-bold text-[#0257a0]"
+        >
+          <UserRoundPlus className="size-5 shrink-0" aria-hidden="true" />
+          Inscrever outra pessoa
         </button>
       </section>
     </main>

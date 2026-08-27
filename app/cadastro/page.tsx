@@ -6,7 +6,10 @@ import { escolaPorId, type Escola } from "../lib/escolas";
 import { useFluxoAutorizado } from "../lib/fluxo-navegacao";
 import { buscarEscolas } from "../lib/supabase-client";
 import { registrarEventoAnalytics } from "../lib/analytics";
-export default function PaginaCadastro() { return <Suspense><Conteudo /></Suspense>; }
+function CarregandoCadastro() {
+  return <main aria-busy="true" className="grid min-h-dvh place-items-center bg-[#f2f3f6]"><p role="status" data-vlibras-texto="Carregando cadastro" className="font-bold text-[#0257a0]">Carregando cadastro...</p></main>;
+}
+export default function PaginaCadastro() { return <Suspense fallback={<CarregandoCadastro />}><Conteudo /></Suspense>; }
 function Conteudo() {
   const router = useRouter(); const params = useSearchParams(); const id = params.get("escola"); const turnoId = params.get("turno");
   const nivelInformado = params.get("nivel");
@@ -42,6 +45,6 @@ function Conteudo() {
   }, [fluxoAutorizado, id, nivel, router, turnoId]);
 
   const turno = escola?.turnos.find((item) => item.id === turnoId);
-  if (!id || !turnoId || !nivel || !fluxoAutorizado || carregando || !escola || !turno) return <main className="grid min-h-dvh place-items-center bg-[#f2f3f6]"><p className="font-bold text-[#0257a0]">Voltando ao início...</p></main>;
+  if (!id || !turnoId || !nivel || !fluxoAutorizado || carregando || !escola || !turno) return <CarregandoCadastro />;
   return <TelaCadastro escola={escola} turno={turno} onVoltar={() => router.back()} onSucesso={(nome) => { registrarEventoAnalytics("concluiu_inscricao", { nivel, escola_id: escola.id, turno: turno.turno }); sessionStorage.setItem("eja-inscricao-concluida", "true"); router.push(`/sucesso?nome=${encodeURIComponent(nome)}&escola=${encodeURIComponent(escola.nome)}&turno=${encodeURIComponent(turno.turno)}`); }} />;
 }

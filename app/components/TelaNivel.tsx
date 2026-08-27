@@ -24,7 +24,7 @@ type Props = { onVoltar: () => void; onEscolher: (nivel: Nivel["filtro"]) => voi
 const pergunta = "Até que série ou ano você estudou?";
 const instrucao = "Toque em uma opção para continuar.";
 const pacoteDaOpcao = (nivel: Nivel, indice: number) => `Opção ${indice + 1}: ${textoParaAudio(nivel.titulo.replace("\n", ", "))}. ${nivel.subtitulo}`;
-const leituraCompleta = `Etapa 1 de 4. ${pergunta} ${instrucao} ${niveis.map(pacoteDaOpcao).join(" ")} Todas as escolas são gratuitas e possuem auxílios para que você consiga concluir os estudos.`;
+const leituraCompleta = `Etapa 1 de 4: Nível. ${pergunta} ${instrucao} ${niveis.map(pacoteDaOpcao).join(" ")} Todas as escolas são gratuitas e possuem auxílios para que você consiga concluir os estudos.`;
 
 export default function TelaNivel({ onVoltar, onEscolher }: Props) {
   const { ativo, falarAgora, interromper } = useAudioDescricao();
@@ -76,7 +76,7 @@ export default function TelaNivel({ onVoltar, onEscolher }: Props) {
                   <span className="mt-1 block text-[clamp(0.78rem,1.8dvh,0.98rem)] font-semibold leading-[1.38] text-[#0257a0]/70 xl:text-sm">{nivel.subtitulo}</span>
                 </span>
                 <ChevronRight aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 size-6 -translate-y-1/2 text-[#4e8afb] xl:bottom-4 xl:top-auto xl:translate-y-0" />
-                {ativo && <span className="absolute right-12 top-2 z-20 xl:right-4 xl:top-4"><BotaoDoBloco texto={pacote} /></span>}
+                {ativo && <span data-nivel-audio className="absolute right-12 top-2 z-20 xl:right-4 xl:top-4"><BotaoDoBloco texto={pacote} /></span>}
               </motion.article>
             );
           })}
