@@ -2,7 +2,21 @@
 
 ## Estado
 
-RESERVA CONCLUÍDA; publicação de teste ainda pendente.
+TESTE PUBLICADO E VERIFICADO em 27/08/2026. Aguardando decisão do usuário.
+
+## Teste em avaliação
+
+- URL pública: https://vempraeja-novo.web.app
+- Código do teste: `05f500f`.
+- Versão Hosting do teste: `945fefb2396eb0b2`.
+- Lançamento: `1787850086931000`, de `2026-08-27T17:01:26.931Z`.
+- Código arquivado: `.codex-backups/fonte-teste-05f500f.zip`.
+- Build exato arquivado: `.codex-backups/build-teste-05f500f.zip`.
+- Reserva original compactada: `.codex-backups/publicacao-original-5035a9d7ef5659de.zip`.
+- Build passou; `/`, `/nivel/` e `/admin/` retornaram HTTP 200 e conteúdo idêntico ao build local.
+- Nenhuma publicação no GitHub, alteração de banco ou implantação de Functions foi feita.
+
+**PUBLICAR OFICIALMENTE O TESTE:** verificar se `live` ainda é `945fefb2396eb0b2`; se sim, a versão já está no link principal e basta registrar sua aprovação como oficial, preservando a reserva. Se a versão estiver em outro canal, promover a versão exata. Não rebuildar ou incorporar mudanças novas sem pedido do usuário.
 
 Projeto Firebase configurado: `vempraeja-novo`.
 Base Git local: `a5e44795673de1ae9c3ea174f82b26aaffa1d47c`.
@@ -21,6 +35,7 @@ Histórico completo do Git preservado e verificado: `.codex-backups/historico-an
 - Manifesto de verificação: `.codex-backups/firebase-live-5035a9d7ef5659de-manifest.json`.
 - Os 196 arquivos publicados pelo projeto tiveram hashes gzip SHA-256 conferidos contra a API Firebase. Os dois endpoints `__/firebase/init.js` e `__/firebase/init.json` são gerados pelo serviço; sua resposta atual foi guardada mas não é uma cópia binária da versão histórica.
 - O canal de reserva é temporário; o histórico live e os backups locais não dependem da duração desse canal.
+- Expiração do canal de reserva: `2026-09-03T16:55:42.480559372Z`. A restauração por ID usa o histórico do canal live, não depende desse preview.
 
 ## Retorno exato autorizado por CANCELAR TESTE
 
