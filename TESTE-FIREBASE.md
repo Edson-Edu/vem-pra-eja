@@ -6,23 +6,30 @@ TESTE PUBLICADO E VERIFICADO em 27/08/2026. Aguardando decisão do usuário.
 
 ### Atualização do teste autorizada em 27/08/2026
 
-O usuário solicitou publicar a revisão de UI/acessibilidade atualmente validada no localhost. A nova publicação substitui somente o teste, não a reserva original `5035a9d7ef5659de`. Build e oito testes passaram. A preparação preserva separadamente fonte e build; os identificadores da nova publicação serão registrados após confirmação do Hosting.
+O usuário solicitou publicar a revisão de UI/acessibilidade validada no localhost. A publicação foi concluída e verificada em `2026-08-27T19:43:21.370Z` (16:43 de Brasília). Substituiu somente o teste, não a reserva original `5035a9d7ef5659de`. Build e oito testes passaram. Fonte e build foram preservados separadamente.
 
 Os comandos **PUBLICAR TESTE OFICIALMENTE** e **PUBLICAR OFICIALMENTE O TESTE** têm o mesmo significado: aprovar a última versão de teste publicada e registrada neste documento, sem incorporar alterações locais posteriores. **CANCELAR TESTE** continua apontando para `5035a9d7ef5659de`.
 
 ## Teste em avaliação
 
 - URL pública: https://vempraeja-novo.web.app
-- Código do teste: `05f500f`.
-- Versão Hosting do teste: `945fefb2396eb0b2`.
-- Lançamento: `1787850086931000`, de `2026-08-27T17:01:26.931Z`.
-- Código arquivado: `.codex-backups/fonte-teste-05f500f.zip`.
-- Build exato arquivado: `.codex-backups/build-teste-05f500f.zip`.
+- Código do teste: `1faf15a`.
+- Versão Hosting do teste: `948c95ec0c9d9054`.
+- Lançamento: `1787859801370000`, de `2026-08-27T19:43:21.370Z`.
+- Código arquivado: `.codex-backups/fonte-teste-1faf15a.zip`.
+- Build exato arquivado: `.codex-backups/build-teste-1faf15a.zip`.
+- SHA-256 da fonte arquivada: `B0AEC6BEE58DE38F374FE661B8F091183E5A4A6E938ED32A0EE332DDBE4257BC`.
+- SHA-256 do build arquivado: `862A4D7F4E758B0276B7E4CAFC8453261E2E113EF89777B69FA830B0F0D9156B`.
 - Reserva original compactada: `.codex-backups/publicacao-original-5035a9d7ef5659de.zip`.
-- Build passou; `/`, `/nivel/` e `/admin/` retornaram HTTP 200 e conteúdo idêntico ao build local.
+- Build passou; os 196 arquivos publicados tiveram hashes conferidos contra o build validado. `/`, `/nivel/`, `/escolas/`, `/detalhes/`, `/cadastro/`, `/sucesso/` e `/admin/` retornaram HTTP 200 e conteúdo idêntico ao build local.
+- Relatório de verificação: `.codex-backups/verificacao-teste-1faf15a.json`.
 - Nenhuma publicação no GitHub, alteração de banco ou implantação de Functions foi feita.
 
-**PUBLICAR OFICIALMENTE O TESTE:** verificar se `live` ainda é `945fefb2396eb0b2`; se sim, a versão já está no link principal e basta registrar sua aprovação como oficial, preservando a reserva. Se a versão estiver em outro canal, promover a versão exata. Não rebuildar ou incorporar mudanças novas sem pedido do usuário.
+**PUBLICAR TESTE OFICIALMENTE / PUBLICAR OFICIALMENTE O TESTE:** verificar se `live` ainda é `948c95ec0c9d9054`; se sim, a versão já está no link principal e basta registrar sua aprovação como oficial, preservando a reserva. Se a versão estiver em outro canal, promover a versão exata. Não rebuildar ou incorporar mudanças novas sem pedido do usuário.
+
+### Teste anterior também preservado (não é a reserva de cancelamento)
+
+O teste anterior usava código `05f500f`, versão `945fefb2396eb0b2` e lançamento `1787850086931000` de `2026-08-27T17:01:26.931Z`. Seus arquivos `.codex-backups/fonte-teste-05f500f.zip` e `.codex-backups/build-teste-05f500f.zip` continuam intactos. **CANCELAR TESTE não retorna a esse teste intermediário; retorna sempre à reserva original `5035a9d7ef5659de`.**
 
 Projeto Firebase configurado: `vempraeja-novo`.
 Base Git local: `a5e44795673de1ae9c3ea174f82b26aaffa1d47c`.
@@ -56,7 +63,7 @@ Esse comando troca apenas o Hosting, sem apagar o código do teste nem alterar d
 ## Comandos combinados com o usuário
 
 - **CANCELAR TESTE**: restaurar a versão que estava publicada antes deste teste. Não descartar as alterações do teste nem reverter arquivos de forma ampla. Usar a versão exata de Hosting previamente registrada e preservar ambos os códigos.
-- **PUBLICAR OFICIALMENTE O TESTE**: promover/confirmar a versão exata testada, sem incorporar alterações posteriores silenciosamente.
+- **PUBLICAR TESTE OFICIALMENTE** ou **PUBLICAR OFICIALMENTE O TESTE**: promover/confirmar a versão exata testada, sem incorporar alterações posteriores silenciosamente.
 
 ## Pré-requisitos para iniciar o teste
 

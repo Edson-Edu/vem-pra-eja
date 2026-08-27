@@ -1,6 +1,6 @@
 # Revisão de UI e acessibilidade — 27/08/2026
 
-Implementada localmente. Esta rodada NÃO foi publicada no Firebase e não altera a reserva descrita em `TESTE-FIREBASE.md`.
+Implementada e validada localmente; publicada como teste no Firebase em 27/08/2026, às 16:43 de Brasília, após autorização explícita. A reserva original continua intacta; veja `TESTE-FIREBASE.md` para versão atual e procedimento de retorno.
 
 ## Pontos atendidos
 
@@ -34,7 +34,7 @@ Limites: validação por dimensões no navegador, não em aparelhos físicos. A 
 
 ## Segunda rodada — mapa, confirmação e exclusividade assistiva
 
-Continuam somente no localhost; nenhuma publicação, commit ou alteração da reserva do Firebase nesta rodada.
+Esta rodada foi inicialmente validada somente no localhost. Depois, o usuário autorizou publicar o conjunto como novo teste: fonte `1faf15a`, Hosting `948c95ec0c9d9054`. A reserva original do Firebase permanece inalterada.
 
 - **Mobile (<768 px):** legenda ancorada acima da lista/contagem, sobre o mapa. O painel reserva pelo menos 360 px para a região do mapa quando a altura permite. Pinos sobrepostos são separados automaticamente na primeira exibição, com linhas até as coordenadas reais; seleção, navegação e localização original são preservadas. A separação não interfere no zoom/pan escolhido pela pessoa.
 - **Carregamento do mapa:** aguarda CSS e JavaScript do Leaflet; enquadra depois de criar os marcadores, acompanha mudanças de tamanho e usa as escolas atuais nos callbacks. O primeiro enquadramento mobile não depende de animação ou toque.
