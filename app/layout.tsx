@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
+import "./tipografia.css";
 import ControlesGlobais from "./components/ControlesGlobais";
 
 const idDoGoogleAnalytics = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID ?? "G-SEU_CODIGO_AQUI";

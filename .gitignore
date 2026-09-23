@@ -22,6 +22,9 @@
 /.firebase/
 /azure-function/dist/
 /azure-function/local.settings.json
+/.codex-backups/
+/.codex-presentation/
+/*.pptx.inspect.ndjson
 
 # production
 /build

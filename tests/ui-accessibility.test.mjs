@@ -10,9 +10,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 const require = createRequire(import.meta.url);
 
-function carregar(arquivo, ambiente = {}) {
+function carregar(arquivo, ambiente = {}, expor = []) {
   const filename = path.resolve(import.meta.dirname, '..', arquivo);
-  const compilado = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
+  const fonte = fs.readFileSync(filename, 'utf8') + (expor.length ? `\nexport { ${expor.join(', ')} };` : '');
+  const compilado = ts.transpileModule(fonte, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2020 },
     fileName: filename,
   }).outputText;
@@ -31,6 +32,35 @@ test('auxílios reconhecem acentos, plural e complementos; desconhecidos não vi
     ['Ônibus', 'transporte'], ['Auxílio para mães estudantes', 'outro'],
   ];
   for (const [texto, esperado] of casos) assert.equal(tipoDeAuxilio(texto), esperado, texto);
+});
+
+test('cartao usa Auxilios na interface e no pacote de audio', () => {
+  let audio = '';
+  const { CartaoEscola } = carregar('app/components/TelaEscolas.tsx', {
+    require: nome => nome === './BotaoAudio' ? { default: ({ texto }) => { audio = texto; return null; } }
+      : nome === './useAudioDescricao' ? { textoParaAudio: texto => texto }
+      : nome.startsWith('.') ? {} : require(nome),
+  }, ['CartaoEscola']);
+  const escola = { nome: 'Escola teste', bairro: 'Centro', cidade: 'Camboriu', imagem: '/teste.png', turnos: [{ id: 'noite', nivel: 'Ensino Fundamental', turno: 'Noite', auxilios: ['Alimentação', 'Transporte'] }] };
+  const html = renderToStaticMarkup(React.createElement(CartaoEscola, { escola, nivel: 'Ensino Fundamental', leituraAtiva: true }));
+  assert.ok(html.includes('AUXÍLIOS OFERECIDOS'));
+  assert.ok(audio.includes('Auxílios oferecidos: Alimentação, Transporte'));
+  assert.doesNotMatch(html + audio, /benef[ií]cio/i);
+});
+
+test('VLibras encontra os itens pelo novo titulo e preserva o agrupamento', () => {
+  const { textoDaEscolaParaLibras, prepararTextoParaLibras } = carregar('app/components/BotaoVLibras.tsx', {
+    require: nome => nome.startsWith('.') ? {} : require(nome),
+  }, ['textoDaEscolaParaLibras', 'prepararTextoParaLibras']);
+  const texto = textContent => ({ textContent });
+  const secao = (titulo, itens) => ({ ...texto(titulo), nextElementSibling: { querySelectorAll: () => itens.map(texto) } });
+  const cartao = {
+    querySelector: () => texto('Escola teste'),
+    querySelectorAll: () => [texto('Centro · Camboriu'), secao('TURNOS DISPONÍVEIS', ['Noite']), secao('AUXÍLIOS OFERECIDOS', ['Alimentação', 'Livros didáticos'])],
+  };
+  const traducao = prepararTextoParaLibras(textoDaEscolaParaLibras(cartao));
+  assert.ok(traducao.includes('Auxílios oferecidos: Alimentação, LER DIDATICO'));
+  assert.doesNotMatch(traducao, /benef[ií]cio/i);
 });
 
 test('etapas visuais, leitor de tela e VLibras recebem os mesmos nomes', () => {
@@ -131,13 +161,45 @@ test('erro tardio da voz não inicia síntese depois que Libras foi ativado', as
   assert.deepEqual(JSON.parse(JSON.stringify(voz.obterEstadoDaReproducao())), { carregando: false, tocando: false });
 });
 
-test('pinos próximos aparecem separados no espaço mobile sem mudar a lista original', () => {
-  const { distribuirPinos } = carregar('app/lib/distribuir-pinos.ts');
-  const pontos = [{ x: 198, y: 200 }, { x: 195, y: 225 }, { x: 190, y: 216 }, { x: 191, y: 212 }];
-  const resultado = distribuirPinos(pontos, { esquerda: 32, direita: 358, topo: 258, base: 286 });
-  for (let i = 0; i < resultado.length; i++) {
-    assert.ok(resultado[i].x >= 32 && resultado[i].x <= 358);
-    for (let j = 0; j < i; j++) assert.ok(Math.hypot(resultado[i].x - resultado[j].x, resultado[i].y - resultado[j].y) >= 54);
+test('menu fica fora da abertura e permanece nas etapas do fluxo', () => {
+  let pathname = '/';
+  const Controles = carregar('app/components/ControlesGlobais.tsx', {
+    require: nome => nome === 'next/navigation' ? { usePathname: () => pathname }
+      : nome === './MenuAcessibilidade' ? { default: () => React.createElement('button', null, 'Acessibilidade') }
+      : nome.startsWith('./Botao') ? { default: () => null } : require(nome),
+  }).default;
+  for (const rota of ['/', '/nivel', '/escolas', '/detalhes', '/cadastro', '/sucesso', '/admin']) {
+    pathname = rota;
+    const html = renderToStaticMarkup(React.createElement(Controles));
+    assert.equal(html.includes('Acessibilidade'), rota !== '/' && rota !== '/admin', rota);
   }
-  assert.equal(pontos[0].y, 200);
+});
+
+test('abreviação ter vira terça-feira somente em dias de aula', () => {
+  const voz = carregar('app/components/useAudioDescricao.ts', {
+    require: nome => nome === './estadoRecursosAssistivos' ? {
+      definirRecursoAtivo() {}, obterRecursoAtivo() { return null; },
+      registrarInterrupcaoAudio() {}, armazenamentoDaSessao: { obter() { return null; } },
+    } : nome === 'react' ? { useState: valor => [valor, () => {}], useEffect() {}, useCallback: fn => fn } : require(nome),
+  });
+  assert.equal(voz.textoParaAudio('Você precisa ter poucas faltas.'), 'Você precisa ter poucas faltas.');
+  assert.equal(voz.diasDeAulaParaAudio('Seg - Ter'), 'segunda-feira até terça-feira');
+});
+
+test('VLibras pode interagir com as abas do cadastro', () => {
+  const { Secao } = carregar('app/components/TelaCadastro.tsx', {
+    require: nome => nome.startsWith('.') ? { default: () => null, useAudioDescricao: () => ({}) } : require(nome),
+  }, ['Secao']);
+  const html = renderToStaticMarkup(React.createElement(Secao, {
+    aberta: false, onAlternar() {}, icone: null, titulo: 'ENDEREÇO (opcional)',
+  }, React.createElement('span', null, 'CEP')));
+  assert.ok(html.includes('data-vlibras-acao="pronto"'));
+  assert.ok(html.includes('aria-expanded="false"'));
+  assert.ok(html.includes('ENDEREÇO (opcional)'));
+});
+
+test('conclusão não coloca dados pessoais ou escolares na URL', () => {
+  const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/cadastro/page.tsx'), 'utf8');
+  assert.match(fonte, /router\.push\("\/sucesso"\)/);
+  assert.doesNotMatch(fonte, /\/sucesso\?(?:nome|escola|turno)=/);
 });

@@ -14,7 +14,7 @@ export default function ControlesGlobais() {
 
   return (
     <>
-      <MenuAcessibilidade />
+      {pathname !== "/" && <MenuAcessibilidade />}
       <BotaoAltoContraste />
       <BotaoVLibras />
     </>

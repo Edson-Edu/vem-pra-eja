@@ -1,0 +1,84 @@
+/* Escala do fluxo público. O fator amplia letras sem ampliar ícones e margens. */
+:root { --eja-texto-fator: 1; }
+html[data-eja-texto="125"] { --eja-texto-fator: 1.25; }
+html[data-eja-texto="150"] { --eja-texto-fator: 1.5; }
+
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])),
+.eja-acessibilidade-dialogo, .eja-acessibilidade-abrir {
+  --eja-corpo: calc(1rem * var(--eja-texto-fator));
+  --eja-apoio: calc(.875rem * var(--eja-texto-fator));
+  --eja-cartao: calc(1.125rem * var(--eja-texto-fator));
+  --eja-secao: calc(1.25rem * var(--eja-texto-fator));
+  --eja-titulo: calc(1.75rem * var(--eja-texto-fator));
+  font-size: var(--eja-corpo);
+  line-height: 1.5;
+}
+@media (min-width: 768px) {
+  main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) {
+    --eja-corpo: calc(1.125rem * var(--eja-texto-fator));
+    --eja-secao: calc(1.5rem * var(--eja-texto-fator));
+    --eja-titulo: calc(2.25rem * var(--eja-texto-fator));
+  }
+}
+
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) :is(p, .text-sm) { font-size: var(--eja-corpo); line-height: 1.5; }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) :is(small, .text-xs, [class~="text-[11px]"]) { font-size: var(--eja-apoio); line-height: 1.5; }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) h1 { font-size: var(--eja-titulo); line-height: 1.2; overflow-wrap: anywhere; }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) h2 { font-size: var(--eja-secao); line-height: 1.3; }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) :is(input, select, textarea, button) { font-size: var(--eja-corpo); line-height: 1.5; }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) :is(input, select, textarea) { min-width: 0; max-width: 100%; }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) button { white-space: normal; overflow-wrap: anywhere; }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) [data-eja-progresso] strong { font-size: var(--eja-apoio); line-height: 1.5; white-space: normal; }
+
+/* Nível: tamanhos independentes da altura do telefone. */
+main[data-nivel-tela] [data-nivel-opcao] strong { font-size: var(--eja-cartao); line-height: 1.3; }
+main[data-nivel-tela] [data-nivel-opcao] strong > span { white-space: normal; }
+main[data-nivel-tela] [data-nivel-opcao] strong + span { font-size: var(--eja-corpo); line-height: 1.5; }
+main[data-nivel-tela] [data-nivel-conteudo] > footer p { font-size: var(--eja-apoio); line-height: 1.5; }
+main[data-nivel-tela] [data-nivel-opcao] { height: auto; }
+main[data-nivel-tela] [data-nivel-opcao]:has([data-nivel-audio]) { padding-top: 3rem; }
+
+/* O mapa é a exceção compacta; os cartões continuam com texto completo. */
+main:has(> [data-eja-lista-escolas]) > h1 { font-size: var(--eja-cartao); width: max-content; max-width: calc(100% - 32px); white-space: normal; text-align: center; }
+main:has(> [data-eja-lista-escolas]) h2 { font-size: var(--eja-cartao); overflow-wrap: anywhere; }
+main:has(> [data-eja-lista-escolas]) [data-eja-legenda-mapa] p { font-size: var(--eja-apoio); }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) .eja-marcador-nome { font-size: var(--eja-apoio); }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) .eja-nome-escola-fluido [data-eja-texto-acessivel] { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) .eja-nome-escola-fluido > span { display: flex; justify-content: center; }
+
+main.sucesso-tela .sucesso-etapas p { font-size: var(--eja-corpo); line-height: 1.5; }
+main.sucesso-tela .sucesso-etapas strong { font-size: var(--eja-cartao); line-height: 1.3; }
+main.sucesso-tela .sucesso-cartao { overflow: visible; }
+main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) > div.fixed > div:has(> h2) { max-height: 90dvh; overflow-y: auto; }
+
+/* O menu também acompanha o tamanho escolhido e permanece rolável. */
+.eja-acessibilidade-dialogo { overflow-y: auto; overflow-x: hidden; }
+.eja-acessibilidade-dialogo .eja-acessibilidade-cabecalho h2 { font-size: var(--eja-secao); line-height: 1.3; }
+.eja-acessibilidade-dialogo .eja-acessibilidade-texto strong,
+.eja-acessibilidade-dialogo .eja-acessibilidade-concluir { font-size: var(--eja-corpo); }
+.eja-acessibilidade-dialogo .eja-acessibilidade-texto > span,
+.eja-acessibilidade-dialogo .eja-acessibilidade-status { font-size: var(--eja-apoio); }
+.eja-acessibilidade-abrir { font-size: calc(.875rem * var(--eja-texto-fator)); max-width: 60%; }
+.eja-tamanho-texto { min-width: 0; border: 0; margin: 20px 0; padding: 0; }
+.eja-tamanho-texto legend { font-size: var(--eja-corpo); font-weight: 700; }
+.eja-tamanho-texto p { margin: 4px 0 12px; font-size: var(--eja-apoio); color: #52657b; }
+.eja-tamanho-texto > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.eja-tamanho-texto label { display: flex; align-items: center; flex: 1 1 110px; gap: 8px; min-height: 48px; padding: 10px; border: 1px solid #94a3b8; border-radius: 12px; cursor: pointer; font-size: var(--eja-apoio); }
+.eja-tamanho-texto label:has(:checked) { background: var(--eja-cor-azul-superficie); border-color: var(--eja-cor-azul-principal); color: var(--eja-cor-azul-principal); }
+.eja-tamanho-texto label:focus-within { outline: 3px solid var(--eja-cor-azul-acao); outline-offset: 2px; }
+.eja-tamanho-texto input { flex: none; accent-color: var(--eja-cor-azul-principal); }
+.eja-tamanho-texto small { display: block; font-size: inherit; }
+html.alto-contraste .eja-tamanho-texto { color: #fff; }
+html.alto-contraste .eja-tamanho-texto label:has(:checked) { border-color: var(--eja-cor-amarelo-acessibilidade); background: #1b334f; color: #fff; }
+
+/* Texto grande e telefones estreitos ganham espaço por rolagem vertical. */
+@media (max-width: 767px) {
+  main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) [data-eja-cabecalho-fluxo] { height: auto; min-height: 120px; }
+  main.sucesso-tela [data-eja-cabecalho-fluxo] { min-height: 64px; }
+  main:has(.eja-nome-escola-fluido) > section > div.grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
+  main:has(.eja-nome-escola-fluido) > div.fixed:has(> button) { position: sticky; }
+  main:has(.eja-nome-escola-fluido) > section { padding-bottom: 24px; }
+}
+@media (min-width: 1280px) {
+  main[data-nivel-tela] [data-nivel-opcao] { min-height: 260px; }
+}

@@ -43,11 +43,11 @@ export default function TelaSucesso({ onInicio, onNovaInscricao }: Props) {
   return (
     <main className="sucesso-tela relative flex min-h-dvh items-center justify-center overflow-hidden bg-fundo-claro p-4 pt-[136px] sm:p-5 sm:pt-[136px]">
       <CabecalhoFluxo etapa={4} concluido textoAudio={resumo} posicao="absolute" />
-      <section className="sucesso-cartao relative mx-auto w-full max-w-xl overflow-hidden rounded-3xl bg-white px-5 py-6 text-center shadow-xl shadow-[#0257a0]/10 sm:px-7 sm:py-7">
+      <section className="sucesso-cartao relative mx-auto w-full max-w-xl overflow-hidden rounded-3xl bg-white px-5 py-6 text-center shadow-xl shadow-azul-principal/10 sm:px-7 sm:py-7">
         <div data-vlibras-pai="sucesso-resumo" data-vlibras-texto={textoConfirmacao} className="sucesso-resumo relative">
           <ConfirmacaoAnimada />
           <div className="mt-4 flex items-center justify-center gap-2">
-            <h1 className="text-2xl font-black text-[#1e293b] sm:text-3xl">Pré-inscrição enviada!</h1>
+            <h1 className="text-2xl font-black text-texto-principal sm:text-3xl">Pré-inscrição enviada!</h1>
             {ativo && <BotaoPai texto={textoConfirmacao} />}
           </div>
           <p className="mx-auto mt-2 max-w-md text-sm leading-snug text-slate-600">
@@ -68,7 +68,7 @@ export default function TelaSucesso({ onInicio, onNovaInscricao }: Props) {
             interromper();
             onInicio();
           }}
-          className="sucesso-voltar relative mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#008bff] py-3.5 font-bold text-white sm:mt-6 sm:py-4"
+          className="sucesso-voltar relative mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-azul-acao py-3.5 font-bold text-white sm:mt-6 sm:py-4"
         >
           <Home className="size-5" />
           Voltar ao início
@@ -77,7 +77,7 @@ export default function TelaSucesso({ onInicio, onNovaInscricao }: Props) {
           data-vlibras-acao="pronto"
           type="button"
           onClick={() => { interromper(); onNovaInscricao(); }}
-          className="relative mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-[#008bff] px-3 py-3 font-bold text-[#0257a0]"
+          className="relative mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-azul-acao px-3 py-3 font-bold text-azul-principal"
         >
           <UserRoundPlus className="size-5 shrink-0" aria-hidden="true" />
           Inscrever outra pessoa
@@ -93,7 +93,7 @@ function ConfirmacaoAnimada() {
       initial={{ opacity: 0, scale: 0.72 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.35, ease: "backOut" }}
-      className="sucesso-selo mx-auto flex size-16 items-center justify-center rounded-full bg-[#07aa43] shadow-lg shadow-[#07aa43]/20 sm:size-20"
+      className="sucesso-selo mx-auto flex size-16 items-center justify-center rounded-full bg-sucesso shadow-lg shadow-sucesso/20 sm:size-20"
     >
       <motion.svg viewBox="0 0 24 24" className="size-10 text-white sm:size-12" fill="none" aria-hidden="true">
         <motion.path
@@ -113,7 +113,7 @@ function ConfirmacaoAnimada() {
 
 function BotaoPai({ texto }: { texto: string }) {
   return (
-    <BotaoAudio modo="ouvir" texto={texto} ariaLabel="Ouvir este bloco" tamanhoIcone={16} className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#e6f0fa] text-[#008bff] hover:bg-[#d6e8fa] disabled:cursor-wait disabled:opacity-75" />
+    <BotaoAudio modo="ouvir" texto={texto} ariaLabel="Ouvir este bloco" tamanhoIcone={16} className="flex size-8 shrink-0 items-center justify-center rounded-full bg-azul-superficie text-azul-acao hover:bg-azul-foco disabled:cursor-wait disabled:opacity-75" />
   );
 }
 
@@ -127,10 +127,10 @@ function Passo({ numero, icone, titulo, descricao, ativo }: {
   const texto = `${numero}. ${titulo}. ${descricao}`;
   return (
     <article data-vlibras-pai="sucesso-passo" data-vlibras-texto={texto} className="relative flex gap-3 rounded-2xl border border-slate-200 p-3 shadow-sm">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#008bff] text-sm font-black text-white">{numero}</span>
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-azul-acao text-sm font-black text-white">{numero}</span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-[#4e8afb]">{icone}</span>
+          <span className="text-azul-secundario">{icone}</span>
           <strong className="text-sm text-slate-800">{titulo}</strong>
           {ativo && <BotaoPai texto={texto} />}
         </div>

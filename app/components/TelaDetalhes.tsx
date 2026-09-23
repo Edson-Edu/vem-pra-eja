@@ -19,7 +19,7 @@ import CabecalhoFluxo from "./CabecalhoFluxo";
 import type { Escola, Turno } from "../lib/escolas";
 import { distanciaEmMetros, formatarDistancia, useLocalizacaoUsuario } from "../lib/localizacao";
 import NomeEscolaFluido from "./NomeEscolaFluido";
-import { textoParaAudio, useAudioDescricao } from "./useAudioDescricao";
+import { diasDeAulaParaAudio, textoParaAudio, useAudioDescricao } from "./useAudioDescricao";
 
 type Props = {
   escola: Escola;
@@ -62,7 +62,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
   const usarTextoAdaptadoDoCejaBalnearioCamboriu = /\bCEJA\b.*Balneário.*Camboriú/i.test(escola.nome) && nivel === "Ensino Médio";
 
   const pacoteDoTurno = (turno: Turno) => {
-    const dias = textoParaAudio(turno.diasAula);
+    const dias = diasDeAulaParaAudio(turno.diasAula);
     const auxilios = turno.auxilios.join(", ") || "não informado";
     return `Turno da ${turno.turno} selecionado. As aulas acontecem das ${textoParaAudio(turno.horario.replace("-", " até "))}, ${dias}. Distância: ${textoDistancia}. Como funciona: ${turno.descricao || "Você terá aulas presenciais e acompanhamento para concluir seus estudos."} Auxílios oferecidos: ${auxilios}.`;
   };
@@ -75,10 +75,10 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
   }, [escola.id, falarAgora, leituraInicial]);
 
   return (
-    <main className="min-h-dvh bg-[#f2f3f6]">
+    <main className="min-h-dvh bg-fundo-claro">
       <CabecalhoFluxo etapa={3} textoAudio={resumo} onVoltar={() => { interromper(); onVoltar(); }} />
 
-      <section className="mx-auto max-w-3xl bg-[#f2f3f6] px-5 pb-40 pt-5">
+      <section className="mx-auto max-w-3xl bg-fundo-claro px-5 pb-40 pt-5">
         <div data-vlibras-pai="resumo-escola" className="mb-6 text-center">
           <h1 className="text-2xl font-black leading-tight sm:text-3xl">
             <NomeEscolaFluido nome={escola.nome} leitura={leituraInicial} />
@@ -98,10 +98,10 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
                 data-turno-selecionado={selecionadoAgora}
                 type="button"
                 onClick={() => { setSelecionado(turno); void falarAgora(pacoteDoTurno(turno)); }}
-                className={`min-h-[112px] rounded-2xl border p-3 text-center transition ${selecionadoAgora ? "border-[#008bff] bg-[#008bff] text-white shadow-lg" : "border-[#e5ddff] bg-white text-[#1e1b4b]"}`}
+                className={`min-h-[112px] rounded-2xl border p-3 text-center transition ${selecionadoAgora ? "border-azul-acao bg-azul-acao text-white shadow-lg" : "border-[#e5ddff] bg-white text-[#1e1b4b]"}`}
               >
-                <span className={`mx-auto flex size-12 items-center justify-center rounded-xl ${selecionadoAgora ? "bg-white/15" : "bg-[#e6f0fa]"}`}>
-                  <Icone className={`size-6 ${selecionadoAgora ? "text-white" : "text-[#4e8afb]"}`} />
+                <span className={`mx-auto flex size-12 items-center justify-center rounded-xl ${selecionadoAgora ? "bg-white/15" : "bg-azul-superficie"}`}>
+                  <Icone className={`size-6 ${selecionadoAgora ? "text-white" : "text-azul-secundario"}`} />
                 </span>
                 <span className="block">
                   <strong className="block text-sm">{turno.turno}</strong>
@@ -114,7 +114,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
 
         {!selecionado ? (
           <div data-vlibras-pai="orientacao-turnos" className="px-5 py-20 text-center">
-            <span className="mx-auto flex size-20 items-center justify-center rounded-full bg-[#4e8afb]/10 text-[#4e8afb]"><GraduationCap className="size-10" /></span>
+            <span className="mx-auto flex size-20 items-center justify-center rounded-full bg-azul-secundario/10 text-azul-secundario"><GraduationCap className="size-10" /></span>
             <h2 className="mt-5 text-xl font-black text-[#1e1b4b]">Escolha o melhor horário para você</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-500">Cada turno tem seus próprios auxílios e informações exclusivas.</p>
           </div>
@@ -149,7 +149,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
                     onClick={() => { setAuxilioAberto(auxilio); void falarAgora(`${auxilio}. ${descricaoAuxilio[auxilio] ?? "Converse com a escola para confirmar as condições deste auxílio."}`); }}
                     className="flex w-full items-center gap-3 py-4 text-left"
                   >
-                    <span className="rounded-lg bg-[#e6f0fa] p-2 text-[#008bff]"><IconeAuxilio texto={auxilio} /></span>
+                    <span className="rounded-lg bg-azul-superficie p-2 text-azul-acao"><IconeAuxilio texto={auxilio} /></span>
                     <strong className="flex-1 text-sm text-[#1e1b4b]">{auxilio}</strong>
                     <ChevronRight className="size-5 text-violet-400" />
                   </button>
@@ -161,8 +161,8 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
       </section>
 
       {selecionado && (
-        <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-[#f2f3f6] px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_22px_rgb(15_23_42/0.10)]">
-          <button data-vlibras-acao="pronto" type="button" onClick={() => { interromper(); onInscrever(selecionado); }} className="mx-auto block w-full max-w-3xl rounded-2xl bg-[#008bff] py-4 font-black text-white shadow-lg">
+        <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-fundo-claro px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_22px_rgb(15_23_42/0.10)]">
+          <button data-vlibras-acao="pronto" type="button" onClick={() => { interromper(); onInscrever(selecionado); }} className="mx-auto block w-full max-w-3xl rounded-2xl bg-azul-acao py-4 font-black text-white shadow-lg">
             Quero me inscrever ({selecionado.turno})
           </button>
         </div>
@@ -183,9 +183,9 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
 }
 
 function BotaoPai({ texto }: { texto: string }) {
-  return <BotaoAudio modo="ouvir" texto={texto} ariaLabel="Ouvir este bloco" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e6f0fa] text-[#008bff] hover:bg-[#d6e8fa] disabled:cursor-wait disabled:opacity-75" />;
+  return <BotaoAudio modo="ouvir" texto={texto} ariaLabel="Ouvir este bloco" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-azul-superficie text-azul-acao hover:bg-azul-foco disabled:cursor-wait disabled:opacity-75" />;
 }
 
 function Info({ icon, titulo, valor }: { icon: ReactNode; titulo: string; valor: string }) {
-  return <div data-vlibras-pai="informacao-turno" className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm"><span className="mx-auto block w-fit text-[#4e8afb]">{icon}</span><small className="mt-2 block text-slate-400">{titulo}</small><strong className="block text-sm text-[#1e1b4b]">{valor}</strong></div>;
+  return <div data-vlibras-pai="informacao-turno" className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm"><span className="mx-auto block w-fit text-azul-secundario">{icon}</span><small className="mt-2 block text-slate-400">{titulo}</small><strong className="block text-sm text-[#1e1b4b]">{valor}</strong></div>;
 }

@@ -24,9 +24,9 @@ export default function IndicadorProgresso({ etapa, concluido = false, inverso =
       className={`flex w-full items-center gap-3 ${className}`}
     >
       <span className={`h-2 min-w-0 flex-1 overflow-hidden rounded-full ${inverso ? "bg-white/25" : "bg-slate-200"}`} aria-hidden="true">
-        <span className={`block h-full rounded-full transition-[width] duration-500 ${inverso ? "bg-white" : "bg-[#4e8afb]"}`} style={{ width: `${percentual}%` }} />
+        <span className={`block h-full rounded-full transition-[width] duration-500 ${inverso ? "bg-white" : "bg-azul-secundario"}`} style={{ width: `${percentual}%` }} />
       </span>
-      <strong className={`shrink-0 text-xs font-black ${inverso ? "text-white" : "text-[#0257a0]"}`}>{concluido ? "Concluído" : `${etapa} de ${TOTAL_DE_ETAPAS} · ${NOMES_DAS_ETAPAS[etapa]}`}</strong>
+      <strong className={`shrink-0 text-xs font-black ${inverso ? "text-white" : "text-azul-principal"}`}>{!concluido && <span className="eja-progresso-prefixo" aria-hidden="true">Etapa </span>}{concluido ? "Concluído" : `${etapa} de ${TOTAL_DE_ETAPAS} · ${NOMES_DAS_ETAPAS[etapa]}`}</strong>
     </div>
   );
 }

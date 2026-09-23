@@ -336,16 +336,22 @@ export function useAudioDescricao() {
 
 export function textoParaAudio(texto: string) {
   return texto
-    .replace(/\bSeg\s*[-–]\s*Sex\b/gi, "segunda a sexta")
-    .replace(/\bSeg\s*[-–]\s*Qui\b/gi, "segunda a quinta")
-    .replace(/\bSeg\s*[-–]\s*Qua\b/gi, "segunda a quarta")
     .replace(/\bE\.?\s*E\.?\s*B\.?\b/gi, "Escola de Educação Básica")
     .replace(/\bE\.?\s*B\.?\s*M\.?\b/gi, "Escola Básica Municipal")
     .replace(/\bC\.?\s*E\.?\s*J\.?\s*A\.?\b/gi, "Centro de Educação de Jovens e Adultos")
     .replace(/\bI\.?\s*F\.?\s*C\.?\b/gi, "Instituto Federal Catarinense")
+    .replace(/\s+-\s+/g, " até ");
+}
+
+/** Expande abreviações somente no campo específico de dias de aula. */
+export function diasDeAulaParaAudio(texto: string) {
+  return textoParaAudio(texto)
+    .replace(/\bSeg\s*[-–]\s*Sex\b/gi, "segunda a sexta")
+    .replace(/\bSeg\s*[-–]\s*Qui\b/gi, "segunda a quinta")
+    .replace(/\bSeg\s*[-–]\s*Qua\b/gi, "segunda a quarta")
     .replace(/\bSeg\b/gi, "segunda-feira").replace(/\bTer\b/gi, "terça-feira")
     .replace(/\bQua\b/gi, "quarta-feira").replace(/\bQui\b/gi, "quinta-feira")
-    .replace(/\bSex\b/gi, "sexta-feira").replace(/\s+-\s+/g, " até ");
+    .replace(/\bSex\b/gi, "sexta-feira");
 }
 
 export function obterEstadoDaReproducao() {

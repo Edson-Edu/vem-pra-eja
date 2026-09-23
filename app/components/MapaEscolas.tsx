@@ -4,7 +4,6 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import type { Escola } from "../lib/escolas";
 import type { LocalizacaoUsuario } from "../lib/localizacao";
-import { distribuirPinos } from "../lib/distribuir-pinos";
 
 declare global {
   interface Window { L?: any; }
@@ -62,7 +61,6 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
   const elementRef = useRef<HTMLDivElement>(null);
   const mapaRef = useRef<any>(null);
   const marcadoresRef = useRef<any[]>([]);
-  const ligacoesRef = useRef<any[]>([]);
   const marcadorDoUsuarioRef = useRef<any>(null);
   const escolasEnquadradasRef = useRef("");
   const ultimaSelecaoRef = useRef<string | undefined>(undefined);
@@ -231,6 +229,9 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
       setPronto(true);
     }).catch(() => undefined);
     return () => { ativo = false; if (mapaRef.current) { mapaRef.current.remove(); mapaRef.current = null; } };
+  // O mapa é criado uma única vez. As versões atuais dos callbacks são lidas
+  // por refs para não recriar o Leaflet ao mudar seleção ou breakpoint.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -241,7 +242,7 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
     marcadoresRef.current = escolas.map((escola, indice) => ({ escola, indice })).filter(({ escola }) => Number.isFinite(Number(escola.latitude)) && Number.isFinite(Number(escola.longitude))).map(({ escola, indice }) => {
       const ativo = escola.id === selecionada;
       const tamanho = ativo ? 38 : 34;
-      const cor = ativo ? "#008BFF" : "#E44335";
+      const cor = ativo ? "var(--eja-cor-azul-acao)" : "#E44335";
       const rotulo = escaparHtml(escola.nome);
       const icone = L.divIcon({ className: "eja-marcador-escola", html: `<div class="eja-marcador-conteudo"><span class="eja-marcador-nome"><span data-eja-nome-mapa>${rotulo}</span></span><div class="eja-marcador-pino" style="width:${tamanho}px;height:${tamanho}px;background:${cor}"><span>${indice + 1}</span></div></div>`, iconSize: [142, 44], iconAnchor: [71, 44] });
       const marcador = L.marker([escola.latitude, escola.longitude], { icon: icone, title: `${indice + 1}. ${escola.nome}`, alt: escola.nome, keyboard: true, zIndexOffset: ativo ? 1000 : 0 }).addTo(mapa).on("click", () => onMarcadorClick(escola.id));
@@ -264,6 +265,8 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
       enquadrarAtualRef.current();
     });
     return () => cancelAnimationFrame(quadro);
+  // enquadrarEscolas delega à ref atual e não deve recriar marcadores.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [escolas, localizacaoUsuario, onMarcadorClick, selecionada, pronto]);
 
   useEffect(() => {
@@ -289,6 +292,8 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
     if (!escola) return;
     usuarioInteragiuRef.current = true;
     centralizarNaAreaVisivel(escola, true);
+  // A centralização usa as refs correntes para preservar o mapa já montado.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [escolas, focoNoMapa, selecionada]);
 
   useEffect(() => {
@@ -297,6 +302,8 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
     escolasEnquadradasRef.current = "";
     onVisaoAlterada(false);
     enquadrarEscolas(true);
+  // enquadrarEscolas é estabilizado pelas refs do componente.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reenquadrar, onVisaoAlterada]);
 
   useEffect(() => {
@@ -309,56 +316,10 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
     if (legenda) observador.observe(legenda);
     window.addEventListener("resize", atualizarEnquadramento);
     return () => { observador.disconnect(); window.removeEventListener("resize", atualizarEnquadramento); };
+  // As refs dos contêineres são objetos estáveis; suas propriedades são lidas
+  // sempre que este efeito roda.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [escolas, pronto]);
-
-  useEffect(() => {
-    const mapa = mapaRef.current;
-    if (!mapa || !pronto) return;
-    let quadro = 0;
-    const ajustar = () => {
-      ligacoesRef.current.forEach((linha) => linha.remove());
-      ligacoesRef.current = [];
-      const marcadores = marcadoresRef.current;
-      marcadores.forEach((marcador) => {
-        const elemento = marcador.getElement();
-        if (elemento) { elemento.style.marginLeft = "-71px"; elemento.style.marginTop = "-44px"; }
-      });
-      if (window.innerWidth >= 768 || usuarioInteragiuRef.current) return;
-      const area = areaVisivel();
-      if (!area) return;
-      const pontos = marcadores.map((marcador) => mapa.latLngToContainerPoint(marcador.getLatLng()));
-      const base = area.base - area.mapa.top - 12;
-      const topo = Math.min(base, area.topo - area.mapa.top + 90);
-      const distribuidos = distribuirPinos(pontos, { esquerda: 32, direita: area.mapa.width - 32, topo, base });
-      marcadores.forEach((marcador, indice) => {
-        const ponto = pontos[indice];
-        const destino = distribuidos[indice];
-        const dx = destino.x - ponto.x;
-        const dy = destino.y - ponto.y;
-        const elemento = marcador.getElement();
-        if (!elemento) return;
-        elemento.style.marginLeft = `${-71 + dx}px`;
-        elemento.style.marginTop = `${-44 + dy}px`;
-        if (Math.hypot(dx, dy) > 2) {
-          const linha = window.L.polyline([marcador.getLatLng(), mapa.containerPointToLatLng([destino.x, destino.y])], {
-            color: "#0257a0", weight: 1.5, dashArray: "3 3", interactive: false,
-          }).addTo(mapa);
-          ligacoesRef.current.push(linha);
-        }
-      });
-    };
-    const agendar = () => { cancelAnimationFrame(quadro); quadro = requestAnimationFrame(ajustar); };
-    mapa.on("moveend resize", agendar);
-    window.addEventListener("resize", agendar);
-    agendar();
-    return () => {
-      cancelAnimationFrame(quadro);
-      mapa.off("moveend resize", agendar);
-      window.removeEventListener("resize", agendar);
-      ligacoesRef.current.forEach((linha) => linha.remove());
-      ligacoesRef.current = [];
-    };
-  }, [pronto, escolas, selecionada, onMarcadorClick, areaVisivel]);
 
   return <div ref={elementRef} className="absolute inset-0 bg-[#dbeafe]" aria-label="Mapa das escolas" />;
 }

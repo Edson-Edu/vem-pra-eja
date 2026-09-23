@@ -24,7 +24,7 @@ export default function PaginaSucesso() {
   }, [inscricaoConcluida, router]);
 
   if (!inscricaoConcluida) {
-    return <main className="grid min-h-dvh place-items-center bg-[#f2f3f6]"><p className="font-bold text-[#0257a0]">Voltando ao início...</p></main>;
+    return <main className="grid min-h-dvh place-items-center bg-fundo-claro"><p className="font-bold text-azul-principal">Voltando ao início...</p></main>;
   }
 
   return <TelaSucesso onInicio={() => { sessionStorage.removeItem("eja-inscricao-concluida"); router.replace("/"); }} onNovaInscricao={() => { iniciarFluxo(); router.replace("/nivel"); }} />;

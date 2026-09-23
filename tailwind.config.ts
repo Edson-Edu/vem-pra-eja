@@ -8,10 +8,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // TODO: troque pelo valor real de Paleta.azulPrincipal (paleta.dart)
-        azulPrincipal: "#0257A0",
-        fundoClaro: "#F2F3F6",
-        textoPrincipal: "#1E293B",
+        // Os valores oficiais ficam em app/globals.css e serão trocados ali
+        // quando a CECOM aprovar a paleta definitiva.
+        azulPrincipal: "var(--eja-cor-azul-principal)",
+        azulAcao: "var(--eja-cor-azul-acao)",
+        azulSecundario: "var(--eja-cor-azul-secundario)",
+        azulSuperficie: "var(--eja-cor-azul-superficie)",
+        azulFoco: "var(--eja-cor-azul-foco)",
+        fundoClaro: "var(--eja-cor-fundo-claro)",
+        textoPrincipal: "var(--eja-cor-texto-principal)",
 
         // cores que já existiam no projeto (mantidas para não quebrar outras telas)
         roxoPrimario: "#4F46E5",

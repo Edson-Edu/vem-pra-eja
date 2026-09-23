@@ -67,11 +67,11 @@ function Conteudo() {
   if (carregando) return <Carregando />;
   if (!escola) {
     return (
-      <main className="grid min-h-dvh place-items-center bg-[#f2f3f6] p-6">
+      <main className="grid min-h-dvh place-items-center bg-fundo-claro p-6">
         <div className="max-w-sm text-center">
-          <h1 className="text-xl font-black text-[#1e293b]">Não foi possível encontrar esta escola</h1>
+          <h1 className="text-xl font-black text-texto-principal">Não foi possível encontrar esta escola</h1>
           <p className="mt-2 text-slate-600">Volte ao mapa e selecione a escola novamente.</p>
-          <button type="button" onClick={() => router.back()} className="mt-6 rounded-xl bg-[#008bff] px-5 py-3 font-bold text-white">Voltar ao mapa</button>
+          <button type="button" onClick={() => router.back()} className="mt-6 rounded-xl bg-azul-acao px-5 py-3 font-bold text-white">Voltar ao mapa</button>
         </div>
       </main>
     );
@@ -81,5 +81,5 @@ function Conteudo() {
 }
 
 function Carregando() {
-  return <main className="grid min-h-dvh place-items-center bg-[#f2f3f6]"><div className="text-center"><span className="mx-auto block size-10 animate-spin rounded-full border-4 border-[#d6e8fa] border-t-[#008bff]" /><p className="mt-4 font-bold text-[#0257a0]">Carregando informações da escola...</p></div></main>;
+  return <main className="grid min-h-dvh place-items-center bg-fundo-claro"><div className="text-center"><span className="mx-auto block size-10 animate-spin rounded-full border-4 border-azul-foco border-t-azul-acao" /><p className="mt-4 font-bold text-azul-principal">Carregando informações da escola...</p></div></main>;
 }

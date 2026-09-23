@@ -63,7 +63,13 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
     setSelecionada(id);
     setFocoNoMapa((atual) => atual + 1);
     if (rolar) {
-      referencias.current[id]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      const cartao = referencias.current[id];
+      const conteudo = listaRef.current?.querySelector<HTMLElement>("[data-eja-rolagem-escolas]");
+      if (cartao && conteudo) {
+        // Rola somente os cartões, sem deslocar a página nem o painel sobre o mapa.
+        const topo = cartao.getBoundingClientRect().top - conteudo.getBoundingClientRect().top + conteudo.scrollTop;
+        conteudo.scrollTo({ top: Math.max(0, topo - 16), behavior: "smooth" });
+      }
     }
   }, []);
 
@@ -142,7 +148,7 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
           onClick={redefinirEnquadramento}
           aria-label="Mostrar todas as escolas no mapa"
           title="Mostrar todas as escolas"
-          className="absolute left-4 top-[184px] z-[1090] flex size-11 items-center justify-center rounded-full bg-white text-[#0257a0] shadow-lg transition hover:scale-105"
+          className="absolute left-4 top-[184px] z-[1090] flex size-11 items-center justify-center rounded-full bg-white text-azul-principal shadow-lg transition hover:scale-105"
         >
           <LocateFixed className="size-5" />
         </button>
@@ -150,7 +156,7 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
 
       <CabecalhoFluxo etapa={2} textoAudio={orientacao} onVoltar={() => { interromper(); onVoltar(); }} posicao="absolute" referencia={cabecalhoRef} />
 
-      <h1 className="absolute left-1/2 top-[132px] z-[1090] -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 px-4 py-2 text-sm font-black text-[#1e293b] shadow-md backdrop-blur-sm sm:text-base">
+      <h1 className="absolute left-1/2 top-[132px] z-[1090] -translate-x-1/2 whitespace-nowrap rounded-full bg-white/95 px-4 py-2 text-sm font-black text-texto-principal shadow-md backdrop-blur-sm sm:text-base">
         Escolha sua escola
       </h1>
 
@@ -158,9 +164,9 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
         data-eja-lista-escolas
         ref={listaRef}
         style={alturaDaLista ? { height: `${alturaDaLista}px` } : undefined}
-        className="absolute inset-x-0 bottom-0 z-[1100] flex h-[59dvh] min-h-[260px] max-h-[80dvh] flex-col overflow-hidden rounded-t-[30px] bg-[#f2f3f6] shadow-[0_-8px_22px_rgb(0_0_0/0.14)] xl:bottom-8 xl:left-auto xl:right-8 xl:top-32 xl:h-auto xl:max-h-none xl:w-[440px] xl:rounded-3xl"
+        className="absolute inset-x-0 bottom-0 z-[1100] flex h-[59dvh] min-h-[260px] max-h-[80dvh] flex-col overflow-hidden rounded-t-[30px] bg-fundo-claro shadow-[0_-8px_22px_rgb(0_0_0/0.14)] xl:bottom-8 xl:left-auto xl:right-8 xl:top-32 xl:h-auto xl:max-h-none xl:w-[440px] xl:rounded-3xl"
       >
-        <div className="shrink-0 border-b border-slate-200 bg-[#f2f3f6] shadow-[0_2px_8px_rgb(15_23_42/0.04)]">
+        <div className="shrink-0 border-b border-slate-200 bg-fundo-claro shadow-[0_2px_8px_rgb(15_23_42/0.04)]">
           <button
             type="button"
             onPointerDown={comecarArrasteLista}
@@ -172,17 +178,17 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
           >
             <span className="h-1 w-10 rounded-full bg-slate-300" />
           </button>
-          <p className="px-5 pb-3 text-sm font-semibold text-[#0257a0]">
-            <MapPin className="mr-2 inline size-4 text-[#4e8afb]" />
+          <p className="px-5 pb-3 text-sm font-semibold text-azul-principal">
+            <MapPin className="mr-2 inline size-4 text-azul-secundario" />
             {escolas.length} escolas prontas para te receber
           </p>
           <aside aria-label="Legenda do mapa" data-eja-legenda-mapa data-vlibras-texto={legendaMapa} className="relative mx-4 mb-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] leading-relaxed text-slate-600">
-            <p className="flex flex-wrap gap-x-3"><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-[#008bff]" />Selecionada</span><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-[#e44335]" />Outras escolas</span></p>
+            <p className="flex flex-wrap gap-x-3"><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-azul-acao" />Selecionada</span><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-[#e44335]" />Outras escolas</span></p>
             <p>{legendaNumeros}</p>
           </aside>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
+        <div data-eja-rolagem-escolas className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
           <div className="space-y-4">
             {escolasOrdenadas.map((escola, indice) => (
               <CartaoEscola
@@ -233,20 +239,20 @@ function CartaoEscola({
 }: CartaoProps) {
   const turnos = escola.turnos.filter((turno) => turno.nivel === nivel);
   const beneficios = [...new Set(turnos.flatMap((turno) => turno.auxilios))];
-  const pacote = `${textoParaAudio(escola.nome)}. Fica no bairro ${escola.bairro}, em ${escola.cidade}. Turnos disponíveis: ${turnos.map((turno) => turno.turno).join(", ") || "não informado"}. Benefícios oferecidos: ${beneficios.join(", ") || "não informado"}. Toque em Ver escola para continuar.`;
+  const pacote = `${textoParaAudio(escola.nome)}. Fica no bairro ${escola.bairro}, em ${escola.cidade}. Turnos disponíveis: ${turnos.map((turno) => turno.turno).join(", ") || "não informado"}. Auxílios oferecidos: ${beneficios.join(", ") || "não informado"}. Toque em Ver escola para continuar.`;
 
   return (
     <div
       ref={referencia}
       onClick={onSelecionar}
-      className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition ${ativo ? "border-[#008bff] ring-2 ring-[#008bff]/20" : "border-slate-200"}`}
+      className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition ${ativo ? "border-azul-acao ring-2 ring-azul-acao/20" : "border-slate-200"}`}
     >
       <FotosDaEscola escola={escola} destaque={destaque} />
       <div className="p-4">
         <div className="flex items-start gap-2">
-          <h2 className="min-w-0 flex-1 text-[17px] font-black text-[#1e293b]">{escola.nome}</h2>
+          <h2 className="min-w-0 flex-1 text-[17px] font-black text-texto-principal">{escola.nome}</h2>
           {leituraAtiva && (
-            <BotaoAudio modo="ouvir" texto={pacote} ariaLabel={`Ouvir detalhes de ${escola.nome}`} interromperEvento className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#e6f0fa] text-[#008bff] hover:bg-[#d6e8fa] disabled:cursor-wait disabled:opacity-75" />
+            <BotaoAudio modo="ouvir" texto={pacote} ariaLabel={`Ouvir detalhes de ${escola.nome}`} interromperEvento className="flex size-9 shrink-0 items-center justify-center rounded-full bg-azul-superficie text-azul-acao hover:bg-azul-foco disabled:cursor-wait disabled:opacity-75" />
           )}
         </div>
         <p className="mt-1 text-sm text-slate-500">{escola.bairro} · {escola.cidade}</p>
@@ -256,7 +262,7 @@ function CartaoEscola({
             <span
               data-turno-disponivel
               key={turno.id}
-              className="inline-flex items-center gap-1 rounded-full bg-[#e6f0fa] px-2 py-1 text-xs font-bold text-[#0257a0]"
+              className="inline-flex items-center gap-1 rounded-full bg-azul-superficie px-2 py-1 text-xs font-bold text-azul-principal"
             >
               <Clock3 className="size-3" />
               {turno.turno}
@@ -265,7 +271,7 @@ function CartaoEscola({
         </div>
         {beneficios.length > 0 && (
           <>
-            <p className="mt-3 text-[11px] font-bold text-slate-500">BENEFÍCIOS OFERECIDOS</p>
+            <p className="mt-3 text-[11px] font-bold text-slate-500">AUXÍLIOS OFERECIDOS</p>
             <div className="mt-1 flex flex-wrap gap-1.5">
               {beneficios.map((beneficio) => (
                 <span
@@ -285,7 +291,7 @@ function CartaoEscola({
             evento.stopPropagation();
             onAbrir();
           }}
-          className="mt-4 w-full rounded-xl bg-[#008bff] py-3 font-bold text-white"
+          className="mt-4 w-full rounded-xl bg-azul-acao py-3 font-bold text-white"
         >
           Ver escola
         </button>
@@ -325,7 +331,7 @@ function FotosDaEscola({ escola, destaque }: { escola: Escola; destaque: boolean
         }}
       />
       {destaque && (
-        <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-[11px] font-black text-[#0257a0]">
+        <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-[11px] font-black text-azul-principal">
           MAIS PRÓXIMA
         </span>
       )}

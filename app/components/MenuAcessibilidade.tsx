@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Accessibility, PersonStanding, Contrast, Hand, Volume2, X, type LucideIcon } from "lucide-react";
+import { PersonStanding, Contrast, Hand, Volume2, X, type LucideIcon } from "lucide-react";
 import { definirEstadoVLibras, observarEstadoVLibras, obterEstadoVLibras } from "./estadoVLibras";
 import { definirMenuAcessibilidade, useMenuAcessibilidadeAberto } from "./estadoMenuAcessibilidade";
 import { prepararAudioNoGestoUsuario, useAudioDescricao } from "./useAudioDescricao";
+import { tamanhosTexto, useTamanhoTexto } from "./useTamanhoTexto";
 
-const textoDoMenu = "Acessibilidade. Alto contraste: aumenta o contraste das cores da tela. Tradução em Libras: mostra um intérprete virtual. Leitura em voz alta: lê o conteúdo da tela para você. Áudio e Libras são usados um de cada vez. Ao ligar um, o outro é desligado automaticamente. O alto contraste pode permanecer ligado.";
+const textoDoMenu = "Acessibilidade. Tamanho do texto: padrão, grande ou muito grande. Alto contraste: aumenta o contraste das cores da tela. Tradução em Libras: mostra um intérprete virtual. Leitura em voz alta: lê o conteúdo da tela para você. Áudio e Libras são usados um de cada vez. Ao ligar um, o outro é desligado automaticamente. O alto contraste pode permanecer ligado.";
 const textoAtualDaTela = () => document.querySelector<HTMLElement>("[data-eja-audio-texto]")?.dataset.ejaAudioTexto || textoDoMenu;
 
 export default function MenuAcessibilidade() {
@@ -14,6 +15,7 @@ export default function MenuAcessibilidade() {
   const dialogo = useRef<HTMLDialogElement>(null);
   const botao = useRef<HTMLButtonElement>(null);
   const [contraste, setContraste] = useState(false);
+  const { tamanho, escolher } = useTamanhoTexto();
   const libras = useSyncExternalStore(observarEstadoVLibras, obterEstadoVLibras, () => false);
   const { ativo: audio, carregando, alternar, falarAgora, interromper } = useAudioDescricao();
 
@@ -57,8 +59,7 @@ export default function MenuAcessibilidade() {
   return (
     <>
       <button ref={botao} type="button" className="eja-acessibilidade-abrir" aria-haspopup="dialog" aria-expanded={aberto} aria-controls="eja-menu-acessibilidade" onClick={() => definirMenuAcessibilidade(true)}>
-        <PersonStanding className="md:hidden" aria-hidden="true" size={21} />
-        <Accessibility className="hidden md:block" aria-hidden="true" size={21} />
+        <PersonStanding aria-hidden="true" size={21} />
         <span>Acessibilidade</span>
       </button>
       <dialog ref={dialogo} id="eja-menu-acessibilidade" className="eja-acessibilidade-dialogo" aria-labelledby="eja-menu-titulo" onCancel={(evento) => { evento.preventDefault(); fechar(); }} onKeyDown={(evento) => { if (evento.key === "Escape") { evento.preventDefault(); fechar(); } }} onClick={(evento) => { if (evento.target === evento.currentTarget) fechar(); }}>
@@ -69,10 +70,22 @@ export default function MenuAcessibilidade() {
             <button type="button" aria-label="Fechar acessibilidade" onClick={fechar}><X aria-hidden="true" size={22} /></button>
           </div>
           <Controle id="contraste" icone={Contrast} titulo="Alto contraste" descricao="Aumenta o contraste das cores da tela." ligado={contraste} onAlternar={() => document.querySelector<HTMLButtonElement>("[data-eja-alto-contraste]")?.click()} />
+          <fieldset className="eja-tamanho-texto">
+            <legend>Tamanho do texto</legend>
+            <p>Escolha o tamanho mais confortável para ler.</p>
+            <div>
+              {tamanhosTexto.map((valor, indice) => <label key={valor}>
+                <input type="radio" name="eja-tamanho-texto" value={valor} checked={tamanho === valor} onChange={() => { escolher(valor); void falarAgora(`Texto ${["padrão", "grande", "muito grande"][indice]}. ${valor} por cento.`); }} />
+                <span>{["Padrão", "Grande", "Muito grande"][indice]}<small>{valor}%</small></span>
+              </label>)}
+            </div>
+          </fieldset>
+          <div className="eja-acessibilidade-grupo">
           <Controle id="libras" icone={Hand} titulo="Tradução em Libras (VLibras)" descricao="Mostra um intérprete virtual traduzindo o conteúdo." ligado={libras} onAlternar={() => definirEstadoVLibras(!libras)} />
           <Controle id="audio" icone={Volume2} titulo="Leitura em voz alta" descricao="O site lê o conteúdo da tela para você." ligado={audio} onPreparar={prepararAudioNoGestoUsuario} onAlternar={alternarAudio} />
-          <p className="eja-acessibilidade-status" data-vlibras-texto="Áudio e Libras são usados um de cada vez. Ao ligar um, o outro é desligado automaticamente. O alto contraste pode permanecer ligado.">Áudio e Libras são usados um de cada vez. Ao ligar um, o outro é desligado automaticamente. O alto contraste pode permanecer ligado.</p>
-          <p className="eja-acessibilidade-status" role="status">{audio && carregando ? "Preparando áudio. Você pode desligar a leitura a qualquer momento." : libras ? "Libras ligado; leitura em voz alta desligada. Feche este menu para usar o intérprete na página." : audio ? "Leitura em voz alta ligada; Libras desligado." : "Você pode mudar essas opções a qualquer momento."}</p>
+          <p className="eja-acessibilidade-status eja-acessibilidade-orientacao" data-vlibras-texto="Áudio e Libras são usados um de cada vez. Ao ligar um, o outro é desligado automaticamente. O alto contraste pode permanecer ligado.">Opte por Libras ou Leitura em voz alta</p>
+          </div>
+          <p className="eja-acessibilidade-status eja-acessibilidade-retorno" data-ativo={audio || libras} role="status">{audio && carregando ? "Preparando áudio. Você pode desligar a leitura a qualquer momento." : libras ? "Libras ligado; leitura em voz alta desligada. Feche este menu para usar o intérprete na página." : audio ? "Leitura em voz alta ligada; Libras desligado." : "Você pode mudar essas opções a qualquer momento."}</p>
           <button type="button" className="eja-acessibilidade-concluir" onClick={fechar}>Voltar à página</button>
         </div>
       </dialog>

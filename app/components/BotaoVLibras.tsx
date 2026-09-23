@@ -51,7 +51,7 @@ function rotaAtual() {
  * widget recorra à datilologia apenas quando ela é realmente necessária.
  */
 /**
- * Alguns nomes de benefícios chegam compostos ou flexionados. O dicionário
+ * Alguns nomes de auxílios chegam compostos ou flexionados. O dicionário
  * do VLibras reconhece os lemas abaixo, enquanto as formas longas podem cair
  * na datilologia. Esta normalização também é aplicada na montagem dos
  * blocos pai, antes de a camada de tradução ser criada.
@@ -231,12 +231,12 @@ function textoDaEscolaParaLibras(cartao: HTMLElement) {
   const turnos = encontrarItens("TURNOS DISPONÍVEIS") || "não informado";
   // Normalizamos já na extração para que o bloco pai nunca receba o rótulo
   // visual "Livros didáticos" — nem mesmo durante atualizações do card.
-  const beneficios = normalizarTermosParaLibras(encontrarItens("BENEFÍCIOS OFERECIDOS")) || "não informado";
+  const beneficios = normalizarTermosParaLibras(encontrarItens("AUXÍLIOS OFERECIDOS")) || "não informado";
   return juntarFrases(
     expandirSiglasParaLibras(nome),
     `Localização: ${localizacao}`,
     `Turnos disponíveis: ${turnos}`,
-    `Benefícios oferecidos: ${beneficios}`,
+    `Auxílios oferecidos: ${beneficios}`,
     "Deseja ver esta escola?",
   );
 }
@@ -273,17 +273,24 @@ function textoDoDetalheParaLibras(bloco: HTMLElement) {
 
 function agruparBlocosDaTelaNivel() {
   if (rotaAtual() !== "/nivel") return;
+  document.querySelectorAll<HTMLElement>("[data-nivel-aviso-libras]").forEach((aviso) => {
+    criarBlocoDeTraducao(aviso, aviso.dataset.nivelAvisoLibras ?? "");
+  });
   const pergunta = document.querySelector<HTMLElement>("main h1");
   if (pergunta?.innerText) criarBlocoDeTraducao(pergunta, "Você estudar até série ou ano qual?");
   const opcoes = document.querySelectorAll<HTMLElement>("main [data-nivel-opcao]");
   const opcoesParaLibras = [
-    "Eu nunca estudar.",
+    "Eu nunca estudar. Não chegar a frequentar a escola formalmente.",
     "TERMINAR ESTUDAR SÉRIE 1 ATÉ 9",
     "ESTUDAR PRIMEIRO GRAU TERMINAR AGORA QUERER SEGUNDO GRAU",
   ];
   opcoes.forEach((opcao, indice) => {
     const texto = opcoesParaLibras[indice];
-    if (texto) criarBlocoDeTraducao(opcao, texto);
+    const acao = opcao.querySelector<HTMLElement>("[data-nivel-acao]");
+    if (texto && acao) {
+      opcao.querySelector(":scope > .vlibras-bloco")?.remove();
+      criarBlocoDeTraducao(acao, texto);
+    }
   });
   const fraseFinal = document.querySelector<HTMLElement>("main footer p");
   if (fraseFinal?.innerText) criarBlocoDeTraducao(fraseFinal, "Todas as escolas são gratuitas. Todas oferecem auxílios para concluir os estudos.");
@@ -483,12 +490,24 @@ export default function BotaoVLibras() {
     const verificacoesDeFechamento: number[] = [];
     let cancelado = false;
     let retomarCaptura = 0;
+    let fimDaConfirmacao = 0;
+    let confirmandoInteracao = false;
     // O pacote oficial intercepta cliques para traduzir textos. Os comandos
     // do aplicativo precisam continuar acionáveis, sobretudo para desligá-lo.
     // Usamos os eventos do próprio widget, sem modificar a versão vendorizada.
     const preservarAcoes = (evento: MouseEvent) => {
       if (!(evento.target instanceof Element)) return;
-      if (!evento.target.closest(".eja-acessibilidade-abrir, .eja-acessibilidade-dialogo, button[data-vlibras-acao]")) return;
+      if (evento.target.closest(".vw-links")) {
+        confirmandoInteracao = true;
+        window.clearTimeout(fimDaConfirmacao);
+        fimDaConfirmacao = window.setTimeout(() => { confirmandoInteracao = false; }, 0);
+        return;
+      }
+      const comandoDireto = evento.target.closest(".eja-acessibilidade-abrir, .eja-acessibilidade-dialogo, button[data-vlibras-acao]");
+      // "Interagir" dispara button.click(). Outras capturas do widget não
+      // devem interceptar novamente esse clique antes de chegar ao React.
+      const interacaoConfirmada = confirmandoInteracao && !evento.isTrusted && evento.target.closest("button[data-nivel-acao], button[data-vlibras-pai='turno']");
+      if (!comandoDireto && !interacaoConfirmada) return;
       window.dispatchEvent(new Event("vp-disable-text-capture"));
       window.clearTimeout(retomarCaptura);
       retomarCaptura = window.setTimeout(() => {
@@ -703,6 +722,7 @@ export default function BotaoVLibras() {
       window.clearTimeout(vigiaDeProntidao);
       window.clearTimeout(retomarCaptura);
       window.removeEventListener("click", preservarAcoes, true);
+      window.clearTimeout(fimDaConfirmacao);
       retomadasDoPainel.forEach((retomada) => window.clearTimeout(retomada));
       verificacoesDeFechamento.forEach((verificacao) => window.clearTimeout(verificacao));
       pararDeObservarEstado();

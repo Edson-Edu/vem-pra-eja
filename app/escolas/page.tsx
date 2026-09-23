@@ -38,4 +38,4 @@ function Conteudo() {
   return <TelaEscolas nivel={nivel} escolas={escolas} onVoltar={() => router.back()} onDetalhes={(id) => { registrarEscola(id); registrarEventoAnalytics("abriu_escola", { nivel, escola_id: id }); router.push(`/detalhes?escola=${id}&nivel=${encodeURIComponent(nivel)}`); }} />;
 }
 
-function Carregando({ texto }: { texto: string }) { return <main className="grid min-h-dvh place-items-center bg-[#f2f3f6]"><div className="text-center"><span className="mx-auto block size-10 animate-spin rounded-full border-4 border-[#d6e8fa] border-t-[#008bff]" /><p className="mt-4 font-bold text-[#0257a0]">{texto}</p></div></main>; }
+function Carregando({ texto }: { texto: string }) { return <main className="grid min-h-dvh place-items-center bg-fundo-claro"><div className="text-center"><span className="mx-auto block size-10 animate-spin rounded-full border-4 border-azul-foco border-t-azul-acao" /><p className="mt-4 font-bold text-azul-principal">{texto}</p></div></main>; }

@@ -7,7 +7,7 @@ import { useFluxoAutorizado } from "../lib/fluxo-navegacao";
 import { buscarEscolas } from "../lib/supabase-client";
 import { registrarEventoAnalytics } from "../lib/analytics";
 function CarregandoCadastro() {
-  return <main aria-busy="true" className="grid min-h-dvh place-items-center bg-[#f2f3f6]"><p role="status" data-vlibras-texto="Carregando cadastro" className="font-bold text-[#0257a0]">Carregando cadastro...</p></main>;
+  return <main aria-busy="true" className="grid min-h-dvh place-items-center bg-fundo-claro"><p role="status" data-vlibras-texto="Carregando cadastro" className="font-bold text-azul-principal">Carregando cadastro...</p></main>;
 }
 export default function PaginaCadastro() { return <Suspense fallback={<CarregandoCadastro />}><Conteudo /></Suspense>; }
 function Conteudo() {
@@ -46,5 +46,5 @@ function Conteudo() {
 
   const turno = escola?.turnos.find((item) => item.id === turnoId);
   if (!id || !turnoId || !nivel || !fluxoAutorizado || carregando || !escola || !turno) return <CarregandoCadastro />;
-  return <TelaCadastro escola={escola} turno={turno} onVoltar={() => router.back()} onSucesso={(nome) => { registrarEventoAnalytics("concluiu_inscricao", { nivel, escola_id: escola.id, turno: turno.turno }); sessionStorage.setItem("eja-inscricao-concluida", "true"); router.push(`/sucesso?nome=${encodeURIComponent(nome)}&escola=${encodeURIComponent(escola.nome)}&turno=${encodeURIComponent(turno.turno)}`); }} />;
+  return <TelaCadastro escola={escola} turno={turno} onVoltar={() => router.back()} onSucesso={() => { registrarEventoAnalytics("concluiu_inscricao", { nivel, escola_id: escola.id, turno: turno.turno }); sessionStorage.setItem("eja-inscricao-concluida", "true"); router.push("/sucesso"); }} />;
 }
