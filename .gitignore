@@ -28,7 +28,15 @@
 
 # production
 /build
+/deploy/production/supabase/.env
+/deploy/production/supabase/.env.functions
+/deploy/production/supabase/.env.old
+/deploy/production/supabase/volumes/db/data/
+/deploy/production/supabase/volumes/storage/
+/deploy/production/supabase/volumes/functions/.cache/
 
+/deploy/production/supabase/backups/
+/supabase/snippets/
 # misc
 .DS_Store
 *.pem
@@ -41,6 +49,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!**/.env.example
 
 # vercel
 .vercel

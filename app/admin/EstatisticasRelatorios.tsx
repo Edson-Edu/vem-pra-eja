@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, CheckCircle2, ClipboardEdit, Download, Eye, FileText, ListChecks, Mail, MailWarning, Play, School } from "lucide-react";
-import { carregarEstatisticasAnalytics, type EstatisticasAnalytics } from "../lib/analytics-admin";
+import { carregarEstatisticasAnalytics, corrigirEReenviarEmail, type EstatisticasAnalytics } from "../lib/analytics-admin";
 import { carregarInscricoesAdministrativas, type InscricaoAdministrativa } from "../lib/admin-escolas";
 import { exportarInscricoesCsv, exportarRelatorioCsv, visualizarInscricoesPdf, visualizarRelatorioPdf } from "../lib/exportacao-administrativa";
 import RetrospectivaAcessos from "./RetrospectivaAcessos";
@@ -29,12 +29,13 @@ function faixa(periodo: Periodo, inicio: string, fim: string) {
   return inicio && fim ? { inicio, fim } : null;
 }
 
-function Cartao({ titulo, texto, icone: Icon, valor, carregando, alerta = false }: { titulo: string; texto: string; icone: typeof Eye; valor?: number; carregando: boolean; alerta?: boolean }) {
+function Cartao({ titulo, texto, icone: Icon, valor, carregando, alerta = false, aoClicar }: { titulo: string; texto: string; icone: typeof Eye; valor?: number; carregando: boolean; alerta?: boolean; aoClicar?: () => void }) {
   const cor = alerta ? "text-red-600" : "text-azul-acao";
-  return <Card><span className={["grid size-9 place-items-center rounded-xl", alerta ? "bg-red-50" : "bg-azul-superficie", cor].join(" ")}><Icon className="size-5" /></span><div className="mt-4">{valor === undefined ? (carregando ? <span className="text-2xl font-black text-slate-400">…</span> : <EmCalculo />) : <span className={["text-2xl font-black", alerta ? "text-red-600" : "text-texto-principal"].join(" ")}>{valor.toLocaleString("pt-BR")}</span>}<p className={["mt-1 text-sm font-black", alerta ? "text-red-600" : "text-texto-principal"].join(" ")}>{titulo}</p><p className="mt-1 text-xs leading-5 text-slate-500">{texto}</p></div></Card>;
+  const conteudo = <><span className={["grid size-9 place-items-center rounded-xl", alerta ? "bg-red-50" : "bg-azul-superficie", cor].join(" ")}><Icon className="size-5" /></span><div className="mt-4">{valor === undefined ? (carregando ? <span className="text-2xl font-black text-slate-400">…</span> : <EmCalculo />) : <span className={["text-2xl font-black", alerta ? "text-red-600" : "text-texto-principal"].join(" ")}>{valor.toLocaleString("pt-BR")}</span>}<p className={["mt-1 text-sm font-black", alerta ? "text-red-600" : "text-texto-principal"].join(" ")}>{titulo}</p><p className="mt-1 text-xs leading-5 text-slate-500">{texto}</p>{aoClicar && <p className="mt-3 text-xs font-black text-azul-acao">Abrir detalhes →</p>}</div></>;
+  return aoClicar ? <button type="button" onClick={aoClicar} className={[card, "text-left transition hover:-translate-y-0.5 hover:border-azul-acao focus:outline-none focus:ring-4 focus:ring-azul-acao/20"].join(" ")}>{conteudo}</button> : <Card>{conteudo}</Card>;
 }
 
-function Resumo({ dados, carregando, erro }: { dados: EstatisticasAnalytics | null; carregando: boolean; erro: string }) {
+function Resumo({ dados, carregando, erro, aoAbrirEmails }: { dados: EstatisticasAnalytics | null; carregando: boolean; erro: string; aoAbrirEmails: () => void }) {
   const r = dados?.resumo;
   const cartoes = [
     { titulo: "Pessoas que entraram no site", texto: "Pessoas únicas no Vem pra EJA durante o período.", icone: Eye, valor: r?.visitas },
@@ -42,12 +43,12 @@ function Resumo({ dados, carregando, erro }: { dados: EstatisticasAnalytics | nu
     { titulo: "Pessoas que abriram uma escola", texto: "Pessoas únicas que abriram os detalhes de uma escola.", icone: School, valor: r?.abriuEscola },
     { titulo: "Pessoas que começaram a inscrição", texto: "Pessoas únicas que chegaram ao formulário de inscrição.", icone: ClipboardEdit, valor: r?.iniciouCadastro },
     { titulo: "Pessoas que enviaram a inscrição", texto: "Pessoas únicas que clicaram em enviar o formulário.", icone: CheckCircle2, valor: r?.concluiuInscricao },
-    { titulo: "E-mails enviados para as escolas", texto: "Será calculado quando o serviço de e-mail confirmar cada envio.", icone: Mail, valor: undefined },
-    { titulo: "E-mails que precisam de atenção", texto: "Será calculado quando houver retorno de falha do serviço de e-mail.", icone: MailWarning, valor: undefined, alerta: true },
+    { titulo: "E-mails enviados para as escolas", texto: "Mensagens aceitas pelo servidor de e-mail institucional.", icone: Mail, valor: dados?.emails.enviados },
+    { titulo: "E-mails que precisam de atenção", texto: "Envios que falharam e precisam ser verificados.", icone: MailWarning, valor: dados?.emails.comFalha, alerta: true, aoClicar: aoAbrirEmails },
   ];
   const etapas = [["Entraram no site", r?.visitas], ["Escolheram um nível", r?.escolheuNivel], ["Abriram uma escola", r?.abriuEscola], ["Começaram a inscrição", r?.iniciouCadastro], ["Enviaram a inscrição", r?.concluiuInscricao]] as const;
   const maior = Math.max(...etapas.map(([, valor]) => valor ?? 0), 1);
-  return <div className="space-y-6">{erro && <Card className="border-red-200 bg-red-50"><p className="font-bold text-red-700">Não foi possível atualizar os acessos: {erro}</p><p className="mt-1 text-sm text-red-600">Confira se a Edge Function está publicada e se “Verify JWT with legacy secret” está desligado.</p></Card>}<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{cartoes.map((item) => <Cartao key={item.titulo} {...item} carregando={carregando} />)}</div><Card><Titulo>Caminho das pessoas no site</Titulo><p className="mt-1 text-sm text-slate-500">Mostra em qual etapa as pessoas seguiram ou pararam no período escolhido.</p><div className="mt-6 space-y-4">{etapas.map(([nome, valor]) => <div key={nome}><div className="flex justify-between gap-4 text-sm"><span className="font-bold text-texto-principal">{nome}</span><span className="font-black text-azul-principal">{carregando ? "…" : (valor ?? 0).toLocaleString("pt-BR")}</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-azul-superficie"><div className="h-full rounded-full bg-azul-principal" style={{ width: String(((valor ?? 0) / maior) * 100) + "%" }} /></div></div>)}</div></Card></div>;
+  return <div className="space-y-6">{erro && <Card className="border-red-200 bg-red-50"><p className="font-bold text-red-700">Não foi possível atualizar os acessos: {erro}</p><p className="mt-1 text-sm text-red-600">O serviço local de estatísticas não respondeu. Tente atualizar a página.</p></Card>}<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{cartoes.map((item) => <Cartao key={item.titulo} {...item} carregando={carregando} />)}</div><Card><Titulo>Caminho das pessoas no site</Titulo><p className="mt-1 text-sm text-slate-500">Mostra em qual etapa as pessoas seguiram ou pararam no período escolhido.</p><div className="mt-6 space-y-4">{etapas.map(([nome, valor]) => <div key={nome}><div className="flex justify-between gap-4 text-sm"><span className="font-bold text-texto-principal">{nome}</span><span className="font-black text-azul-principal">{carregando ? "…" : (valor ?? 0).toLocaleString("pt-BR")}</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-azul-superficie"><div className="h-full rounded-full bg-azul-principal" style={{ width: String(((valor ?? 0) / maior) * 100) + "%" }} /></div></div>)}</div></Card></div>;
 }
 
 function Ranking({ titulo, descricao, dados, formatar }: { titulo: string; descricao: string; dados: Linha[]; formatar?: (nome: string) => string }) {
@@ -187,7 +188,36 @@ function Relatorios({ periodo, inicio, fim, textoDoPeriodo }: { periodo: Periodo
   </div>;
 }
 
-function Emails() { return <div className="space-y-6"><Card><Titulo>Envio de e-mails</Titulo><p className="mt-2 text-sm leading-6 text-slate-500">O Make envia os e-mails hoje, mas ainda não devolve ao banco a confirmação de envio ou falha. Por isso, os números abaixo ficam como “A calcular”.</p></Card><div className="grid gap-4 md:grid-cols-3">{[["Na fila", MailWarning, "text-amber-600"], ["Enviados", Mail, "text-azul-acao"], ["Com falha", MailWarning, "text-red-600"]].map(([titulo, Icon, cor]) => { const Componente = Icon as typeof Mail; return <Card key={titulo as string}><Componente className={["size-6", cor as string].join(" ")} /><div className="mt-4"><EmCalculo /><p className="mt-1 text-sm font-black text-texto-principal">{titulo as string}</p></div></Card>; })}</div></div>; }
+function FalhaDeEmail({ falha, aoAtualizar }: { falha: EstatisticasAnalytics["emails"]["falhas"][number]; aoAtualizar: () => void }) {
+  const [email, setEmail] = useState(falha.destinatario);
+  const [enviando, setEnviando] = useState(false);
+  const [mensagem, setMensagem] = useState("");
+
+  async function reenviar() {
+    setEnviando(true);
+    setMensagem("");
+    try {
+      await corrigirEReenviarEmail(falha.id, email);
+      setMensagem("E-mail corrigido e reenviado com sucesso.");
+      aoAtualizar();
+    } catch (erroDoReenvio) {
+      setMensagem(erroDoReenvio instanceof Error ? erroDoReenvio.message : "Não foi possível reenviar o e-mail.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return <details className="rounded-2xl border border-red-200 bg-white open:shadow-[0_8px_24px_-8px_rgba(220,38,38,0.18)]"><summary className="cursor-pointer list-none px-5 py-4"><div className="flex items-center justify-between gap-4"><div><p className="font-black text-texto-principal">{falha.escola}</p><p className="mt-1 text-sm text-red-700">{falha.destinatario || "E-mail não informado"}</p></div><span className="shrink-0 rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">Ver e corrigir</span></div></summary><div className="border-t border-red-100 px-5 py-5"><dl className="grid gap-3 text-sm sm:grid-cols-2"><div><dt className="font-black text-slate-500">Data da tentativa</dt><dd className="mt-1 text-texto-principal">{formatoData(falha.data)}</dd></div><div><dt className="font-black text-slate-500">Motivo informado</dt><dd className="mt-1 break-words text-red-700">{falha.erro}</dd></div></dl><label className="mt-5 block text-sm font-black text-texto-principal" htmlFor={`email-falha-${falha.id}`}>E-mail institucional correto da escola</label><div className="mt-2 flex flex-col gap-3 sm:flex-row"><input id={`email-falha-${falha.id}`} type="email" required value={email} onChange={(evento) => setEmail(evento.target.value)} className="h-11 min-w-0 flex-1 rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-azul-acao" /><button type="button" onClick={reenviar} disabled={enviando || !email.trim()} className="h-11 rounded-xl bg-azul-principal px-5 text-sm font-black text-white transition hover:bg-azul-acao disabled:cursor-not-allowed disabled:opacity-50">{enviando ? "Reenviando…" : "Salvar e reenviar"}</button></div><p className="mt-2 text-xs leading-5 text-slate-500">A correção também será salva no cadastro da escola para as próximas inscrições.</p>{mensagem && <p className={["mt-3 text-sm font-bold", mensagem.includes("sucesso") ? "text-green-700" : "text-red-700"].join(" ")}>{mensagem}</p>}</div></details>;
+}
+
+function Emails({ dados, carregando, erro, aoAtualizar }: { dados: EstatisticasAnalytics | null; carregando: boolean; erro: string; aoAtualizar: () => void }) {
+  const itens = [
+    { titulo: "Na fila", valor: dados?.emails.naFila, Icon: MailWarning, cor: "text-amber-600" },
+    { titulo: "Enviados", valor: dados?.emails.enviados, Icon: Mail, cor: "text-azul-acao" },
+    { titulo: "Com falha", valor: dados?.emails.comFalha, Icon: MailWarning, cor: "text-red-600" },
+  ];
+  return <div className="space-y-6"><Card><Titulo>Envio de e-mails</Titulo><p className="mt-2 text-sm leading-6 text-slate-500">Os números são atualizados pela confirmação do serviço institucional: o envio aparece como concluído somente depois que o servidor SMTP aceita a mensagem.</p></Card>{erro && <Card className="border-red-200 bg-red-50"><p className="font-bold text-red-700">Não foi possível consultar os envios: {erro}</p></Card>}<div className="grid gap-4 md:grid-cols-3">{itens.map(({ titulo, valor, Icon, cor }) => <Card key={titulo}><Icon className={["size-6", cor].join(" ")} /><div className="mt-4"><span className={["text-2xl font-black", cor].join(" ")}>{carregando ? "…" : (valor ?? 0).toLocaleString("pt-BR")}</span><p className="mt-1 text-sm font-black text-texto-principal">{titulo}</p></div></Card>)}</div>{!carregando && dados?.emails.falhas.length ? <Card><Titulo>Envios que precisam de correção</Titulo><p className="mt-2 text-sm leading-6 text-slate-500">Abra um item para consultar o motivo, corrigir o endereço institucional da escola e reenviar a inscrição.</p><div className="mt-5 space-y-3">{dados.emails.falhas.map((falha) => <FalhaDeEmail key={falha.id} falha={falha} aoAtualizar={aoAtualizar} />)}</div></Card> : !carregando && !erro ? <Card><p className="font-bold text-green-700">Nenhum envio com falha neste período.</p></Card> : null}</div>;
+}
 
 export default function EstatisticasRelatorios({ onVoltar }: { onVoltar: () => void }) {
   const [aba, setAba] = useState<Aba>("resumo");
@@ -198,8 +228,14 @@ export default function EstatisticasRelatorios({ onVoltar }: { onVoltar: () => v
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [retrospectivaAberta, setRetrospectivaAberta] = useState(false);
+  const [versaoDados, setVersaoDados] = useState(0);
   const intervalo = useMemo(() => faixa(periodo, inicio, fim), [periodo, inicio, fim]);
   const textoDoPeriodo = useMemo(() => periodo === "Personalizado" && inicio && fim ? inicio.split("-").reverse().join("/") + " até " + fim.split("-").reverse().join("/") : periodo, [periodo, inicio, fim]);
+
+  useEffect(() => {
+    const atualizacao = window.setInterval(() => setVersaoDados((atual) => atual + 1), 60_000);
+    return () => window.clearInterval(atualizacao);
+  }, []);
 
   useEffect(() => {
     let ativo = true;
@@ -217,7 +253,7 @@ export default function EstatisticasRelatorios({ onVoltar }: { onVoltar: () => v
       if (ativo) setErro(falha instanceof Error ? falha.message : "Não foi possível consultar os dados de acesso.");
     }).finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, [intervalo]);
+  }, [intervalo, versaoDados]);
 
   const botaoRetrospectiva = aba === "acessos" && dados && !carregando && !erro && <button type="button" onClick={() => setRetrospectivaAberta(true)} className="group inline-flex h-12 items-center gap-2 rounded-xl bg-azul-principal px-5 text-sm font-black text-white shadow-[0_10px_25px_-10px_rgba(2,87,160,0.9)] transition hover:-translate-y-0.5 hover:bg-azul-acao hover:shadow-[0_14px_30px_-10px_rgba(0,139,255,0.9)]"><span className="grid size-7 place-items-center rounded-lg bg-white/20 transition group-hover:scale-110"><Play className="size-3.5 fill-white" /></span>Ver Retrospectiva</button>;
 
@@ -226,7 +262,7 @@ export default function EstatisticasRelatorios({ onVoltar }: { onVoltar: () => v
     <div className="mt-6 flex flex-wrap items-start justify-between gap-5"><div><h1 className="text-3xl font-black text-azul-principal">Estatísticas e Relatórios</h1><p className="mt-1 text-sm text-slate-500">Acompanhe os acessos ao site e as inscrições recebidas.</p><p className="mt-3 text-xs text-slate-500">Período selecionado: <strong className="text-texto-principal">{textoDoPeriodo}</strong></p></div><div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5">{(["Hoje", "Últimos 7 dias", "Mês", "Personalizado"] as Periodo[]).map((item) => <button type="button" key={item} onClick={() => setPeriodo(item)} className={["rounded-lg px-3 py-2 text-xs font-black transition", periodo === item ? "bg-azul-principal text-white" : "text-slate-500 hover:bg-azul-superficie hover:text-azul-principal"].join(" ")}>{item}</button>)}</div></div>
     {periodo === "Personalizado" && <div className="mt-4 flex items-center gap-3"><input type="date" value={inicio} onChange={(evento) => setInicio(evento.target.value)} className="h-10 rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-azul-acao" /><span className="text-sm text-slate-500">até</span><input type="date" value={fim} onChange={(evento) => setFim(evento.target.value)} className="h-10 rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-azul-acao" /></div>}
     <div className="mt-8 flex items-end justify-between border-b border-slate-200"><div className="flex">{abas.map((item) => <button type="button" key={item.id} onClick={() => setAba(item.id)} className={["-mb-px shrink-0 border-b-2 px-5 py-3 text-sm font-black transition", aba === item.id ? "border-azul-principal text-azul-principal" : "border-transparent text-slate-400 hover:text-azul-secundario"].join(" ")}>{item.titulo}</button>)}</div><div className="mb-2">{botaoRetrospectiva}</div></div>
-    <div className="mt-7">{aba === "resumo" && <Resumo dados={dados} carregando={carregando} erro={erro} />}{aba === "acessos" && <Acessos dados={dados} carregando={carregando} erro={erro} />}{aba === "inscricoes" && <Inscricoes periodo={periodo} inicio={inicio} fim={fim} textoDoPeriodo={textoDoPeriodo} />}{aba === "relatorios" && <Relatorios periodo={periodo} inicio={inicio} fim={fim} textoDoPeriodo={textoDoPeriodo} />}{aba === "emails" && <Emails />}</div>
+    <div className="mt-7">{aba === "resumo" && <Resumo dados={dados} carregando={carregando} erro={erro} aoAbrirEmails={() => setAba("emails")} />}{aba === "acessos" && <Acessos dados={dados} carregando={carregando} erro={erro} />}{aba === "inscricoes" && <Inscricoes periodo={periodo} inicio={inicio} fim={fim} textoDoPeriodo={textoDoPeriodo} />}{aba === "relatorios" && <Relatorios periodo={periodo} inicio={inicio} fim={fim} textoDoPeriodo={textoDoPeriodo} />}{aba === "emails" && <Emails dados={dados} carregando={carregando} erro={erro} aoAtualizar={() => setVersaoDados((atual) => atual + 1)} />}</div>
     {retrospectivaAberta && dados && <RetrospectivaAcessos dados={dados} periodo={periodo} inicio={inicio} fim={fim} textoDoPeriodo={textoDoPeriodo} aoFechar={() => setRetrospectivaAberta(false)} />}
   </section>;
 }

@@ -13,7 +13,34 @@ export type EstatisticasAnalytics = {
     paginas: Array<{ nome: string; total: number }>;
     horarios: Array<{ nome: string; total: number }>;
   };
+  emails: {
+    naFila: number;
+    enviados: number;
+    comFalha: number;
+    falhas: Array<{
+      id: string;
+      escola: string;
+      destinatario: string;
+      erro: string;
+      data: string;
+    }>;
+  };
 };
+
+export async function corrigirEReenviarEmail(notificacaoId: string, novoEmail: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const token = obterTokenAdministrador();
+  if (!url || !chave || !token) throw new Error("Sua sessão administrativa expirou. Entre novamente.");
+
+  const resposta = await fetch(`${url}/functions/v1/reenviar-email`, {
+    method: "POST",
+    headers: { apikey: chave, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ notificacaoId, novoEmail }),
+  });
+  const corpo = await resposta.json().catch(() => ({})) as { erro?: string };
+  if (!resposta.ok) throw new Error(corpo.erro || "Não foi possível reenviar o e-mail.");
+}
 
 export async function carregarEstatisticasAnalytics(periodo: { inicio: string; fim: string }): Promise<EstatisticasAnalytics> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");

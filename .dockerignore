@@ -1,0 +1,10 @@
+.git
+.next
+out
+node_modules
+npm-debug.log*
+.env*
+supabase/functions/.env
+deploy/production/supabase/.env
+deploy/production/supabase/.env.functions
+deploy/production/supabase/volumes/db/data

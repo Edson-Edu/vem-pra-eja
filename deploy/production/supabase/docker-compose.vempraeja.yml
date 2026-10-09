@@ -1,0 +1,67 @@
+services:
+  # Somente o Caddy publica portas no host. Banco, Studio e gateway ficam
+  # restritos à rede interna do Compose.
+  api-gw:
+    ports: !reset []
+
+  supavisor:
+    ports: !reset []
+
+  functions:
+    env_file:
+      - ${FUNCTIONS_ENV_FILE:-.env.functions}
+    volumes:
+      - ../../../supabase/functions/notificar-inscricao:/home/deno/functions/notificar-inscricao:ro,z
+      - ../../../supabase/functions/registrar-acesso:/home/deno/functions/registrar-acesso:ro,z
+      - ../../../supabase/functions/analytics-admin:/home/deno/functions/analytics-admin:ro,z
+      - ../../../supabase/functions/reenviar-email:/home/deno/functions/reenviar-email:ro,z
+      - ../../../supabase/functions/verificar-retornos-email:/home/deno/functions/verificar-retornos-email:ro,z
+
+  web:
+    container_name: vempraeja-web
+    build:
+      context: ../../..
+      dockerfile: deploy/production/web/Dockerfile
+      args:
+        PUBLIC_SUPABASE_URL: ${SUPABASE_PUBLIC_URL}
+        PUBLIC_SUPABASE_BROWSER_TOKEN: ${ANON_KEY}
+        PUBLIC_AZURE_VOICE_FUNCTION_URL: ${AZURE_VOICE_FUNCTION_URL}
+    restart: unless-stopped
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  caddy:
+    depends_on:
+      web:
+        condition: service_healthy
+      api-gw:
+        condition: service_healthy
+
+  email-bounce-scheduler:
+    container_name: vempraeja-email-scheduler
+    image: curlimages/curl:8.12.1
+    restart: unless-stopped
+    depends_on:
+      functions:
+        condition: service_healthy
+    environment:
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      BOUNCE_CHECK_INTERVAL_SECONDS: ${BOUNCE_CHECK_INTERVAL_SECONDS:-300}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        while true; do
+          curl --fail --silent --show-error \
+            --request POST \
+            --header "apikey: $${SERVICE_ROLE_KEY}" \
+            --header "Authorization: Bearer $${SERVICE_ROLE_KEY}" \
+            http://api-gw:8000/functions/v1/verificar-retornos-email \
+            >/dev/null || true
+          sleep "$${BOUNCE_CHECK_INTERVAL_SECONDS}"
+        done

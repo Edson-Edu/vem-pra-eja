@@ -1,7 +1,10 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 
+const ORIGEM_PRODUCAO = "https://vempraeja.bc.sc.gov.br";
+
 function origemPermitida(origem: string | null) {
-  const permitidas = (process.env.ALLOWED_ORIGINS ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+  const configuradas = (process.env.ALLOWED_ORIGINS ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+  const permitidas = [...new Set([ORIGEM_PRODUCAO, ...configuradas])];
   return origem && permitidas.includes(origem) ? origem : permitidas[0] ?? "";
 }
 

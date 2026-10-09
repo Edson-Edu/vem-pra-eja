@@ -1,13 +1,20 @@
-# Função de voz do VemPraEJA
+# Função de voz do Vem Pra EJA
 
-Esta função fica entre o site e o Azure Speech. A chave `AZURE_SPEECH_KEY` deve existir **somente** nas configurações da Function App; nunca no repositório nem em variáveis `NEXT_PUBLIC_*`.
+Esta função fica entre o site e o Azure Speech. A chave
+`AZURE_SPEECH_KEY` deve existir somente nas configurações da Function App;
+nunca no repositório nem em variáveis `NEXT_PUBLIC_*`.
 
 ## Configurações da Function App
 
-Defina as configurações de aplicativo:
+Defina:
 
-- `AZURE_SPEECH_KEY`: chave do serviço Azure Speech já existente.
+- `AZURE_SPEECH_KEY`: chave do serviço Azure Speech.
 - `AZURE_SPEECH_REGION`: `centralus`.
-- `ALLOWED_ORIGINS`: `https://vempraeja-novo.web.app,https://vempraeja-novo.firebaseapp.com` (acrescente `http://localhost:3000` enquanto desenvolve).
+- `ALLOWED_ORIGINS`: lista separada por vírgulas. Inclua
+  `https://vempraeja.bc.sc.gov.br` e `http://localhost:3000` durante o desenvolvimento.
 
-Após publicar a função, copie a URL pública terminada em `/api/voz` para `AZURE_VOICE_FUNCTION_URL` no ambiente de build do site. Essa URL se torna `NEXT_PUBLIC_AZURE_VOICE_FUNCTION_URL`; ela não contém a chave do Azure.
+A URL pública terminada em `/api/voz` deve ser informada como
+`AZURE_VOICE_FUNCTION_URL` durante o build do site. A URL não contém a chave
+do Azure.
+
+O domínio pode ser incluído em `ALLOWED_ORIGINS` antes de o DNS ser ativado.

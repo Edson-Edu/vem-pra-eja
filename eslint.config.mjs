@@ -35,6 +35,7 @@ const eslintConfig = defineConfig([
     ".codex-presentation/**",
     "public/vlibras/**",
     "azure-function/dist/**",
+    "deploy/production/supabase/volumes/functions/**",
   ]),
 ]);
 

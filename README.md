@@ -1,37 +1,62 @@
 # Vem Pra EJA — versão web
 
-Aplicação web responsiva do Vem Pra EJA, desenvolvida com Next.js e React.
-Ela substitui a versão anterior em Flutter e permite escolher o nível de
-ensino, encontrar escolas no mapa, consultar turnos e realizar a pré-inscrição.
+Aplicação web responsiva do Vem Pra EJA, desenvolvida com Next.js 16 e React 19.
+Ela permite escolher o nível de ensino, localizar escolas, consultar turnos e
+realizar a pré-inscrição.
 
-## Tecnologias
+## Componentes
 
-- Next.js 16 e React 19
-- Supabase para escolas, turnos e pré-inscrições
-- Azure Speech por Azure Function para leitura assistida
-- VLibras e modo de alto contraste
-- Firebase Hosting para publicação estática
+- Next.js com exportação estática.
+- Supabase/PostgreSQL para escolas, turnos, inscrições, autenticação e métricas.
+- Edge Functions para e-mail institucional e tratamento de devoluções.
+- Azure Speech para leitura assistida.
+- VLibras e modo de alto contraste.
 
-## Executar localmente
+## Desenvolvimento local
+
+Abra o Docker Desktop e, no Ubuntu/WSL, execute:
 
 ```bash
-npm install
+cd ~/projetos/vem-pra-eja
+export NVM_DIR="$HOME/.nvm"
+source "$NVM_DIR/nvm.sh"
+nvm use 24
+npx supabase start
 npm run dev
 ```
 
-Crie um arquivo `.env.local` com as chaves públicas do Supabase:
+Site: http://localhost:3000
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-```
+Painel: http://localhost:3000/admin
 
-## Produção
+Supabase Studio local: http://localhost:54323
+
+Para desligar:
 
 ```bash
-npm run build
-npx firebase-tools deploy --only hosting
+# Ctrl+C encerra o Next.js
+npx supabase stop
 ```
 
-As credenciais privadas do Azure ficam somente nas Variáveis de ambiente da
-Function App; não devem ser adicionadas ao repositório.
+As variáveis públicas do desenvolvimento ficam em `.env.development.local`.
+As credenciais SMTP/IMAP locais ficam em `supabase/functions/.env`. Esses
+arquivos não devem ser enviados ao Git.
+
+## Verificação
+
+```bash
+npm run check
+```
+
+O comando executa lint, testes e o build estático.
+
+## Produção na Prefeitura
+
+A produção não usa o ambiente do Supabase CLI nem o Firebase antigo. Ela possui
+um pacote Docker Compose separado e fixado no Supabase self-hosted oficial.
+
+Leia o manual completo em:
+
+`deploy/production/README.md`
+
+Domínio planejado: https://vempraeja.bc.sc.gov.br
