@@ -37,11 +37,16 @@ cat >> .env <<'EOF'
 ############
 AZURE_VOICE_FUNCTION_URL=https://vempraeja-voz-2026-fccbhjhadwekfncu.centralus-01.azurewebsites.net/api/voz
 BOUNCE_CHECK_INTERVAL_SECONDS=300
+BOUNCE_CHECK_SECRET=PREENCHER_NO_SERVIDOR
 EOF
 
 echo "Gerando chaves exclusivas do ambiente de producao..."
 sh utils/generate-keys.sh --update-env >/dev/null
 sh utils/add-new-auth-keys.sh --update-env >/dev/null
+
+bounce_check_secret=$(openssl rand -hex 32)
+sed -i "s|^BOUNCE_CHECK_SECRET=.*$|BOUNCE_CHECK_SECRET=$bounce_check_secret|" .env
+sed -i "s|^BOUNCE_CHECK_SECRET=.*$|BOUNCE_CHECK_SECRET=$bounce_check_secret|" .env.functions
 
 printf "Senha do e-mail institucional (nao sera exibida): "
 stty -echo

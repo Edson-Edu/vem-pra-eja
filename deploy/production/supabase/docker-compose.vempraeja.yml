@@ -51,6 +51,7 @@ services:
         condition: service_healthy
     environment:
       SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      BOUNCE_CHECK_SECRET: ${BOUNCE_CHECK_SECRET}
       BOUNCE_CHECK_INTERVAL_SECONDS: ${BOUNCE_CHECK_INTERVAL_SECONDS:-300}
     command:
       - /bin/sh
@@ -61,6 +62,7 @@ services:
             --request POST \
             --header "apikey: $${SERVICE_ROLE_KEY}" \
             --header "Authorization: Bearer $${SERVICE_ROLE_KEY}" \
+            --header "X-Bounce-Check-Secret: $${BOUNCE_CHECK_SECRET}" \
             http://api-gw:8000/functions/v1/verificar-retornos-email \
             >/dev/null || true
           sleep "$${BOUNCE_CHECK_INTERVAL_SECONDS}"

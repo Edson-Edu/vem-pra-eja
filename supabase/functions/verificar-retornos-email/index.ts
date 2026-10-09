@@ -130,7 +130,12 @@ async function localizarNotificacao(admin: ReturnType<typeof createClient>, mess
 Deno.serve(async (request) => {
   if (request.method !== "POST") return new Response(JSON.stringify({ erro: "Método não permitido." }), { status: 405, headers: { "Content-Type": "application/json" } });
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if ((request.headers.get("Authorization") ?? "") !== `Bearer ${serviceRoleKey}`) {
+  const segredoDoVerificador = Deno.env.get("BOUNCE_CHECK_SECRET") ?? "";
+  const autorizacaoInterna = serviceRoleKey.length > 0
+    && (request.headers.get("Authorization") ?? "") === `Bearer ${serviceRoleKey}`;
+  const autorizacaoDoAgendador = segredoDoVerificador.length >= 32
+    && (request.headers.get("X-Bounce-Check-Secret") ?? "") === segredoDoVerificador;
+  if (!autorizacaoInterna && !autorizacaoDoAgendador) {
     return new Response(JSON.stringify({ erro: "Acesso não autorizado." }), { status: 401, headers: { "Content-Type": "application/json" } });
   }
 
@@ -145,7 +150,7 @@ Deno.serve(async (request) => {
     const porta = Number(Deno.env.get("IMAP_PORT") || "993");
     const usuario = Deno.env.get("IMAP_USER")?.trim() || Deno.env.get("SMTP_USER")?.trim();
     const senha = Deno.env.get("IMAP_PASSWORD") || Deno.env.get("SMTP_PASSWORD");
-    const pasta = Deno.env.get("IMAP_MAILBOX")?.trim() || "INBOX";
+    const pasta = Deno.env.get("IMAP_MAILBOX")?.trim() || "Shared/vempraeja@bc.sc.gov.br/INBOX";
     if (!usuario || !senha) throw new Error("Credenciais IMAP não configuradas.");
 
     conexao = await comPrazo(Deno.connectTls({ hostname: host, port: porta }));
