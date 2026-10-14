@@ -8,7 +8,7 @@ import PainelAdministrativo from "./PainelAdministrativo";
 export default function PaginaAdmin() {
   const [verificando, setVerificando] = useState(true);
   const [autenticado, setAutenticado] = useState(false);
-  const [usuario, setUsuario] = useState("");
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
@@ -29,14 +29,9 @@ export default function PaginaAdmin() {
     evento.preventDefault();
     setErro("");
 
-    if (usuario.trim().toLowerCase() !== "admin") {
-      setErro("Usuário ou senha inválidos.");
-      return;
-    }
-
     setEnviando(true);
     try {
-      const entrou = await entrarComoAdministrador(senha);
+      const entrou = await entrarComoAdministrador(email, senha);
       if (!entrou) {
         setErro("Usuário ou senha inválidos.");
         return;
@@ -68,10 +63,10 @@ export default function PaginaAdmin() {
         <h1 className="mt-2 text-center text-3xl font-black text-slate-800">Login</h1>
         <p className="mt-2 text-center text-sm text-slate-500">Área administrativa</p>
 
-        <label className="mt-8 block text-sm font-bold text-slate-700" htmlFor="usuario">Usuário</label>
+        <label className="mt-8 block text-sm font-bold text-slate-700" htmlFor="email">E-mail</label>
         <div className="relative mt-2">
           <UserRound className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-azul-secundario" aria-hidden="true" />
-          <input id="usuario" value={usuario} onChange={(evento) => setUsuario(evento.target.value)} autoComplete="username" required className="w-full rounded-xl border border-slate-200 py-3 pl-12 pr-4 text-slate-800 outline-none transition focus:border-azul-acao focus:ring-4 focus:ring-azul-foco" placeholder="Admin" />
+          <input id="email" type="email" value={email} onChange={(evento) => setEmail(evento.target.value)} autoComplete="username" required className="w-full rounded-xl border border-slate-200 py-3 pl-12 pr-4 text-slate-800 outline-none transition focus:border-azul-acao focus:ring-4 focus:ring-azul-foco" placeholder="admin@exemplo.com" />
         </div>
 
         <label className="mt-5 block text-sm font-bold text-slate-700" htmlFor="senha">Senha</label>

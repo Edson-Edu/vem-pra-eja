@@ -1,6 +1,3 @@
-const EMAIL_ADMINISTRADOR = (
-  process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "edson.tavares@bc.sc.gov.br"
-).trim().toLowerCase();
 const CHAVE_SESSAO = "eja-admin-access-token";
 
 type RespostaLogin = {
@@ -19,19 +16,18 @@ function configuracao() {
   return { url: url.replace(/\/$/, ""), chave };
 }
 
-export async function entrarComoAdministrador(senha: string) {
+export async function entrarComoAdministrador(email: string, senha: string) {
   const { url, chave } = configuracao();
   const resposta = await fetch(`${url}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: { apikey: chave, "Content-Type": "application/json" },
-    body: JSON.stringify({ email: EMAIL_ADMINISTRADOR, password: senha }),
+    body: JSON.stringify({ email: email.trim().toLowerCase(), password: senha }),
   });
 
   if (!resposta.ok) return false;
 
   const dados = await resposta.json() as RespostaLogin;
-  const email = dados.user?.email?.toLowerCase();
-  if (!dados.access_token || email !== EMAIL_ADMINISTRADOR) return false;
+  if (!dados.access_token || !dados.user?.email) return false;
 
   sessionStorage.setItem(CHAVE_SESSAO, dados.access_token);
   return true;
@@ -49,7 +45,7 @@ export async function administradorEstaLogado() {
     if (!resposta.ok) return false;
 
     const usuario = await resposta.json() as { email?: string | null };
-    return usuario.email?.toLowerCase() === EMAIL_ADMINISTRADOR;
+    return Boolean(usuario.email);
   } catch {
     return false;
   }
