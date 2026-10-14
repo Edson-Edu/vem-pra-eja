@@ -43,7 +43,7 @@ function Resumo({ dados, carregando, erro, aoAbrirEmails }: { dados: Estatistica
     { titulo: "Pessoas que abriram uma escola", texto: "Pessoas únicas que abriram os detalhes de uma escola.", icone: School, valor: r?.abriuEscola },
     { titulo: "Pessoas que começaram a inscrição", texto: "Pessoas únicas que chegaram ao formulário de inscrição.", icone: ClipboardEdit, valor: r?.iniciouCadastro },
     { titulo: "Pessoas que enviaram a inscrição", texto: "Pessoas únicas que clicaram em enviar o formulário.", icone: CheckCircle2, valor: r?.concluiuInscricao },
-    { titulo: "E-mails enviados para as escolas", texto: "Mensagens aceitas pelo servidor de e-mail institucional.", icone: Mail, valor: dados?.emails.enviados },
+    { titulo: "E-mails aceitos pelo servidor", texto: "O servidor institucional colocou essas mensagens na fila; isso ainda não confirma a entrega na caixa da escola.", icone: Mail, valor: dados?.emails.enviados },
     { titulo: "E-mails que precisam de atenção", texto: "Envios que falharam e precisam ser verificados.", icone: MailWarning, valor: dados?.emails.comFalha, alerta: true, aoClicar: aoAbrirEmails },
   ];
   const etapas = [["Entraram no site", r?.visitas], ["Escolheram um nível", r?.escolheuNivel], ["Abriram uma escola", r?.abriuEscola], ["Começaram a inscrição", r?.iniciouCadastro], ["Enviaram a inscrição", r?.concluiuInscricao]] as const;
@@ -213,7 +213,7 @@ function FalhaDeEmail({ falha, aoAtualizar }: { falha: EstatisticasAnalytics["em
 function Emails({ dados, carregando, erro, aoAtualizar }: { dados: EstatisticasAnalytics | null; carregando: boolean; erro: string; aoAtualizar: () => void }) {
   const itens = [
     { titulo: "Na fila", valor: dados?.emails.naFila, Icon: MailWarning, cor: "text-amber-600" },
-    { titulo: "Enviados", valor: dados?.emails.enviados, Icon: Mail, cor: "text-azul-acao" },
+    { titulo: "Aceitos pelo servidor", valor: dados?.emails.enviados, Icon: Mail, cor: "text-azul-acao" },
     { titulo: "Com falha", valor: dados?.emails.comFalha, Icon: MailWarning, cor: "text-red-600" },
   ];
   return <div className="space-y-6"><Card><Titulo>Envio de e-mails</Titulo><p className="mt-2 text-sm leading-6 text-slate-500">Os números são atualizados pela confirmação do serviço institucional: o envio aparece como concluído somente depois que o servidor SMTP aceita a mensagem.</p></Card>{erro && <Card className="border-red-200 bg-red-50"><p className="font-bold text-red-700">Não foi possível consultar os envios: {erro}</p></Card>}<div className="grid gap-4 md:grid-cols-3">{itens.map(({ titulo, valor, Icon, cor }) => <Card key={titulo}><Icon className={["size-6", cor].join(" ")} /><div className="mt-4"><span className={["text-2xl font-black", cor].join(" ")}>{carregando ? "…" : (valor ?? 0).toLocaleString("pt-BR")}</span><p className="mt-1 text-sm font-black text-texto-principal">{titulo}</p></div></Card>)}</div>{!carregando && dados?.emails.falhas.length ? <Card><Titulo>Envios que precisam de correção</Titulo><p className="mt-2 text-sm leading-6 text-slate-500">Abra um item para consultar o motivo, corrigir o endereço institucional da escola e reenviar a inscrição.</p><div className="mt-5 space-y-3">{dados.emails.falhas.map((falha) => <FalhaDeEmail key={falha.id} falha={falha} aoAtualizar={aoAtualizar} />)}</div></Card> : !carregando && !erro ? <Card><p className="font-bold text-green-700">Nenhum envio com falha neste período.</p></Card> : null}</div>;
