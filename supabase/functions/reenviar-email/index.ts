@@ -2,7 +2,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const origensLocais = new Set(["http://localhost:3000", "http://127.0.0.1:3000"]);
 const origemPublicada = Deno.env.get("SITE_ORIGIN")?.replace(/\/$/, "");
-const emailAdministrador = Deno.env.get("ANALYTICS_ADMIN_EMAIL") ?? "admin@vempraeja-novo.app";
+const emailsAdministradores = new Set([
+  Deno.env.get("ANALYTICS_ADMIN_EMAIL")?.trim().toLowerCase(),
+  "edson.tavares@bc.sc.gov.br",
+].filter((email): email is string => Boolean(email)));
 
 function origemEhPermitida(request: Request) {
   const origem = request.headers.get("origin")?.replace(/\/$/, "") ?? "";
@@ -34,7 +37,7 @@ Deno.serve(async (request) => {
     const url = Deno.env.get("SUPABASE_URL")!;
     const anon = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, { auth: { persistSession: false } });
     const { data: { user }, error: erroDeAutenticacao } = await anon.auth.getUser(token);
-    if (erroDeAutenticacao || !user || user.email?.toLowerCase() !== emailAdministrador.toLowerCase()) {
+    if (erroDeAutenticacao || !user || !emailsAdministradores.has(user.email?.toLowerCase() ?? "")) {
       return resposta(request, { erro: "Acesso não autorizado." }, 401);
     }
 

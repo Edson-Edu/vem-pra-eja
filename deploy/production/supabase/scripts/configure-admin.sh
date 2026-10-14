@@ -46,7 +46,9 @@ on conflict (email) do update set ativo = true;
 SQL
 
 escaped_email=$(printf '%s' "$admin_email" | sed 's/[&|\\]/\\&/g')
+sed -i "s|^ADMIN_EMAIL=.*$|ADMIN_EMAIL=$escaped_email|" .env
 sed -i "s|^ANALYTICS_ADMIN_EMAIL=.*$|ANALYTICS_ADMIN_EMAIL=$escaped_email|" .env.functions
 docker compose up -d --wait --force-recreate --no-deps functions
+docker compose up -d --wait --build --no-deps web
 
 echo "Administrador criado e autorizado: $admin_email"

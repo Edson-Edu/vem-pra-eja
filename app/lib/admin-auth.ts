@@ -1,4 +1,6 @@
-const EMAIL_ADMINISTRADOR = "admin@vempraeja-novo.app";
+const EMAIL_ADMINISTRADOR = (
+  process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "edson.tavares@bc.sc.gov.br"
+).trim().toLowerCase();
 const CHAVE_SESSAO = "eja-admin-access-token";
 
 type RespostaLogin = {

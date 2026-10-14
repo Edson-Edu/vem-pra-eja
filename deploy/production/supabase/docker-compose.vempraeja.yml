@@ -25,6 +25,7 @@ services:
       args:
         PUBLIC_SUPABASE_URL: ${SUPABASE_PUBLIC_URL}
         PUBLIC_SUPABASE_BROWSER_TOKEN: ${ANON_KEY}
+        PUBLIC_ADMIN_EMAIL: ${ADMIN_EMAIL:-edson.tavares@bc.sc.gov.br}
         PUBLIC_AZURE_VOICE_FUNCTION_URL: ${AZURE_VOICE_FUNCTION_URL}
     restart: unless-stopped
     expose:
