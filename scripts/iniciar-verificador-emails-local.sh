@@ -11,18 +11,20 @@ if ! docker inspect "$kong_container" >/dev/null 2>&1; then
   exit 1
 fi
 
-service_role_key=$(
-  docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$edge_container" |
-    sed -n 's/^SUPABASE_SERVICE_ROLE_KEY=//p' |
-    head -n 1
+gateway_api_key=$(
+  docker exec "$kong_container" printenv SUPABASE_SERVICE_KEY 2>/dev/null || true
 )
 
-if [ -z "$service_role_key" ]; then
-  service_role_key=$(
-    docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$kong_container" |
-      sed -n 's/^SUPABASE_SERVICE_KEY=//p' |
-      head -n 1
-  )
+service_role_key=$(
+  docker exec "$edge_container" printenv SUPABASE_SERVICE_ROLE_KEY
+)
+
+internal_secret_key=$(
+  docker exec "$edge_container" printenv SUPABASE_INTERNAL_SECRET_KEY
+)
+
+if [ -z "$gateway_api_key" ]; then
+  gateway_api_key="$internal_secret_key"
 fi
 
 bounce_check_secret=$(sed -n 's/^BOUNCE_CHECK_SECRET=//p' "$env_file" | head -n 1)
@@ -31,8 +33,8 @@ if [ ${#bounce_check_secret} -lt 32 ]; then
   exit 1
 fi
 
-if [ -z "$service_role_key" ]; then
-  echo "ERRO: nao foi possivel obter a chave interna do Supabase local." >&2
+if [ -z "$gateway_api_key" ] || [ -z "$service_role_key" ] || [ -z "$internal_secret_key" ]; then
+  echo "ERRO: nao foi possivel obter as chaves internas do Supabase local." >&2
   exit 1
 fi
 
@@ -45,14 +47,16 @@ docker run -d \
   --name "$scheduler_container" \
   --restart unless-stopped \
   --network "$network_name" \
+  -e GATEWAY_API_KEY="$gateway_api_key" \
   -e SERVICE_ROLE_KEY="$service_role_key" \
+  -e INTERNAL_SECRET_KEY="$internal_secret_key" \
   -e BOUNCE_CHECK_SECRET="$bounce_check_secret" \
   curlimages/curl:8.12.1 \
   /bin/sh -c '
     while true; do
       curl --fail --silent --show-error \
         --request POST \
-        --header "apikey: ${SERVICE_ROLE_KEY}" \
+        --header "apikey: ${GATEWAY_API_KEY}" \
         --header "Authorization: Bearer ${SERVICE_ROLE_KEY}" \
         --header "X-Bounce-Check-Secret: ${BOUNCE_CHECK_SECRET}" \
         http://supabase_kong_vem-pra-eja:8000/functions/v1/verificar-retornos-email || true
