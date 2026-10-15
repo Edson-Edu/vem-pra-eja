@@ -60,6 +60,11 @@ Crie o primeiro administrador:
 sh scripts/configure-admin.sh edson.tavares@bc.sc.gov.br
 ```
 
+O cadastro público de usuários fica desativado em produção. Na regra atual,
+toda conta criada manualmente no Supabase Auth é administrativa; portanto,
+somente a equipe autorizada pode criar usuários e `DISABLE_SIGNUP=true` deve
+permanecer habilitado.
+
 Confira os serviços e o HTTPS:
 
 ```bash
@@ -138,5 +143,6 @@ domínio.
 - O PostgreSQL e o Supabase Studio não são publicados na Internet.
 - Novos cadastros públicos são validados por RLS.
 - A função de e-mail aceita somente inscrições existentes e com envio pendente.
-- O painel exige usuário autorizado na tabela `administradores`.
+- O painel exige uma conta criada manualmente no Supabase Auth, com o cadastro
+  público de usuários permanentemente desativado.
 - Logs, backups e retenção de inscrições devem seguir a política da Prefeitura.
