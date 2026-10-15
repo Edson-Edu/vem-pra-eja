@@ -66,7 +66,7 @@ export default function PaginaAdmin() {
         <label className="mt-8 block text-sm font-bold text-slate-700" htmlFor="email">E-mail</label>
         <div className="relative mt-2">
           <UserRound className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-azul-secundario" aria-hidden="true" />
-          <input id="email" type="email" value={email} onChange={(evento) => setEmail(evento.target.value)} autoComplete="username" required className="w-full rounded-xl border border-slate-200 py-3 pl-12 pr-4 text-slate-800 outline-none transition focus:border-azul-acao focus:ring-4 focus:ring-azul-foco" placeholder="admin@exemplo.com" />
+          <input id="email" type="email" value={email} onChange={(evento) => setEmail(evento.target.value)} autoComplete="username" required className="w-full rounded-xl border border-slate-200 py-3 pl-12 pr-4 text-slate-800 outline-none transition focus:border-azul-acao focus:ring-4 focus:ring-azul-foco" placeholder="nome@bc.sc.gov.br" />
         </div>
 
         <label className="mt-5 block text-sm font-bold text-slate-700" htmlFor="senha">Senha</label>

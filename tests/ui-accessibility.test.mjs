@@ -203,3 +203,17 @@ test('conclusão não coloca dados pessoais ou escolares na URL', () => {
   assert.match(fonte, /router\.push\("\/sucesso"\)/);
   assert.doesNotMatch(fonte, /\/sucesso\?(?:nome|escola|turno)=/);
 });
+
+test('cadastro só confirma sucesso depois de salvar a inscrição', () => {
+  const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaCadastro.tsx'), 'utf8');
+  assert.doesNotMatch(fonte, /Pular cadastro/);
+  assert.equal([...fonte.matchAll(/onSucesso\(/g)].length, 1);
+  assert.ok(fonte.indexOf('await enviarInscricao') < fonte.indexOf('onSucesso(nome)'));
+});
+
+test('logos institucionais são servidas pelo próprio site', () => {
+  const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaAbertura.tsx'), 'utf8');
+  assert.match(fonte, /src="\/logos\/logo_prefeitura\.png"/);
+  assert.match(fonte, /src="\/logos\/logo_ifc\.png"/);
+  assert.doesNotMatch(fonte, /raw\.githubusercontent\.com/);
+});
