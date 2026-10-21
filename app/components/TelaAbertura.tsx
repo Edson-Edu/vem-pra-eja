@@ -117,15 +117,14 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(9,40,92,0.2)_72%,rgba(9,40,92,0.36)_100%)]" />
           </div>
 
-          <div className="relative z-10 flex flex-1 items-center justify-center px-6 pb-48 pt-24 md:px-12 md:pb-52">
+          <div className="relative z-10 flex flex-1 items-center justify-center px-5 pb-[clamp(10rem,26dvh,13rem)] pt-[clamp(4.5rem,12dvh,6.5rem)] sm:px-8 sm:pb-[13rem] md:px-12 md:pb-[14rem]">
             <div className="eja-logo-entrada relative w-full max-w-[760px]">
-              <i aria-hidden="true" className="eja-logo-halo absolute inset-[8%] rounded-[40%] border border-white/45" />
               <div className="eja-logo-revelacao relative overflow-hidden">
                 <Image
                   src="/marca/vem-pra-eja-logo-2.png"
                   alt="Vem pra EJA"
-                  width={1400}
-                  height={762}
+                  width={1317}
+                  height={590}
                   priority
                   sizes="(max-width: 768px) 88vw, 760px"
                   className="h-auto w-full select-none object-contain drop-shadow-[0_18px_42px_rgba(4,31,75,0.28)]"
@@ -138,7 +137,7 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2, duration: 0.45 }}
-            className="absolute bottom-[30px] left-0 right-0 flex flex-col items-center"
+            className="absolute inset-x-0 bottom-[max(14px,env(safe-area-inset-bottom))] flex flex-col items-center px-4 sm:bottom-[max(24px,env(safe-area-inset-bottom))]"
           >
             <div className="relative h-1.5 w-[84px] overflow-hidden rounded-full bg-white/20">
               <motion.span
@@ -147,19 +146,19 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
                 className="absolute inset-y-0 left-0 w-7 rounded-full bg-gradient-to-r from-verde-marca via-white to-laranja-marca"
               />
             </div>
-            <span className="mt-3 text-base font-semibold tracking-[2px] text-white/70">Carregando...</span>
+            <span className="mt-2.5 text-sm font-semibold tracking-[2px] text-white/75 sm:mt-3 sm:text-base">Carregando...</span>
 
-            <div className="mt-[50px] flex items-center gap-[25px] opacity-85">
+            <div data-eja-logos-institucionais className="mt-5 flex min-h-[54px] items-center gap-4 opacity-90 sm:mt-7 sm:min-h-[58px] sm:gap-6">
               {semLogoPrefeitura ? (
-                <Building2 aria-label="Prefeitura" className="h-[55px] w-[55px] text-white/70" />
+                <Building2 aria-label="Prefeitura" className="h-11 w-11 text-white/70 sm:h-12 sm:w-12 md:h-[55px] md:w-[55px]" />
               ) : (
-                <Image src="/logos/logo_prefeitura.png" alt="Prefeitura" width={1920} height={1080} style={{ height: "55px", width: "auto" }} className="object-contain" onError={() => setSemLogoPrefeitura(true)} />
+                <Image src="/logos/logo_prefeitura.png" alt="Prefeitura" width={1920} height={1080} className="h-11 w-auto object-contain sm:h-12 md:h-[55px]" onError={() => setSemLogoPrefeitura(true)} />
               )}
-              <span aria-hidden="true" className="h-[45px] w-px bg-white/25" />
+              <span aria-hidden="true" className="h-10 w-px bg-white/30 sm:h-11" />
               {semLogoIfc ? (
-                <GraduationCap aria-label="Instituto Federal Catarinense" className="h-[65px] w-[65px] translate-y-2 text-white/70" />
+                <GraduationCap aria-label="Instituto Federal Catarinense" className="h-[50px] w-[50px] translate-y-1 text-white/70 sm:h-[54px] sm:w-[54px] md:h-[65px] md:w-[65px]" />
               ) : (
-                <Image src="/logos/logo_ifc.png" alt="Instituto Federal Catarinense" width={1920} height={1080} style={{ height: "65px", width: "auto" }} className="translate-y-2 object-contain" onError={() => setSemLogoIfc(true)} />
+                <Image src="/logos/logo_ifc.png" alt="Instituto Federal Catarinense" width={1920} height={1080} className="h-[50px] w-auto translate-y-1 object-contain sm:h-[54px] md:h-[65px]" onError={() => setSemLogoIfc(true)} />
               )}
             </div>
           </motion.footer>

@@ -216,6 +216,10 @@ test('logos institucionais são servidas pelo próprio site', () => {
   assert.match(fonte, /src="\/marca\/vem-pra-eja-logo-2\.png"/);
   assert.match(fonte, /src="\/logos\/logo_prefeitura\.png"/);
   assert.match(fonte, /src="\/logos\/logo_ifc\.png"/);
+  assert.match(fonte, /data-eja-logos-institucionais/);
+  assert.match(fonte, /bottom-\[max\(14px,env\(safe-area-inset-bottom\)\)\]/);
+  assert.doesNotMatch(fonte, /eja-logo-halo/);
+  assert.doesNotMatch(fonte, /mt-\[50px\]/);
   assert.doesNotMatch(fonte, /raw\.githubusercontent\.com/);
 });
 
