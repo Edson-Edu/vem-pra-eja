@@ -119,6 +119,8 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
 
           <div className="relative z-10 flex flex-1 items-center justify-center px-5 pb-[clamp(10rem,26dvh,13rem)] pt-[clamp(4.5rem,12dvh,6.5rem)] sm:px-8 sm:pb-[13rem] md:px-12 md:pb-[14rem]">
             <div className="eja-logo-entrada relative w-full max-w-[760px]">
+              <i aria-hidden="true" className="eja-logo-onda absolute inset-[10%_3%] -z-10 rounded-[50%] border border-white/45" />
+              <i aria-hidden="true" className="eja-logo-onda eja-logo-onda-secundaria absolute inset-[10%_3%] -z-10 rounded-[50%] border border-verde-marca/40" />
               <div className="eja-logo-revelacao relative overflow-hidden">
                 <Image
                   src="/marca/vem-pra-eja-logo-2.png"
@@ -127,7 +129,7 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
                   height={590}
                   priority
                   sizes="(max-width: 768px) 88vw, 760px"
-                  className="h-auto w-full select-none object-contain drop-shadow-[0_18px_42px_rgba(4,31,75,0.28)]"
+                  className="eja-logo-marca h-auto w-full select-none object-contain"
                 />
               </div>
             </div>
