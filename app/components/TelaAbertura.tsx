@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Building2, GraduationCap } from "lucide-react";
 import BotaoAudio from "./BotaoAudio";
 import { useLocalizacaoUsuario } from "../lib/localizacao";
@@ -39,6 +39,7 @@ function precarregarImagem(url: string) {
 
 export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
   const menuAberto = useMenuAcessibilidadeAberto();
+  const reduzirMovimento = useReducedMotion();
   const [saindo, setSaindo] = useState(false);
   const { solicitarLocalizacao } = useLocalizacaoUsuario({ solicitarAutomaticamente: false });
   const [semLogoPrefeitura, setSemLogoPrefeitura] = useState(false);
@@ -102,40 +103,35 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
           transition={{ duration: 0.6, ease: "easeIn" }}
           className="relative flex min-h-dvh flex-col overflow-hidden bg-azul-principal"
         >
-          <div className="flex flex-1 flex-col items-center justify-center">
-            <div className="flex items-center gap-2">
-              <motion.span
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-                className="text-[22px] font-normal tracking-[4px] text-white/60"
-              >
-                VEM
-              </motion.span>
-              <motion.span
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6, duration: 0.5, type: "spring", bounce: 0.4 }}
-                className="rounded-lg bg-white px-[10px] py-1 text-[18px] font-black tracking-[1px] text-azul-principal"
-              >
-                PRA
-              </motion.span>
-            </div>
+          <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+            <motion.i
+              animate={reduzirMovimento ? undefined : { scale: [1, 1.12, 1], x: [0, 18, 0], y: [0, -12, 0] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -left-24 top-[14%] size-72 rounded-full bg-verde-marca/25 blur-3xl md:size-96"
+            />
+            <motion.i
+              animate={reduzirMovimento ? undefined : { scale: [1.08, 0.96, 1.08], x: [0, -14, 0], y: [0, 16, 0] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -right-28 bottom-[12%] size-72 rounded-full bg-laranja-marca/25 blur-3xl md:size-[28rem]"
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(9,40,92,0.2)_72%,rgba(9,40,92,0.36)_100%)]" />
+          </div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1, duration: 0.7, ease: "easeOut" }}
-              className="relative -mt-0.5 overflow-hidden px-2 text-[clamp(6rem,28vw,7.5rem)] font-black leading-none tracking-[-4px] text-white [font-family:Arial_Black,Arial,sans-serif]"
-            >
-              EJA
-              <motion.span
-                aria-hidden="true"
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ delay: 1.5, duration: 1.2, ease: "easeInOut" }}
-                className="absolute inset-0 w-1/2 skew-x-12 bg-gradient-to-r from-transparent via-white/90 to-transparent mix-blend-overlay"
-              />
-            </motion.h1>
+          <div className="relative z-10 flex flex-1 items-center justify-center px-6 pb-48 pt-24 md:px-12 md:pb-52">
+            <div className="eja-logo-entrada relative w-full max-w-[760px]">
+              <i aria-hidden="true" className="eja-logo-halo absolute inset-[8%] rounded-[40%] border border-white/45" />
+              <div className="eja-logo-revelacao relative overflow-hidden">
+                <Image
+                  src="/marca/vem-pra-eja-logo-2.png"
+                  alt="Vem pra EJA"
+                  width={1400}
+                  height={762}
+                  priority
+                  sizes="(max-width: 768px) 88vw, 760px"
+                  className="h-auto w-full select-none object-contain drop-shadow-[0_18px_42px_rgba(4,31,75,0.28)]"
+                />
+              </div>
+            </div>
           </div>
 
           <motion.footer
@@ -144,11 +140,11 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
             transition={{ delay: 1.2, duration: 0.45 }}
             className="absolute bottom-[30px] left-0 right-0 flex flex-col items-center"
           >
-            <div className="relative h-1 w-[60px] overflow-hidden rounded-full bg-white/20">
+            <div className="relative h-1.5 w-[84px] overflow-hidden rounded-full bg-white/20">
               <motion.span
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ repeat: Infinity, repeatType: "mirror", duration: 1.5, ease: "easeInOut" }}
-                className="absolute inset-y-0 left-0 w-[18px] rounded-full bg-white/80"
+                animate={reduzirMovimento ? undefined : { x: ["-100%", "310%"] }}
+                transition={{ repeat: Infinity, duration: 1.7, ease: "easeInOut" }}
+                className="absolute inset-y-0 left-0 w-7 rounded-full bg-gradient-to-r from-verde-marca via-white to-laranja-marca"
               />
             </div>
             <span className="mt-3 text-base font-semibold tracking-[2px] text-white/70">Carregando...</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
 import { LockKeyhole, UserRound } from "lucide-react";
 import { administradorEstaLogado, entrarComoAdministrador, sairDaAreaAdministrativa } from "../lib/admin-auth";
 import PainelAdministrativo from "./PainelAdministrativo";
@@ -55,11 +56,19 @@ export default function PaginaAdmin() {
 
   return (
     <main className="eja-admin-login-fundo grid min-h-dvh place-items-center p-5">
-      <form onSubmit={entrar} className="w-full max-w-md rounded-[2rem] border border-white/80 bg-white p-8 shadow-[0_24px_70px_rgba(2,87,160,0.15)] sm:p-10">
-        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-azul-superficie text-azul-principal">
+      <form onSubmit={entrar} className="w-full max-w-md rounded-[2rem] border border-white/80 bg-white p-8 shadow-[0_24px_70px_rgba(30,91,184,0.15)] sm:p-10">
+        <Image
+          src="/marca/vem-pra-eja-logo-3.png"
+          alt="Vem pra EJA"
+          width={1400}
+          height={588}
+          priority
+          sizes="210px"
+          className="mx-auto h-auto w-[210px]"
+        />
+        <div className="mx-auto mt-6 grid size-16 place-items-center rounded-2xl bg-azul-superficie text-azul-principal">
           <LockKeyhole className="size-7" aria-hidden="true" />
         </div>
-        <p className="mt-6 text-center text-sm font-black tracking-[0.24em] text-azul-acao">VEM PRA EJA</p>
         <h1 className="mt-2 text-center text-3xl font-black text-slate-800">Login</h1>
         <p className="mt-2 text-center text-sm text-slate-500">Área administrativa</p>
 
@@ -76,7 +85,7 @@ export default function PaginaAdmin() {
         </div>
 
         {erro && <p role="alert" className="mt-4 text-center text-sm font-bold text-red-600">{erro}</p>}
-        <button disabled={enviando} className="mt-7 w-full rounded-xl bg-azul-principal py-3.5 font-black text-white shadow-lg shadow-azul-principal/20 transition hover:bg-[#014884] disabled:cursor-wait disabled:opacity-70">
+        <button disabled={enviando} className="mt-7 w-full rounded-xl bg-azul-principal py-3.5 font-black text-white shadow-lg shadow-azul-principal/20 transition hover:brightness-90 disabled:cursor-wait disabled:opacity-70">
           {enviando ? "Entrando..." : "Entrar"}
         </button>
       </form>

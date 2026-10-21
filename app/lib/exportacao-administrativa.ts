@@ -48,12 +48,12 @@ function abrirImpressao(titulo: string, periodo: string, conteudo: string) {
   }
   janela.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8" /><title>${html(titulo)}</title><style>
     @page { size: A4; margin: 16mm; }
-    * { box-sizing: border-box; } body { color: #1e293b; font: 12px Arial, sans-serif; margin: 0; }
-    h1 { color: #0257a0; font-size: 24px; margin: 0 0 5px; } h2 { color: #0257a0; font-size: 16px; margin: 28px 0 10px; }
+    * { box-sizing: border-box; } body { color: #17243a; font: 12px Arial, sans-serif; margin: 0; }
+    h1 { color: #1e5bb8; font-size: 24px; margin: 0 0 5px; } h2 { color: #1e5bb8; font-size: 16px; margin: 28px 0 10px; }
     .meta { color: #475569; margin: 0 0 4px; } table { border-collapse: collapse; width: 100%; margin-top: 14px; }
-    th { background: #e6f0fa; color: #0257a0; text-align: left; } th, td { border: 1px solid #d6e8fa; padding: 8px; vertical-align: top; }
+    th { background: #eaf0fa; color: #1e5bb8; text-align: left; } th, td { border: 1px solid #d8e5f7; padding: 8px; vertical-align: top; }
     tr:nth-child(even) { background: #f8fafc; } .vazio { color: #64748b; padding: 24px 0; }
-    .rodape { border-top: 1px solid #d6e8fa; color: #64748b; font-size: 10px; margin-top: 28px; padding-top: 8px; }
+    .rodape { border-top: 1px solid #d8e5f7; color: #64748b; font-size: 10px; margin-top: 28px; padding-top: 8px; }
   </style></head><body><h1>${html(titulo)}</h1><p class="meta"><strong>Período:</strong> ${html(periodo)}</p><p class="meta"><strong>Gerado em:</strong> ${html(new Date().toLocaleString("pt-BR"))}</p>${conteudo}<p class="rodape">Vem pra EJA — documento administrativo.</p></body></html>`);
   janela.document.close();
   janela.focus();
