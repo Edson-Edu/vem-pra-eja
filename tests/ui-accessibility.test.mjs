@@ -231,4 +231,8 @@ test('logos institucionais são servidas pelo próprio site', () => {
 test('a área administrativa usa a versão da marca para fundos claros', () => {
   const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/admin/page.tsx'), 'utf8');
   assert.match(fonte, /src="\/marca\/vem-pra-eja-logo-3\.png"/);
+  assert.match(fonte, />Área administrativa<\/h1>/);
+  assert.match(fonte, /Entre com seu e-mail institucional\./);
+  assert.equal([...fonte.matchAll(/<LockKeyhole/g)].length, 1);
+  assert.doesNotMatch(fonte, />Login<\/h1>/);
 });

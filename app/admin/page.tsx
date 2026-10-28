@@ -57,22 +57,22 @@ export default function PaginaAdmin() {
   return (
     <main className="eja-admin-login-fundo grid min-h-dvh place-items-center p-5">
       <form onSubmit={entrar} className="w-full max-w-md rounded-[2rem] border border-white/80 bg-white p-8 shadow-[0_24px_70px_rgba(30,91,184,0.15)] sm:p-10">
-        <Image
-          src="/marca/vem-pra-eja-logo-3.png"
-          alt="Vem pra EJA"
-          width={1400}
-          height={588}
-          priority
-          sizes="210px"
-          className="mx-auto h-auto w-[210px]"
-        />
-        <div className="mx-auto mt-6 grid size-16 place-items-center rounded-2xl bg-azul-superficie text-azul-principal">
-          <LockKeyhole className="size-7" aria-hidden="true" />
-        </div>
-        <h1 className="mt-2 text-center text-3xl font-black text-slate-800">Login</h1>
-        <p className="mt-2 text-center text-sm text-slate-500">Área administrativa</p>
+        <header className="text-center">
+          <Image
+            src="/marca/vem-pra-eja-logo-3.png"
+            alt="Vem pra EJA"
+            width={1400}
+            height={588}
+            priority
+            sizes="(max-width: 640px) 220px, 240px"
+            className="mx-auto h-auto w-[220px] sm:w-[240px]"
+          />
+          <span aria-hidden="true" className="mx-auto mt-5 block h-1 w-16 rounded-full bg-gradient-to-r from-verde-marca via-laranja-marca to-azul-principal" />
+          <h1 className="mt-5 text-3xl font-black text-slate-800">Área administrativa</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">Entre com seu e-mail institucional.</p>
+        </header>
 
-        <label className="mt-8 block text-sm font-bold text-slate-700" htmlFor="email">E-mail</label>
+        <label className="mt-7 block text-sm font-bold text-slate-700" htmlFor="email">E-mail</label>
         <div className="relative mt-2">
           <UserRound className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-azul-secundario" aria-hidden="true" />
           <input id="email" type="email" value={email} onChange={(evento) => setEmail(evento.target.value)} autoComplete="username" required className="w-full rounded-xl border border-slate-200 py-3 pl-12 pr-4 text-slate-800 outline-none transition focus:border-azul-acao focus:ring-4 focus:ring-azul-foco" placeholder="nome@bc.sc.gov.br" />
