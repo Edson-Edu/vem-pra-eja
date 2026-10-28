@@ -67,8 +67,8 @@ export default function PaginaAdmin() {
             sizes="(max-width: 640px) 220px, 240px"
             className="mx-auto h-auto w-[220px] sm:w-[240px]"
           />
-          <span aria-hidden="true" className="mx-auto mt-5 block h-1 w-16 rounded-full bg-gradient-to-r from-verde-marca via-laranja-marca to-azul-principal" />
-          <h1 className="mt-5 text-3xl font-black text-slate-800">Área administrativa</h1>
+          <span aria-hidden="true" className="mx-auto mt-5 block h-1 w-16 rounded-full bg-gradient-to-r from-verde-escuro via-amarelo-marca to-azul-principal" />
+          <h1 className="mt-5 text-3xl font-black text-azul-escuro">Área administrativa</h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">Entre com seu e-mail institucional.</p>
         </header>
 

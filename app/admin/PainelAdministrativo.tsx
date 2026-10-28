@@ -95,7 +95,7 @@ function Modal({ titulo, perigo = false, mostrarFechar = true, children, onFecha
 }
 
 function Botao({ children, variante = "principal", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variante?: "principal" | "borda" | "perigo" }) {
-  const estilo = variante === "principal" ? "bg-azul-principal text-white hover:bg-[#014884]" : variante === "perigo" ? "bg-red-600 text-white hover:bg-red-700" : "border border-azul-acao bg-white text-azul-principal hover:bg-azul-superficie";
+  const estilo = variante === "principal" ? "bg-azul-principal text-white hover:bg-azul-secundario" : variante === "perigo" ? "bg-red-600 text-white hover:bg-red-700" : "border border-azul-acao bg-white text-azul-principal hover:bg-azul-superficie";
   return <button type="button" {...props} className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-50 ${estilo} ${props.className ?? ""}`}>{children}</button>;
 }
 

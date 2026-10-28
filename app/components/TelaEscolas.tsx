@@ -129,7 +129,7 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
   };
 
   return (
-    <main className="relative h-dvh overflow-hidden bg-[#dbeafe]">
+    <main className="relative h-dvh overflow-hidden bg-azul-superficie">
       <MapaEscolas
         escolas={escolasOrdenadas}
         selecionada={idSelecionado}
@@ -183,7 +183,7 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
             {escolas.length} escolas prontas para te receber
           </p>
           <aside aria-label="Legenda do mapa" data-eja-legenda-mapa data-vlibras-texto={legendaMapa} className="relative mx-4 mb-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] leading-relaxed text-slate-600">
-            <p className="flex flex-wrap gap-x-3"><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-azul-acao" />Selecionada</span><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-[#e44335]" />Outras escolas</span></p>
+            <p className="flex flex-wrap gap-x-3"><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-azul-acao" />Selecionada</span><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-verde-escuro" />Outras escolas</span></p>
             <p>{legendaNumeros}</p>
           </aside>
         </div>

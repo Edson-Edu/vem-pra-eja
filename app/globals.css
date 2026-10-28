@@ -1,18 +1,32 @@
 @import "tailwindcss";
 
 :root {
+  /* Cores exatas da marca aprovada pela SECOM. */
   --eja-cor-azul-principal: #1e5bb8;
   --eja-cor-azul-acao: #1e5bb8;
-  --eja-cor-azul-secundario: #174a96;
-  --eja-cor-azul-superficie: #eaf0fa;
-  --eja-cor-azul-foco: #d8e5f7;
+  --eja-cor-azul-secundario: #154690;
+  --eja-cor-azul-escuro: #0f2f63;
+  --eja-cor-azul-superficie: #e6effb;
+  --eja-cor-azul-foco: #d6e2f3;
   --eja-cor-verde-marca: #a7d86b;
-  --eja-cor-laranja-marca: #ffb400;
-  --eja-cor-fundo-claro: #f6f8fc;
-  --eja-cor-texto-principal: #17243a;
-  --eja-cor-fundo-contraste: #07111f;
+  --eja-cor-verde-escuro: #6ea83a;
+  --eja-cor-amarelo-marca: #ffb400;
+  --eja-cor-laranja-marca: #f08a02;
+  --eja-cor-fundo-claro: #f4f8fd;
+  --eja-cor-texto-principal: #1a2433;
+  --eja-cor-texto-secundario: #5b6b82;
+  --eja-cor-borda: #d6e2f3;
+  --eja-cor-fundo-contraste: #000000;
   --eja-cor-amarelo-acessibilidade: #ffb400;
-  --eja-cor-sucesso: #5f9634;
+  --eja-cor-sucesso: #6ea83a;
+  --eja-cor-sucesso-fundo: #e8f3da;
+  --eja-cor-sucesso-texto: #3f7a14;
+  --eja-cor-atencao-fundo: #fff1c2;
+  --eja-cor-atencao-texto: #6b4500;
+  --eja-cor-erro: #b3261e;
+  --eja-cor-erro-fundo: #fdecea;
+  --eja-cor-desabilitado-fundo: #e3e8f0;
+  --eja-cor-desabilitado-texto: #6b7788;
 }
 
 @theme inline {
@@ -24,15 +38,58 @@
   --color-azul-principal: var(--eja-cor-azul-principal);
   --color-azul-acao: var(--eja-cor-azul-acao);
   --color-azul-secundario: var(--eja-cor-azul-secundario);
+  --color-azul-escuro: var(--eja-cor-azul-escuro);
   --color-azul-superficie: var(--eja-cor-azul-superficie);
   --color-azul-foco: var(--eja-cor-azul-foco);
   --color-verde-marca: var(--eja-cor-verde-marca);
+  --color-verde-escuro: var(--eja-cor-verde-escuro);
+  --color-amarelo-marca: var(--eja-cor-amarelo-marca);
   --color-laranja-marca: var(--eja-cor-laranja-marca);
   --color-fundo-claro: var(--eja-cor-fundo-claro);
   --color-texto-principal: var(--eja-cor-texto-principal);
+  --color-texto-secundario: var(--eja-cor-texto-secundario);
+  --color-borda: var(--eja-cor-borda);
   --color-fundo-contraste: var(--eja-cor-fundo-contraste);
   --color-amarelo-acessibilidade: var(--eja-cor-amarelo-acessibilidade);
   --color-sucesso: var(--eja-cor-sucesso);
+  --color-sucesso-fundo: var(--eja-cor-sucesso-fundo);
+  --color-sucesso-texto: var(--eja-cor-sucesso-texto);
+  --color-atencao-fundo: var(--eja-cor-atencao-fundo);
+  --color-atencao-texto: var(--eja-cor-atencao-texto);
+  --color-erro: var(--eja-cor-erro);
+  --color-erro-fundo: var(--eja-cor-erro-fundo);
+
+  /* As classes slate já usadas pelo projeto passam a obedecer à identidade. */
+  --color-slate-50: #f4f8fd;
+  --color-slate-100: #e6effb;
+  --color-slate-200: #d6e2f3;
+  --color-slate-300: #9fb3ce;
+  --color-slate-400: #6b7788;
+  --color-slate-500: #5b6b82;
+  --color-slate-600: #42536b;
+  --color-slate-700: #0f2f63;
+  --color-slate-800: #1a2433;
+  --color-slate-900: #0f2f63;
+
+  /* Compatibilidade: componentes antigos que ainda usam violet passam a
+     renderizar a paleta institucional, sem roxo residual. */
+  --color-violet-50: #e6effb;
+  --color-violet-100: #d6e2f3;
+  --color-violet-400: #1e5bb8;
+  --color-violet-600: #1e5bb8;
+  --color-violet-700: #154690;
+
+  --color-green-100: #e8f3da;
+  --color-green-600: #3f7a14;
+  --color-green-700: #3f7a14;
+  --color-amber-100: #fff1c2;
+  --color-amber-600: #6b4500;
+  --color-red-50: #fdecea;
+  --color-red-200: #f2b8b5;
+  --color-red-500: #b3261e;
+  --color-red-600: #b3261e;
+  --color-red-700: #8c1d18;
+  --color-red-800: #7a1713;
 }
 
 * { box-sizing: border-box; }
@@ -43,6 +100,21 @@ body {
   background: var(--eja-cor-fundo-claro);
   color: var(--eja-cor-texto-principal);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+:is(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--eja-cor-amarelo-marca);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  background-color: var(--eja-cor-desabilitado-fundo) !important;
+  color: var(--eja-cor-desabilitado-texto) !important;
+  box-shadow: none !important;
+}
+
+main [class*="bg-[#f8fafc]"] {
+  background-color: var(--eja-cor-fundo-claro);
 }
 
 /* A entrada da marca usa CSS para continuar funcionando mesmo antes da
@@ -104,7 +176,7 @@ body {
   background:
     radial-gradient(circle at 15% 0%, rgb(167 216 107 / 17%), transparent 34%),
     radial-gradient(circle at 86% 12%, rgb(255 180 0 / 15%), transparent 30%),
-    radial-gradient(circle at top, #d8e5f7, transparent 48%),
+    radial-gradient(circle at top, var(--eja-cor-azul-foco), transparent 48%),
     var(--eja-cor-fundo-claro);
 }
 
@@ -180,7 +252,7 @@ html.alto-contraste .eja-marcador-nome { background: var(--eja-cor-fundo-contras
 
 [vw-plugin-wrapper] .marca-vem-pra-eja span {
   margin-top: 2px;
-  color: #dbeafe;
+  color: #c9d8f0;
   font-size: 9px;
   font-weight: 650;
   letter-spacing: 0.25px;
@@ -391,12 +463,11 @@ body:has([vw-plugin-wrapper].active) button[data-vlibras-acao] {
 
 html.alto-contraste { color-scheme: dark; }
 
-/* Alto contraste não precisa ser preto e branco. A base azul-marinho reduz o brilho,
-   enquanto amarelo e branco preservam hierarquia, foco e áreas de ação. */
+/* Alto contraste segue a régua institucional: preto, branco e amarelo. */
 html.alto-contraste body,
 html.alto-contraste main {
   background-color: var(--eja-cor-fundo-contraste) !important;
-  color: #f8fafc !important;
+  color: #fff !important;
 }
 
 html.alto-contraste main [class*="bg-white"],
@@ -405,12 +476,12 @@ html.alto-contraste main [class*="bg-fundo-claro"],
 html.alto-contraste main [class*="bg-slate"],
 html.alto-contraste main [class*="bg-azul-superficie"],
 html.alto-contraste main [class*="bg-azul-foco"] {
-  background-color: #10233a !important;
-  color: #f8fafc !important;
+  background-color: #000 !important;
+  color: #fff !important;
 }
 
 html.alto-contraste main [class*="bg-azul-principal"] {
-  background-color: #0b2945 !important;
+  background-color: #000 !important;
   color: #fff !important;
 }
 
@@ -422,11 +493,11 @@ html.alto-contraste main button[style*="background-color"] {
 
 html.alto-contraste main [class*="text-"],
 html.alto-contraste main [class*="text-[#"] {
-  color: #f8fafc !important;
+  color: #fff !important;
 }
 
 html.alto-contraste main [class*="border-"] {
-  border-color: var(--eja-cor-amarelo-acessibilidade) !important;
+  border-color: #fff !important;
 }
 
 html.alto-contraste main [class*="shadow"] {
@@ -434,8 +505,8 @@ html.alto-contraste main [class*="shadow"] {
 }
 
 html.alto-contraste main :is(button, input, select, textarea) {
-  border: 2px solid var(--eja-cor-amarelo-acessibilidade) !important;
-  background-color: #10233a !important;
+  border: 2px solid #fff !important;
+  background-color: #000 !important;
   color: #fff !important;
 }
 
@@ -479,8 +550,8 @@ html.alto-contraste main button[style*="background-color"] :is(svg, span) {
 
 /* Benefícios precisam manter contraste entre fundo e texto, inclusive nos cards do mapa. */
 html.alto-contraste main [class*="bg-green-100"] {
-  background-color: #14532d !important;
-  border: 1px solid #86efac !important;
+  background-color: #000 !important;
+  border: 1px solid #fff !important;
   color: #fff !important;
 }
 
@@ -490,23 +561,29 @@ html.alto-contraste main [class*="text-green-700"] {
 
 /* Chips de turno do mapa: azul mais vivo, texto branco e ícone ciano. */
 html.alto-contraste main [data-turno-disponivel] {
-  background-color: #164e63 !important;
-  border: 1px solid #7dd3fc !important;
+  background-color: #000 !important;
+  border: 1px solid #fff !important;
   color: #fff !important;
 }
 
 html.alto-contraste main [data-turno-disponivel] svg {
-  color: #7dd3fc !important;
+  color: var(--eja-cor-amarelo-acessibilidade) !important;
 }
 
 /* Um turno marcado é uma escolha atual, não uma ação de alerta: azul escuro, texto claro. */
 html.alto-contraste main button[data-turno-selecionado="true"] {
-  background-color: #0e4b66 !important;
-  border-color: #7dd3fc !important;
-  color: #fff !important;
+  background-color: var(--eja-cor-amarelo-acessibilidade) !important;
+  border-color: #fff !important;
+  color: #000 !important;
 }
 
 html.alto-contraste main button[data-turno-selecionado="true"] :is(svg, span) {
+  color: #000 !important;
+}
+
+html.alto-contraste main button[data-turno-selecionado="false"] {
+  background-color: #000 !important;
+  border-color: #fff !important;
   color: #fff !important;
 }
 
@@ -522,12 +599,12 @@ html.alto-contraste main button:disabled {
 }
 
 html.alto-contraste .sucesso-etapas article {
-  background-color: #10233a !important;
+  background-color: #000 !important;
 }
 
 /* Ícones de contexto voltam a ter contraste próprio nos blocos informativos. */
 html.alto-contraste main [class*="bg-amber-100"] {
-  background-color: #1b334f !important;
+  background-color: #000 !important;
   border: 1px solid var(--eja-cor-amarelo-acessibilidade) !important;
 }
 
@@ -536,7 +613,7 @@ html.alto-contraste main [class*="text-amber-600"] {
 }
 
 html.alto-contraste main :is(input, textarea)::placeholder { color: #cbd5e1 !important; opacity: 1; }
-html.alto-contraste main a { color: #fde68a !important; }
+html.alto-contraste main a { color: var(--eja-cor-amarelo-acessibilidade) !important; }
 html.alto-contraste main :is(input, select, textarea):focus-visible { outline: 3px solid var(--eja-cor-amarelo-acessibilidade) !important; outline-offset: 2px; }
 html.alto-contraste .leaflet-container { filter: contrast(1.15) brightness(.9) saturate(1.15); }
 html.alto-contraste main img:not(.leaflet-tile) { filter: contrast(1.08) saturate(1.06); }
@@ -559,22 +636,24 @@ body [vw-access-button] { display: none !important; }
   gap: 7px;
   min-height: 44px;
   padding: 10px 14px;
-  border: 1px solid #d6e2ef;
+  border: 3px solid #fff;
   border-radius: 999px;
-  background: #fff;
-  color: var(--eja-cor-azul-principal);
+  background: var(--eja-cor-amarelo-marca);
+  color: var(--eja-cor-azul-escuro);
   font-size: 14px;
   font-weight: 700;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  box-shadow: 0 5px 16px rgb(15 47 99 / 35%);
   cursor: pointer;
+  transition: background-color 160ms ease-out, box-shadow 160ms ease-out;
 }
+.eja-acessibilidade-abrir:hover { background: var(--eja-cor-laranja-marca); }
 .eja-acessibilidade-dialogo {
   width: min(480px, calc(100% - 32px));
   max-width: none;
   max-height: min(90dvh, 680px);
   margin: auto;
   padding: 0;
-  border: 1px solid #d6e2ef;
+  border: 1px solid var(--eja-cor-borda);
   border-radius: 24px;
   background: #fff;
   color: var(--eja-cor-texto-principal);
@@ -584,27 +663,28 @@ body [vw-access-button] { display: none !important; }
 .eja-acessibilidade-dialogo::backdrop { background: rgb(8 24 43 / 55%); }
 .eja-acessibilidade-painel { padding: 12px 20px max(20px, env(safe-area-inset-bottom)); }
 .eja-acessibilidade-alca { display: block; width: 40px; height: 5px; margin: 0 auto 8px; border-radius: 999px; background: #dce5ef; }
-.eja-acessibilidade-cabecalho { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+.eja-acessibilidade-cabecalho { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 -20px 8px; padding: 12px 20px; background: var(--eja-cor-azul-principal); color: #fff; }
 .eja-acessibilidade-cabecalho h2 { font-size: 18px; font-weight: 800; }
-.eja-acessibilidade-cabecalho button { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 999px; color: var(--eja-cor-azul-principal); cursor: pointer; }
-.eja-acessibilidade-opcao { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 100px; padding: 16px 0; border-top: 1px solid #e2e8f0; text-align: left; cursor: pointer; }
-.eja-acessibilidade-icone { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: #edf4fb; color: var(--eja-cor-azul-principal); }
+.eja-acessibilidade-cabecalho button { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 999px; color: #fff; cursor: pointer; }
+.eja-acessibilidade-opcao { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 100px; padding: 16px 0; border-top: 1px solid var(--eja-cor-borda); text-align: left; cursor: pointer; }
+.eja-acessibilidade-icone { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--eja-cor-azul-superficie); color: var(--eja-cor-azul-principal); }
 .eja-acessibilidade-texto { flex: 1; min-width: 0; }
 .eja-acessibilidade-texto strong { display: block; font-size: 14px; line-height: 1.4; }
-.eja-acessibilidade-texto > span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.5; color: #52657b; }
-.eja-acessibilidade-chave { display: flex; flex: none; flex-direction: column; align-items: center; gap: 4px; width: 60px; font-size: 11px; font-weight: 700; color: #52657b; }
-.eja-acessibilidade-trilho { display: flex; width: 46px; height: 26px; padding: 3px; border-radius: 999px; background: #75859a; }
+.eja-acessibilidade-texto > span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.5; color: var(--eja-cor-texto-secundario); }
+.eja-acessibilidade-chave { display: flex; flex: none; flex-direction: column; align-items: center; gap: 4px; width: 60px; font-size: 11px; font-weight: 700; color: var(--eja-cor-texto-secundario); }
+.eja-acessibilidade-trilho { display: flex; width: 46px; height: 26px; padding: 3px; border-radius: 999px; background: #c5cfdd; }
 .eja-acessibilidade-trilho > span { width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 150ms; }
 .eja-acessibilidade-opcao[aria-checked="true"] .eja-acessibilidade-trilho { background: var(--eja-cor-azul-principal); }
 .eja-acessibilidade-opcao[aria-checked="true"] .eja-acessibilidade-trilho > span { transform: translateX(20px); }
-.eja-acessibilidade-status { margin-top: 12px; font-size: 12px; line-height: 1.5; color: #52657b; }
+.eja-acessibilidade-status { margin-top: 12px; font-size: 12px; line-height: 1.5; color: var(--eja-cor-texto-secundario); }
 .eja-acessibilidade-concluir { width: 100%; min-height: 44px; margin-top: 16px; padding: 10px; border-radius: 12px; background: var(--eja-cor-azul-principal); color: #fff; font-weight: 700; cursor: pointer; }
 .eja-acessibilidade-abrir:focus-visible,
-.eja-acessibilidade-dialogo button:focus-visible { outline: 3px solid var(--eja-cor-azul-acao); outline-offset: 3px; }
+.eja-acessibilidade-dialogo button:focus-visible { outline: 3px solid var(--eja-cor-amarelo-marca); outline-offset: 3px; }
+.eja-acessibilidade-abrir:focus-visible { outline-color: var(--eja-cor-azul-escuro); }
 html.alto-contraste :is(.eja-acessibilidade-abrir, .eja-acessibilidade-dialogo) { background: var(--eja-cor-fundo-contraste); color: #fff; border-color: var(--eja-cor-amarelo-acessibilidade); }
 html.alto-contraste .eja-acessibilidade-dialogo :is(button, strong, p, span) { color: #fff; }
-html.alto-contraste .eja-acessibilidade-opcao { border-color: #64748b; }
-html.alto-contraste .eja-acessibilidade-icone { background: #1b334f; }
+html.alto-contraste .eja-acessibilidade-opcao { border-color: #fff; }
+html.alto-contraste .eja-acessibilidade-icone { background: #000; border: 1px solid #fff; }
 html.alto-contraste .eja-acessibilidade-opcao[aria-checked="true"] .eja-acessibilidade-trilho { background: var(--eja-cor-amarelo-acessibilidade); }
 html.alto-contraste .eja-acessibilidade-opcao[aria-checked="true"] .eja-acessibilidade-trilho > span { background: var(--eja-cor-fundo-contraste); }
 html.alto-contraste .eja-acessibilidade-concluir { border: 1px solid var(--eja-cor-amarelo-acessibilidade); }
@@ -621,25 +701,25 @@ html.alto-contraste .eja-acessibilidade-concluir { border: 1px solid var(--eja-c
   .eja-acessibilidade-cabecalho h2 { font-size: 18px; font-weight: 700; }
   .eja-acessibilidade-cabecalho button { margin-right: -8px; }
   .eja-acessibilidade-opcao { gap: 12px; min-height: 80px; padding: 14px 0; }
-  .eja-acessibilidade-painel > .eja-acessibilidade-opcao { border-top: 0; border-bottom: 1px solid #e2e8f0; margin-bottom: 4px; }
+  .eja-acessibilidade-painel > .eja-acessibilidade-opcao { border-top: 0; border-bottom: 1px solid var(--eja-cor-borda); margin-bottom: 4px; }
   .eja-acessibilidade-icone { width: 36px; height: 36px; border-radius: 8px; }
   .eja-acessibilidade-texto strong { font-weight: 600; overflow-wrap: anywhere; }
   .eja-acessibilidade-texto > span { margin-top: 3px; }
   .eja-acessibilidade-chave { width: 44px; }
   .eja-acessibilidade-chave > span:last-child { display: none; }
-  .eja-acessibilidade-trilho { width: 44px; padding: 3px; background: #cbd5e1; }
+  .eja-acessibilidade-trilho { width: 44px; padding: 3px; background: #c5cfdd; }
   .eja-acessibilidade-opcao[aria-checked="true"] .eja-acessibilidade-trilho > span { transform: translateX(18px); }
-  .eja-acessibilidade-grupo { display: block; padding: 0 12px 12px; border: 1px solid #e2e8f0; border-radius: 14px; }
+  .eja-acessibilidade-grupo { display: block; padding: 0 12px 12px; border: 1px solid var(--eja-cor-borda); border-radius: 14px; }
   .eja-acessibilidade-grupo > .eja-acessibilidade-opcao:first-child { border-top: 0; }
   .eja-acessibilidade-orientacao { margin-top: 6px; text-align: center; font-size: 11px; }
   .eja-acessibilidade-retorno[data-ativo="false"] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .eja-acessibilidade-concluir { min-height: 46px; margin-top: 18px; border-radius: 12px; background: var(--eja-cor-azul-secundario); font-size: 14px; }
-  html.alto-contraste .eja-acessibilidade-grupo { border-color: #64748b; }
+  html.alto-contraste .eja-acessibilidade-grupo { border-color: #fff; }
 }
 
 @media (min-width: 768px) {
-  .eja-acessibilidade-abrir { border: 0; border-radius: 8px; background: transparent; box-shadow: none; padding: 10px 8px; font-weight: 600; }
-  .eja-acessibilidade-abrir:hover { background: var(--eja-cor-azul-superficie); }
+  .eja-acessibilidade-abrir { border: 3px solid #fff; border-radius: 999px; background: var(--eja-cor-amarelo-marca); box-shadow: 0 5px 16px rgb(15 47 99 / 35%); padding: 10px 14px; font-weight: 700; }
+  .eja-acessibilidade-abrir:hover { background: var(--eja-cor-laranja-marca); }
 }
 
 @media (min-width: 1280px) {
@@ -651,21 +731,30 @@ html.alto-contraste .eja-acessibilidade-concluir { border: 1px solid var(--eja-c
   [data-eja-cabecalho-fluxo] [data-eja-progresso] > span { flex: none; height: 6px; }
   [data-eja-cabecalho-fluxo] [data-eja-progresso] > strong { order: -1; font-size: 14px; line-height: 20px; font-weight: 600; }
   [data-eja-cabecalho-fluxo] .eja-progresso-prefixo { display: inline; }
-  main:not(.sucesso-tela) [data-eja-cabecalho-fluxo] { box-shadow: none; border-bottom: 1px solid #e2e8f0; }
+  main:not(.sucesso-tela) [data-eja-cabecalho-fluxo] { box-shadow: none; border-bottom: 1px solid var(--eja-cor-borda); }
   main:not(.sucesso-tela) [data-eja-cabecalho-fluxo].sticky { margin-bottom: 16px; }
-  main:not(.sucesso-tela) [data-eja-cabecalho-fluxo] button[aria-label="Voltar"],
+  main:not(.sucesso-tela) [data-eja-cabecalho-fluxo] button[aria-label="Voltar"] {
+    border: 2px solid var(--eja-cor-azul-principal);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--eja-cor-azul-principal);
+    box-shadow: 0 3px 10px rgb(15 47 99 / 14%);
+    padding: 10px 12px;
+    font-weight: 700;
+    transform: none;
+  }
   .eja-acessibilidade-abrir {
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    box-shadow: none;
-    padding: 10px 8px;
-    font-weight: 600;
+    border: 3px solid #fff;
+    border-radius: 999px;
+    background: var(--eja-cor-amarelo-marca);
+    box-shadow: 0 5px 16px rgb(15 47 99 / 35%);
+    padding: 10px 12px;
+    font-weight: 700;
     transform: none;
   }
   .eja-acessibilidade-abrir { top: 12px; right: 16px; }
-  main:not(.sucesso-tela) [data-eja-cabecalho-fluxo] button[aria-label="Voltar"]:hover,
-  .eja-acessibilidade-abrir:hover { background: var(--eja-cor-azul-superficie); }
+  main:not(.sucesso-tela) [data-eja-cabecalho-fluxo] button[aria-label="Voltar"]:hover { background: var(--eja-cor-fundo-claro); }
+  .eja-acessibilidade-abrir:hover { background: var(--eja-cor-laranja-marca); }
 }
 @media (prefers-reduced-motion: reduce) {
   .eja-acessibilidade-trilho > span { transition: none; }

@@ -236,3 +236,27 @@ test('a área administrativa usa a versão da marca para fundos claros', () => {
   assert.equal([...fonte.matchAll(/<LockKeyhole/g)].length, 1);
   assert.doesNotMatch(fonte, />Login<\/h1>/);
 });
+
+test('a interface usa a paleta institucional da marca', () => {
+  const css = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/globals.css'), 'utf8');
+  for (const declaracao of [
+    '--eja-cor-azul-principal: #1e5bb8',
+    '--eja-cor-azul-escuro: #0f2f63',
+    '--eja-cor-amarelo-marca: #ffb400',
+    '--eja-cor-laranja-marca: #f08a02',
+    '--eja-cor-verde-marca: #a7d86b',
+    '--eja-cor-verde-escuro: #6ea83a',
+    '--eja-cor-fundo-claro: #f4f8fd',
+    '--eja-cor-texto-principal: #1a2433',
+    '--eja-cor-texto-secundario: #5b6b82',
+    '--eja-cor-borda: #d6e2f3',
+    '--eja-cor-fundo-contraste: #000000',
+  ]) assert.match(css, new RegExp(declaracao.replace('#', '\\#')));
+  assert.match(css, /\.eja-acessibilidade-abrir[\s\S]*background: var\(--eja-cor-amarelo-marca\)/);
+  assert.match(css, /\.eja-acessibilidade-cabecalho[\s\S]*background: var\(--eja-cor-azul-principal\)/);
+
+  const telas = ['app/components/TelaDetalhes.tsx', 'app/components/TelaNivel.tsx', 'app/components/MapaEscolas.tsx']
+    .map((arquivo) => fs.readFileSync(path.resolve(import.meta.dirname, '..', arquivo), 'utf8'))
+    .join('\n');
+  assert.doesNotMatch(telas, /#1e1b4b|#e5ddff|#0b75e8|#E44335/i);
+});

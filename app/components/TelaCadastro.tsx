@@ -30,7 +30,7 @@ export default function TelaCadastro({ escola, turno, onVoltar, onSucesso }: Pro
   const { falarAgora, interromper } = useAudioDescricao();
   const contatoPronto = Boolean(nome.trim()) && apenasNumeros(cpf, 11).length === 11 && idade.length > 0 && apenasNumeros(ddd, 2).length === 2 && apenasNumeros(telefone, 9).length === 9;
   const enderecoPronto = Boolean(endereco.cep && endereco.rua && endereco.bairro && endereco.cidade);
-  const corDoBotao = !contatoPronto ? "#94a3b8" : enderecoPronto ? "var(--eja-cor-azul-acao)" : "var(--eja-cor-azul-secundario)";
+  const corDoBotao = !contatoPronto ? "var(--eja-cor-desabilitado-fundo)" : enderecoPronto ? "var(--eja-cor-azul-acao)" : "var(--eja-cor-azul-secundario)";
   const atualizarEndereco = (campo: keyof Endereco, valor: string) => setEndereco((atual) => ({ ...atual, [campo]: valor }));
 
   useLayoutEffect(() => { const atualizar = () => { const pequeno = window.innerWidth < 768; setMobile(pequeno); if (!pequeno) { setContatoAberto(true); setEnderecoAberto(true); } }; atualizar(); addEventListener("resize", atualizar); return () => removeEventListener("resize", atualizar); }, []);

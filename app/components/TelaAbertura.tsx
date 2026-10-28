@@ -141,14 +141,14 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
             transition={{ delay: 1.2, duration: 0.45 }}
             className="absolute inset-x-0 bottom-[max(14px,env(safe-area-inset-bottom))] flex flex-col items-center px-4 sm:bottom-[max(24px,env(safe-area-inset-bottom))]"
           >
-            <div className="relative h-1.5 w-[84px] overflow-hidden rounded-full bg-white/20">
+            <div className="relative h-1.5 w-[84px] overflow-hidden rounded-full bg-white/25">
               <motion.span
                 animate={reduzirMovimento ? undefined : { x: ["-100%", "310%"] }}
                 transition={{ repeat: Infinity, duration: 1.7, ease: "easeInOut" }}
-                className="absolute inset-y-0 left-0 w-7 rounded-full bg-gradient-to-r from-verde-marca via-white to-laranja-marca"
+                className="absolute inset-y-0 left-0 w-7 rounded-full bg-amarelo-marca"
               />
             </div>
-            <span className="mt-2.5 text-sm font-semibold tracking-[2px] text-white/75 sm:mt-3 sm:text-base">Carregando...</span>
+            <span className="mt-2.5 text-sm font-semibold tracking-[2px] text-white sm:mt-3 sm:text-base">Carregando...</span>
 
             <div data-eja-logos-institucionais className="mt-5 flex min-h-[54px] items-center gap-4 opacity-90 sm:mt-7 sm:min-h-[58px] sm:gap-6">
               {semLogoPrefeitura ? (

@@ -242,7 +242,7 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
     marcadoresRef.current = escolas.map((escola, indice) => ({ escola, indice })).filter(({ escola }) => Number.isFinite(Number(escola.latitude)) && Number.isFinite(Number(escola.longitude))).map(({ escola, indice }) => {
       const ativo = escola.id === selecionada;
       const tamanho = ativo ? 38 : 34;
-      const cor = ativo ? "var(--eja-cor-azul-acao)" : "#E44335";
+      const cor = ativo ? "var(--eja-cor-azul-acao)" : "var(--eja-cor-verde-escuro)";
       const rotulo = escaparHtml(escola.nome);
       const icone = L.divIcon({ className: "eja-marcador-escola", html: `<div class="eja-marcador-conteudo"><span class="eja-marcador-nome"><span data-eja-nome-mapa>${rotulo}</span></span><div class="eja-marcador-pino" style="width:${tamanho}px;height:${tamanho}px;background:${cor}"><span>${indice + 1}</span></div></div>`, iconSize: [142, 44], iconAnchor: [71, 44] });
       const marcador = L.marker([escola.latitude, escola.longitude], { icon: icone, title: `${indice + 1}. ${escola.nome}`, alt: escola.nome, keyboard: true, zIndexOffset: ativo ? 1000 : 0 }).addTo(mapa).on("click", () => onMarcadorClick(escola.id));
@@ -279,7 +279,7 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
 
     const icone = L.divIcon({
       className: "",
-      html: `<div style="position:relative;width:108px;height:48px;font-family:Inter,Arial,sans-serif"><span style="position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;border-radius:999px;background:#0b75e8;color:#fff;padding:3px 7px;font-size:10px;font-weight:800;box-shadow:0 1px 5px #0005">Você está aqui</span><span style="position:absolute;top:26px;left:50%;width:18px;height:18px;transform:translateX(-50%);border:3px solid #fff;border-radius:50%;background:#0b75e8;box-shadow:0 1px 5px #0006"></span></div>`,
+      html: `<div style="position:relative;width:108px;height:48px;font-family:Inter,Arial,sans-serif"><span style="position:absolute;top:0;left:50%;transform:translateX(-50%);white-space:nowrap;border-radius:999px;background:var(--eja-cor-azul-principal);color:#fff;padding:3px 7px;font-size:10px;font-weight:800;box-shadow:0 1px 5px #0005">Você está aqui</span><span style="position:absolute;top:26px;left:50%;width:18px;height:18px;transform:translateX(-50%);border:3px solid #fff;border-radius:50%;background:var(--eja-cor-azul-principal);box-shadow:0 1px 5px #0006"></span></div>`,
       iconSize: [108, 48],
       iconAnchor: [54, 35],
     });
@@ -321,5 +321,5 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [escolas, pronto]);
 
-  return <div ref={elementRef} className="absolute inset-0 bg-[#dbeafe]" aria-label="Mapa das escolas" />;
+  return <div ref={elementRef} className="absolute inset-0 bg-azul-superficie" aria-label="Mapa das escolas" />;
 }

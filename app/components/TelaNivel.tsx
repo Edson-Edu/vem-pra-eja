@@ -135,7 +135,7 @@ export default function TelaNivel({ onVoltar, onEscolher }: Props) {
         <div className="fixed inset-0 z-[1200] flex items-end bg-black/45 xl:items-center xl:justify-center xl:p-5">
           <div role="dialog" aria-modal="true" aria-labelledby="aviso-nivel-titulo" aria-describedby="aviso-nivel-texto" onKeyDown={(evento) => { if (evento.key === "Escape") { interromper(); setAviso(null); } }} className="max-h-[90dvh] w-full overflow-y-auto rounded-t-[28px] bg-white p-6 xl:max-w-md xl:rounded-[28px]">
             <button ref={fecharAviso} data-vlibras-acao="pronto" type="button" aria-label="Fechar aviso" onClick={() => { interromper(); setAviso(null); }} className="float-right rounded-full bg-slate-100 p-2"><X className="size-5" /></button>
-            <h2 id="aviso-nivel-titulo" className="pt-4 text-2xl font-black text-[#1e1b4b]">Aviso</h2>
+            <h2 id="aviso-nivel-titulo" className="pt-4 text-2xl font-black text-azul-escuro">Aviso</h2>
             <p id="aviso-nivel-texto" data-nivel-aviso-libras={aviso.libras} className="mt-4 leading-relaxed text-slate-600">{aviso.texto}</p>
             {ativo && <div className="mt-3"><BotaoDoBloco texto={aviso.texto} /></div>}
             <button data-vlibras-acao="pronto" type="button" onClick={() => { interromper(); setAviso(null); }} className="mt-6 w-full rounded-xl bg-violet-600 py-3 font-bold text-white">Entendi</button>

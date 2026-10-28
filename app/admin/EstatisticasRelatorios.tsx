@@ -72,7 +72,7 @@ function GraficoDeColunas({ dados }: { dados: Linha[] }) {
 }
 
 function GraficoCircular({ dados }: { dados: Linha[] }) {
-  const cores = ["var(--eja-cor-azul-acao)", "var(--eja-cor-azul-principal)", "var(--eja-cor-azul-secundario)", "var(--eja-cor-sucesso)", "#8B5CF6"];
+  const cores = ["var(--eja-cor-azul-principal)", "var(--eja-cor-azul-escuro)", "var(--eja-cor-verde-marca)", "var(--eja-cor-verde-escuro)", "var(--eja-cor-laranja-marca)"];
   const total = dados.reduce((soma, item) => soma + item.total, 0);
   const segmentos = dados.map((item, indice) => {
     const inicio = dados.slice(0, indice).reduce((soma, anterior) => soma + (total ? (anterior.total / total) * 100 : 0), 0);
@@ -101,7 +101,7 @@ function filtrarPeriodo(inscricao: InscricaoAdministrativa, periodo: Periodo, in
 
 function AcoesDeExportacao({ onCsv, onPdf, desabilitado = false }: { onCsv: () => void; onPdf: () => void; desabilitado?: boolean }) {
   const estilo = "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-50";
-  return <div className="flex flex-wrap gap-3"><button type="button" onClick={onCsv} disabled={desabilitado} className={[estilo, "bg-azul-principal text-white hover:bg-[#01477f]"].join(" ")}><Download className="size-4" />Baixar CSV</button><button type="button" onClick={onPdf} disabled={desabilitado} className={[estilo, "border border-azul-acao bg-white text-azul-principal hover:bg-azul-superficie"].join(" ")}><FileText className="size-4" />Visualizar / salvar PDF</button></div>;
+  return <div className="flex flex-wrap gap-3"><button type="button" onClick={onCsv} disabled={desabilitado} className={[estilo, "bg-azul-principal text-white hover:bg-azul-secundario"].join(" ")}><Download className="size-4" />Baixar CSV</button><button type="button" onClick={onPdf} disabled={desabilitado} className={[estilo, "border border-azul-acao bg-white text-azul-principal hover:bg-azul-superficie"].join(" ")}><FileText className="size-4" />Visualizar / salvar PDF</button></div>;
 }
 
 function Inscricoes({ periodo, inicio, fim, textoDoPeriodo }: { periodo: Periodo; inicio: string; fim: string; textoDoPeriodo: string }) {

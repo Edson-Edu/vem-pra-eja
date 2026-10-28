@@ -85,7 +85,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
           </h1>
           <p className="mt-2 text-sm text-slate-500">{escola.bairro} · {escola.cidade} · SC</p>
         </div>
-        <p data-vlibras-pai="instrucao-turnos" className="text-sm font-bold text-[#1e1b4b]">Selecione um turno:</p>
+        <p data-vlibras-pai="instrucao-turnos" className="text-sm font-bold text-azul-escuro">Selecione um turno:</p>
 
         <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
           {turnos.map((turno) => {
@@ -98,7 +98,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
                 data-turno-selecionado={selecionadoAgora}
                 type="button"
                 onClick={() => { setSelecionado(turno); void falarAgora(pacoteDoTurno(turno)); }}
-                className={`min-h-[112px] rounded-2xl border p-3 text-center transition ${selecionadoAgora ? "border-azul-acao bg-azul-acao text-white shadow-lg" : "border-[#e5ddff] bg-white text-[#1e1b4b]"}`}
+                className={`min-h-[112px] rounded-2xl border p-3 text-center transition ${selecionadoAgora ? "border-azul-acao bg-azul-acao text-white shadow-lg" : "border-borda bg-white text-azul-escuro"}`}
               >
                 <span className={`mx-auto flex size-12 items-center justify-center rounded-xl ${selecionadoAgora ? "bg-white/15" : "bg-azul-superficie"}`}>
                   <Icone className={`size-6 ${selecionadoAgora ? "text-white" : "text-azul-secundario"}`} />
@@ -115,7 +115,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
         {!selecionado ? (
           <div data-vlibras-pai="orientacao-turnos" className="px-5 py-20 text-center">
             <span className="mx-auto flex size-20 items-center justify-center rounded-full bg-azul-secundario/10 text-azul-secundario"><GraduationCap className="size-10" /></span>
-            <h2 className="mt-5 text-xl font-black text-[#1e1b4b]">Escolha o melhor horário para você</h2>
+            <h2 className="mt-5 text-xl font-black text-azul-escuro">Escolha o melhor horário para você</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-500">Cada turno tem seus próprios auxílios e informações exclusivas.</p>
           </div>
         ) : (
@@ -127,8 +127,8 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
 
             <section data-vlibras-pai="como-funciona" data-vlibras-texto-adaptado={usarTextoAdaptadoDoCejaBalnearioCamboriu ? textoCejaBalnearioCamboriuParaVLibras : undefined} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <span className="rounded-xl bg-amber-100 p-3 text-amber-600"><GraduationCap /></span>
-                <h2 className="flex-1 text-xl font-black text-[#1e1b4b]">Como funciona</h2>
+                <span className="rounded-xl bg-atencao-fundo p-3 text-atencao-texto"><GraduationCap /></span>
+                <h2 className="flex-1 text-xl font-black text-azul-escuro">Como funciona</h2>
                 {ativo && <BotaoPai texto={`Como funciona. ${selecionado.descricao || "Você terá aulas presenciais e acompanhamento para concluir seus estudos."}`} />}
               </div>
               <p className="mt-4 text-sm leading-relaxed text-slate-600">{selecionado.descricao || "Você terá aulas presenciais e acompanhamento para concluir seus estudos."}</p>
@@ -136,8 +136,8 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
 
             <section data-vlibras-pai="auxilios" className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-3">
-                <span className="rounded-xl bg-amber-100 p-3 text-amber-600"><HandHeart aria-hidden="true" /></span>
-                <h2 className="flex-1 text-xl font-black text-[#1e1b4b]">Auxílios</h2>
+                <span className="rounded-xl bg-atencao-fundo p-3 text-atencao-texto"><HandHeart aria-hidden="true" /></span>
+                <h2 className="flex-1 text-xl font-black text-azul-escuro">Auxílios</h2>
                 {ativo && <BotaoPai texto={`Auxílios oferecidos: ${selecionado.auxilios.join(", ") || "nenhum auxílio informado"}.`} />}
               </div>
               <div className="mt-3 divide-y">
@@ -150,8 +150,8 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
                     className="flex w-full items-center gap-3 py-4 text-left"
                   >
                     <span className="rounded-lg bg-azul-superficie p-2 text-azul-acao"><IconeAuxilio texto={auxilio} /></span>
-                    <strong className="flex-1 text-sm text-[#1e1b4b]">{auxilio}</strong>
-                    <ChevronRight className="size-5 text-violet-400" />
+                    <strong className="flex-1 text-sm text-azul-escuro">{auxilio}</strong>
+                    <ChevronRight className="size-5 text-azul-secundario" />
                   </button>
                 ))}
               </div>
@@ -172,9 +172,9 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
         <div className="fixed inset-0 z-[1200] flex items-end bg-black/45 xl:items-center xl:justify-center xl:p-5">
           <div className="w-full rounded-t-[28px] bg-white p-6 xl:max-w-md xl:rounded-[28px]">
             <button data-vlibras-acao="pronto" type="button" onClick={() => setAuxilioAberto(null)} className="float-right rounded-full bg-slate-100 p-2"><X className="size-5" /></button>
-            <h2 className="pt-4 text-2xl font-black text-[#1e1b4b]">{auxilioAberto}</h2>
+            <h2 className="pt-4 text-2xl font-black text-azul-escuro">{auxilioAberto}</h2>
             <p className="mt-4 leading-relaxed text-slate-600">{descricaoAuxilio[auxilioAberto] ?? "Converse com a escola para confirmar as condições deste auxílio."}</p>
-            <button data-vlibras-acao="pronto" type="button" onClick={() => setAuxilioAberto(null)} className="mt-6 w-full rounded-xl bg-violet-600 py-3 font-bold text-white">Entendi</button>
+            <button data-vlibras-acao="pronto" type="button" onClick={() => setAuxilioAberto(null)} className="mt-6 w-full rounded-xl bg-azul-principal py-3 font-bold text-white transition hover:bg-azul-secundario">Entendi</button>
           </div>
         </div>
       )}
@@ -187,5 +187,5 @@ function BotaoPai({ texto }: { texto: string }) {
 }
 
 function Info({ icon, titulo, valor }: { icon: ReactNode; titulo: string; valor: string }) {
-  return <div data-vlibras-pai="informacao-turno" className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm"><span className="mx-auto block w-fit text-azul-secundario">{icon}</span><small className="mt-2 block text-slate-400">{titulo}</small><strong className="block text-sm text-[#1e1b4b]">{valor}</strong></div>;
+  return <div data-vlibras-pai="informacao-turno" className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm"><span className="mx-auto block w-fit text-azul-secundario">{icon}</span><small className="mt-2 block text-slate-400">{titulo}</small><strong className="block text-sm text-azul-escuro">{valor}</strong></div>;
 }
