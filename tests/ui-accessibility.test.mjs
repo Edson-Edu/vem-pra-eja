@@ -214,6 +214,8 @@ test('cadastro só confirma sucesso depois de salvar a inscrição', () => {
 test('logos institucionais são servidas pelo próprio site', () => {
   const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaAbertura.tsx'), 'utf8');
   assert.match(fonte, /src="\/marca\/vem-pra-eja-logo-2\.png"/);
+  assert.match(fonte, /width=\{1882\}/);
+  assert.match(fonte, /height=\{842\}/);
   assert.match(fonte, /src="\/logos\/logo_prefeitura\.png"/);
   assert.match(fonte, /src="\/logos\/logo_ifc\.png"/);
   assert.match(fonte, /data-eja-logos-institucionais/);

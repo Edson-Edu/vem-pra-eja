@@ -125,8 +125,8 @@ export default function TelaAbertura({ onComplete }: TelaAberturaProps) {
                 <Image
                   src="/marca/vem-pra-eja-logo-2.png"
                   alt="Vem pra EJA"
-                  width={1317}
-                  height={590}
+                  width={1882}
+                  height={842}
                   priority
                   sizes="(max-width: 768px) 88vw, 760px"
                   className="eja-logo-marca h-auto w-full select-none object-contain"
