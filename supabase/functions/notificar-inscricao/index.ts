@@ -1,3 +1,5 @@
+import { LOGO_EMAIL_BASE64 } from "./logo-email.ts";
+
 type Inscricao = {
   id: string;
   escola_id: string;
@@ -40,8 +42,12 @@ type ConteudoEmail = {
   assunto: string;
   texto: string;
   html: string;
+  logoBase64: string;
   messageId: string;
 };
+
+const LOGO_EMAIL_CID = "vem-pra-eja-logo";
+const LOGO_EMAIL_ARQUIVO = "vem-pra-eja-logo-email.png";
 
 function variavelObrigatoria(nome: string) {
   const valor = Deno.env.get(nome)?.trim();
@@ -60,6 +66,12 @@ async function enviarPeloMailpit(email: ConteudoEmail) {
       Subject: email.assunto,
       Text: email.texto,
       HTML: email.html,
+      Attachments: [{
+        Content: email.logoBase64,
+        ContentID: LOGO_EMAIL_CID,
+        ContentType: "image/png",
+        Filename: LOGO_EMAIL_ARQUIVO,
+      }],
     }),
   });
 
@@ -72,8 +84,7 @@ async function enviarPeloMailpit(email: ConteudoEmail) {
 const codificador = new TextEncoder();
 const decodificador = new TextDecoder();
 
-function base64Utf8(valor: string) {
-  const bytes = codificador.encode(valor);
+function base64Bytes(bytes: Uint8Array) {
   const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   let resultado = "";
   for (let indice = 0; indice < bytes.length; indice += 3) {
@@ -87,6 +98,14 @@ function base64Utf8(valor: string) {
     resultado += indice + 2 < bytes.length ? alfabeto[bloco & 63] : "=";
   }
   return resultado;
+}
+
+function base64Utf8(valor: string) {
+  return base64Bytes(codificador.encode(valor));
+}
+
+function quebrarBase64(valor: string) {
+  return valor.match(/.{1,76}/g)?.join("\r\n") ?? valor;
 }
 
 function cabecalhoMime(valor: string) {
@@ -154,7 +173,8 @@ async function comandoSmtp(
 }
 
 function mensagemMime(email: ConteudoEmail, remetente: string, nomeRemetente: string) {
-  const limite = `eja-${crypto.randomUUID()}`;
+  const limiteAlternativo = `eja-alternativo-${crypto.randomUUID()}`;
+  const limiteRelacionado = `eja-relacionado-${crypto.randomUUID()}`;
   const texto = email.texto.replace(/\r?\n/g, "\r\n");
   const html = email.html.replace(/\r?\n/g, "\r\n");
   return [
@@ -165,19 +185,30 @@ function mensagemMime(email: ConteudoEmail, remetente: string, nomeRemetente: st
     `Date: ${new Date().toUTCString()}`,
     `Message-ID: <${email.messageId}>`,
     "MIME-Version: 1.0",
-    `Content-Type: multipart/alternative; boundary="${limite}"`,
+    `Content-Type: multipart/alternative; boundary="${limiteAlternativo}"`,
     "",
-    `--${limite}`,
+    `--${limiteAlternativo}`,
     'Content-Type: text/plain; charset="UTF-8"',
     "Content-Transfer-Encoding: 8bit",
     "",
     texto,
-    `--${limite}`,
+    `--${limiteAlternativo}`,
+    `Content-Type: multipart/related; boundary="${limiteRelacionado}"`,
+    "",
+    `--${limiteRelacionado}`,
     'Content-Type: text/html; charset="UTF-8"',
     "Content-Transfer-Encoding: 8bit",
     "",
     html,
-    `--${limite}--`,
+    `--${limiteRelacionado}`,
+    `Content-Type: image/png; name="${LOGO_EMAIL_ARQUIVO}"`,
+    "Content-Transfer-Encoding: base64",
+    `Content-ID: <${LOGO_EMAIL_CID}>`,
+    `Content-Disposition: inline; filename="${LOGO_EMAIL_ARQUIVO}"`,
+    "",
+    quebrarBase64(email.logoBase64),
+    `--${limiteRelacionado}--`,
+    `--${limiteAlternativo}--`,
     "",
   ].join("\r\n").replace(/^\./gm, "..");
 }
@@ -292,18 +323,18 @@ function linkGoogleMaps(inscricao: Inscricao) {
 
 function linhaHtml(rotulo: string, valor: unknown) {
   return `<tr>
-    <th style="width:38%;padding:12px 0;text-align:left;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px;font-weight:600;vertical-align:top">${escaparHtml(rotulo)}</th>
-    <td style="padding:12px 0;border-bottom:1px solid #e2e8f0;color:#0f172a;font-size:14px;font-weight:700;vertical-align:top">${escaparHtml(valor)}</td>
+    <th style="width:38%;padding:12px 0;text-align:left;border-bottom:1px solid #d6e2f3;color:#5b6b82;font-size:13px;font-weight:600;vertical-align:top">${escaparHtml(rotulo)}</th>
+    <td style="padding:12px 0;border-bottom:1px solid #d6e2f3;color:#1a2433;font-size:14px;font-weight:700;vertical-align:top">${escaparHtml(valor)}</td>
   </tr>`;
 }
 
 function linhaEnderecoHtml(endereco: string, linkMapa: string | null) {
   if (!linkMapa) return linhaHtml("Endereço", endereco);
   return `<tr>
-    <th style="width:38%;padding:12px 0;text-align:left;border-bottom:1px solid #e2e8f0;color:#475569;font-size:13px;font-weight:600;vertical-align:top">Endereço</th>
-    <td style="padding:12px 0;border-bottom:1px solid #e2e8f0;font-size:14px;font-weight:700;vertical-align:top">
-      <a href="${escaparHtml(linkMapa)}" target="_blank" style="color:#0369a1;text-decoration:underline;text-underline-offset:2px">${escaparHtml(endereco)}</a>
-      <div style="margin-top:5px;color:#64748b;font-size:11px;font-weight:600">Abrir no Google Maps ↗</div>
+    <th style="width:38%;padding:12px 0;text-align:left;border-bottom:1px solid #d6e2f3;color:#5b6b82;font-size:13px;font-weight:600;vertical-align:top">Endereço</th>
+    <td style="padding:12px 0;border-bottom:1px solid #d6e2f3;font-size:14px;font-weight:700;vertical-align:top">
+      <a href="${escaparHtml(linkMapa)}" target="_blank" style="color:#1e5bb8;text-decoration:underline;text-underline-offset:2px">${escaparHtml(endereco)}</a>
+      <div style="margin-top:5px;color:#5b6b82;font-size:11px;font-weight:600">Abrir no Google Maps ↗</div>
     </td>
   </tr>`;
 }
@@ -462,58 +493,63 @@ Deno.serve(async (requisicao) => {
       `Pré-inscrição recebida em ${criadoEm}.`,
       "Mensagem automática do Vem Pra EJA.",
     ].join("\n");
+    const logoBase64 = LOGO_EMAIL_BASE64;
     const html = `
-      <div style="margin:0;padding:32px 12px;background:#f0f7fa;font-family:Arial,Helvetica,sans-serif;color:#0f172a">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;margin:0 auto;border:1px solid #cbdde5;border-radius:18px;background:#ffffff;border-collapse:separate;overflow:hidden;box-shadow:0 8px 28px rgba(15,23,42,.08)">
+      <div style="margin:0;padding:32px 12px;background:#f4f8fd;font-family:Arial,Helvetica,sans-serif;color:#1a2433">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:680px;margin:0 auto;border:1px solid #d6e2f3;border-radius:18px;background:#ffffff;border-collapse:separate;overflow:hidden;box-shadow:0 8px 28px rgba(15,47,99,.10)">
           <tr>
-            <td style="padding:28px 32px;background:#075985;color:#ffffff">
-              <div style="display:inline-block;margin-bottom:12px;padding:5px 10px;border:1px solid rgba(255,255,255,.45);border-radius:999px;font-size:11px;font-weight:800;letter-spacing:1.2px">VEM PRA EJA</div>
+            <td align="center" style="padding:24px 32px 20px;background:#ffffff;border-bottom:1px solid #d6e2f3">
+              <img src="cid:${LOGO_EMAIL_CID}" width="230" alt="Vem pra EJA" style="display:block;width:230px;max-width:100%;height:auto;border:0">
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 32px;background:#1e5bb8;color:#ffffff">
               <h1 style="margin:0;font-size:28px;line-height:1.15;color:#ffffff">Nova pré-inscrição!</h1>
             </td>
           </tr>
           <tr>
             <td style="padding:28px 32px 32px">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;border-left:5px solid #0891b2;border-radius:10px;background:#ecfeff">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;border-left:5px solid #ffb400;border-radius:10px;background:#fff1c2">
                 <tr><td style="padding:16px 18px">
-                  <div style="margin-bottom:5px;color:#0e7490;font-size:11px;font-weight:800;letter-spacing:1px">ESCOLA ESCOLHIDA</div>
-                  <div style="color:#083344;font-size:19px;font-weight:800;line-height:1.35">${escaparHtml(escola.nome)}</div>
+                  <div style="margin-bottom:5px;color:#6b4500;font-size:11px;font-weight:800;letter-spacing:1px">ESCOLA ESCOLHIDA</div>
+                  <div style="color:#0f2f63;font-size:19px;font-weight:800;line-height:1.35">${escaparHtml(escola.nome)}</div>
                 </td></tr>
               </table>
 
-              <p style="margin:0 0 26px;color:#334155;font-size:15px;line-height:1.65">Olá, a plataforma &quot;VemPraEJA&quot; recebeu um novo cadastro. Entre em contato com a pessoa interessada para orientar os próximos passos da matrícula.</p>
+              <p style="margin:0 0 26px;color:#1a2433;font-size:15px;line-height:1.65">Olá, a plataforma &quot;VemPraEJA&quot; recebeu um novo cadastro. Entre em contato com a pessoa interessada para orientar os próximos passos da matrícula.</p>
 
-              <h2 style="margin:0 0 4px;color:#075985;font-size:16px">Dados do estudante</h2>
+              <h2 style="margin:0 0 4px;color:#0f2f63;font-size:16px">Dados do estudante</h2>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:26px;border-collapse:collapse">
                 ${linhaHtml("Nome completo", inscricao.nome_completo)}
                 ${linhaHtml("CPF", formatarCpf(inscricao.cpf))}
                 ${linhaHtml("Idade", inscricao.idade ?? "Não informada")}
               </table>
 
-              <h2 style="margin:0 0 10px;color:#075985;font-size:16px">Interesse</h2>
+              <h2 style="margin:0 0 10px;color:#0f2f63;font-size:16px">Interesse</h2>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:26px;border-collapse:separate;border-spacing:0">
                 <tr>
-                  <td width="49%" style="padding:14px 16px;border-radius:10px;background:#e0f2fe;vertical-align:top">
-                    <div style="margin-bottom:5px;color:#0369a1;font-size:11px;font-weight:800;letter-spacing:.7px">NÍVEL</div>
-                    <div style="color:#0c4a6e;font-size:16px;font-weight:800">${escaparHtml(inscricao.nivel_selecionado)}</div>
+                  <td width="49%" style="padding:14px 16px;border-radius:10px;background:#e6effb;vertical-align:top">
+                    <div style="margin-bottom:5px;color:#1e5bb8;font-size:11px;font-weight:800;letter-spacing:.7px">NÍVEL</div>
+                    <div style="color:#0f2f63;font-size:16px;font-weight:800">${escaparHtml(inscricao.nivel_selecionado)}</div>
                   </td>
                   <td width="2%"></td>
-                  <td width="49%" style="padding:14px 16px;border-radius:10px;background:#e0f2fe;vertical-align:top">
-                    <div style="margin-bottom:5px;color:#0369a1;font-size:11px;font-weight:800;letter-spacing:.7px">TURNO</div>
-                    <div style="color:#0c4a6e;font-size:16px;font-weight:800">${escaparHtml(turno)}</div>
+                  <td width="49%" style="padding:14px 16px;border-radius:10px;background:#e6effb;vertical-align:top">
+                    <div style="margin-bottom:5px;color:#1e5bb8;font-size:11px;font-weight:800;letter-spacing:.7px">TURNO</div>
+                    <div style="color:#0f2f63;font-size:16px;font-weight:800">${escaparHtml(turno)}</div>
                   </td>
                 </tr>
               </table>
 
-              <h2 style="margin:0 0 4px;color:#075985;font-size:16px">Contato</h2>
+              <h2 style="margin:0 0 4px;color:#0f2f63;font-size:16px">Contato</h2>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;border-collapse:collapse">
                 ${linhaHtml("Telefone / WhatsApp", telefone)}
                 ${linhaHtml("E-mail", emailAluno)}
                 ${linhaEnderecoHtml(endereco, linkMapa)}
               </table>
 
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-radius:10px;background:#f8fafc">
-                <tr><td style="padding:13px 16px;color:#64748b;font-size:12px;line-height:1.5">
-                  Pré-inscrição recebida em <strong style="color:#334155">${escaparHtml(criadoEm)}</strong>.<br>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-radius:10px;background:#f4f8fd">
+                <tr><td style="padding:13px 16px;color:#5b6b82;font-size:12px;line-height:1.5">
+                  Pré-inscrição recebida em <strong style="color:#0f2f63">${escaparHtml(criadoEm)}</strong>.<br>
                   Mensagem automática do Vem Pra EJA.
                 </td></tr>
               </table>
@@ -528,6 +564,7 @@ Deno.serve(async (requisicao) => {
       assunto,
       texto,
       html,
+      logoBase64,
       messageId,
     });
     emailFoiEnviado = true;

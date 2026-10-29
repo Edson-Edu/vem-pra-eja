@@ -260,3 +260,20 @@ test('a interface usa a paleta institucional da marca', () => {
     .join('\n');
   assert.doesNotMatch(telas, /#1e1b4b|#e5ddff|#0b75e8|#E44335/i);
 });
+
+test('o e-mail institucional incorpora a logo para fundos claros', () => {
+  const raiz = path.resolve(import.meta.dirname, '..');
+  const funcao = fs.readFileSync(path.join(raiz, 'supabase/functions/notificar-inscricao/index.ts'), 'utf8');
+  const logo = path.join(raiz, 'supabase/functions/notificar-inscricao/vem-pra-eja-logo-email.png');
+  const logoIncorporada = fs.readFileSync(path.join(raiz, 'supabase/functions/notificar-inscricao/logo-email.ts'), 'utf8');
+
+  assert.equal(fs.existsSync(logo), true);
+  assert.ok(fs.statSync(logo).size < 30_000, 'a logo do e-mail deve permanecer leve');
+  assert.match(funcao, /import \{ LOGO_EMAIL_BASE64 \} from "\.\/logo-email\.ts"/);
+  assert.ok(logoIncorporada.length > 20_000, 'a logo deve estar incorporada ao pacote da função');
+  assert.match(funcao, /<img src="cid:\$\{LOGO_EMAIL_CID\}"[^>]+alt="Vem pra EJA"/);
+  assert.match(funcao, /Content-ID: <\$\{LOGO_EMAIL_CID\}>/);
+  assert.match(funcao, /ContentID: LOGO_EMAIL_CID/);
+  assert.match(funcao, /background:#1e5bb8/);
+  assert.doesNotMatch(funcao, /vem-pra-eja-logo-2/);
+});
