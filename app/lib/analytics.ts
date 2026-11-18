@@ -1,66 +1,29 @@
 "use client";
 
-type EventoDoSite =
-  | "visitou_pagina"
-  | "escolheu_nivel"
-  | "abriu_escola"
-  | "iniciou_cadastro"
-  | "concluiu_inscricao";
+export type EventoDoSite = "visitou_site" | "selecionou_nivel" | "visualizou_mapa" | "visualizou_escola" | "chegou_contato" | "clicou_whatsapp";
+type Contexto = { escolaId?: string; nivel?: "Ensino Fundamental" | "Ensino Médio"; turno?: string };
+const CHAVE_DEDUPLICACAO = "eja-metricas-sessao";
 
-const CHAVE_VISITANTE = "eja-analytics-visitante";
-const CHAVE_ULTIMA_PAGINA = "eja-analytics-ultima-pagina";
-let visitanteTemporario = "";
-
-function configuracao() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
-  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return url && chave ? { url, chave } : null;
+function chave(evento: EventoDoSite, pagina: string, contexto: Contexto) {
+  return `${evento}|${pagina}|${contexto.escolaId ?? ""}|${contexto.nivel ?? ""}|${contexto.turno ?? ""}`;
 }
 
-function criarUuid() {
-  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
-  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (caractere) =>
-    (Number(caractere) ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(caractere) / 4).toString(16));
-}
-
-function idDoVisitante() {
-  try {
-    const existente = localStorage.getItem(CHAVE_VISITANTE);
-    if (existente) return existente;
-    const novo = criarUuid();
-    localStorage.setItem(CHAVE_VISITANTE, novo);
-    return novo;
-  } catch {
-    if (!visitanteTemporario) visitanteTemporario = criarUuid();
-    return visitanteTemporario;
+export function registrarEventoAnalytics(evento: EventoDoSite, contexto: Contexto = {}, repetir = false) {
+  if (typeof window === "undefined") return;
+  const pagina = window.location.pathname;
+  if (!repetir) {
+    try {
+      const anteriores = new Set(JSON.parse(sessionStorage.getItem(CHAVE_DEDUPLICACAO) ?? "[]") as string[]);
+      const atual = chave(evento, pagina, contexto);
+      if (anteriores.has(atual)) return;
+      anteriores.add(atual);
+      sessionStorage.setItem(CHAVE_DEDUPLICACAO, JSON.stringify([...anteriores].slice(-100)));
+    } catch { /* Métricas não podem impedir a navegação. */ }
   }
+  void fetch("/api/analytics", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ evento, pagina, contexto }), keepalive: true }).catch(() => undefined);
 }
 
-function enviarEvento(evento: EventoDoSite, pagina: string, contexto: Record<string, string> = {}) {
-  if (typeof window === "undefined") return;
-  const config = configuracao();
-  if (!config) return;
-
-  void fetch(`${config.url}/functions/v1/registrar-acesso`, {
-    method: "POST",
-    headers: { apikey: config.chave, "Content-Type": "application/json" },
-    body: JSON.stringify({ evento, pagina, visitanteId: idDoVisitante(), contexto }),
-    keepalive: true,
-  }).catch(() => undefined);
-}
-
-export function registrarVisitaPagina(pagina: string) {
-  const agora = Date.now();
-  try {
-    const anterior = JSON.parse(sessionStorage.getItem(CHAVE_ULTIMA_PAGINA) ?? "null") as { pagina?: string; instante?: number } | null;
-    if (anterior?.pagina === pagina && agora - (anterior.instante ?? 0) < 1500) return;
-    sessionStorage.setItem(CHAVE_ULTIMA_PAGINA, JSON.stringify({ pagina, instante: agora }));
-  } catch { /* A visita ainda é registrada quando o armazenamento está indisponível. */ }
-  enviarEvento("visitou_pagina", pagina);
-}
-
-/** Registra somente ações agregadas, sem nome, CPF, telefone, endereço ou e-mail. */
-export function registrarEventoAnalytics(evento: Exclude<EventoDoSite, "visitou_pagina">, contexto: Record<string, string> = {}) {
-  if (typeof window === "undefined") return;
-  enviarEvento(evento, window.location.pathname, contexto);
+export function registrarVisitaPagina(_pagina: string) {
+  void _pagina;
+  registrarEventoAnalytics("visitou_site");
 }

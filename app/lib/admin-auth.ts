@@ -1,60 +1,48 @@
-const CHAVE_SESSAO = "eja-admin-access-token";
+let csrfToken = "";
 
-type RespostaLogin = {
-  access_token?: string;
-  user?: { email?: string | null };
-};
+type RespostaSessao = { autenticado?: boolean; csrfToken?: string; erro?: string };
 
-function configuracao() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !chave) {
-    throw new Error("A configuração do Supabase não foi encontrada.");
-  }
-
-  return { url: url.replace(/\/$/, ""), chave };
+async function lerResposta(resposta: Response) {
+  const corpo = await resposta.json().catch(() => ({})) as RespostaSessao;
+  if (!resposta.ok) throw new Error(corpo.erro || "Não foi possível concluir a operação.");
+  if (corpo.csrfToken) csrfToken = corpo.csrfToken;
+  return corpo;
 }
 
 export async function entrarComoAdministrador(email: string, senha: string) {
-  const { url, chave } = configuracao();
-  const resposta = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+  const resposta = await fetch("/api/admin/login", {
     method: "POST",
-    headers: { apikey: chave, "Content-Type": "application/json" },
-    body: JSON.stringify({ email: email.trim().toLowerCase(), password: senha }),
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, senha }),
   });
-
-  if (!resposta.ok) return false;
-
-  const dados = await resposta.json() as RespostaLogin;
-  if (!dados.access_token || !dados.user?.email) return false;
-
-  sessionStorage.setItem(CHAVE_SESSAO, dados.access_token);
+  if (resposta.status === 401) return false;
+  await lerResposta(resposta);
   return true;
 }
 
 export async function administradorEstaLogado() {
-  const token = sessionStorage.getItem(CHAVE_SESSAO);
-  if (!token) return false;
+  const resposta = await fetch("/api/admin/session", { credentials: "same-origin", cache: "no-store" });
+  if (!resposta.ok) { csrfToken = ""; return false; }
+  const corpo = await lerResposta(resposta);
+  return corpo.autenticado === true;
+}
 
-  try {
-    const { url, chave } = configuracao();
-    const resposta = await fetch(`${url}/auth/v1/user`, {
-      headers: { apikey: chave, Authorization: `Bearer ${token}` },
-    });
-    if (!resposta.ok) return false;
+export async function sairDaAreaAdministrativa() {
+  if (csrfToken) await fetch("/api/admin/logout", { method: "POST", credentials: "same-origin", headers: { "X-CSRF-Token": csrfToken } }).catch(() => undefined);
+  csrfToken = "";
+}
 
-    const usuario = await resposta.json() as { email?: string | null };
-    return Boolean(usuario.email);
-  } catch {
-    return false;
+export async function requisicaoAdministrativa(caminho: string, opcoes: RequestInit = {}) {
+  if (!csrfToken) {
+    const autenticado = await administradorEstaLogado();
+    if (!autenticado) throw new Error("Sua sessão administrativa expirou. Entre novamente.");
   }
-}
-
-export function sairDaAreaAdministrativa() {
-  sessionStorage.removeItem(CHAVE_SESSAO);
-}
-
-export function obterTokenAdministrador() {
-  return sessionStorage.getItem(CHAVE_SESSAO);
+  const headers = new Headers(opcoes.headers);
+  if (opcoes.method && opcoes.method !== "GET") headers.set("X-CSRF-Token", csrfToken);
+  const resposta = await fetch(caminho, { ...opcoes, headers, credentials: "same-origin", cache: "no-store" });
+  const corpo = await resposta.json().catch(() => ({})) as Record<string, unknown>;
+  if (resposta.status === 401) csrfToken = "";
+  if (!resposta.ok) throw new Error(typeof corpo.erro === "string" ? corpo.erro : "Não foi possível concluir a operação.");
+  return corpo;
 }

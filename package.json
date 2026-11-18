@@ -1,30 +1,38 @@
 {
-  "name": "eja-web",
+  "name": "vem-pra-eja",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test tests/ui-accessibility.test.mjs tests/nivel-disponibilidade.test.mjs",
+    "test": "node --test tests/ui-accessibility.test.mjs tests/nivel-disponibilidade.test.mjs tests/whatsapp.test.mjs",
     "test:layout": "node tests/tablet-layout.cjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "admin": "node scripts/admin.mjs",
     "check": "npm run lint && npm test && npm run build"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "framer-motion": "^12.43.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.27.0",
-    "next": "16.4.1",
+    "next": "16.4.6",
+    "pg": "^8.23.1",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.1",
+    "eslint-config-next": "16.4.6",
     "supabase": "^2.118.0",
     "tailwindcss": "^4",
     "typescript": "^5"

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TelaDetalhes from "../components/TelaDetalhes";
 import { type Escola } from "../lib/escolas";
-import { registrarTurno, useFluxoAutorizado } from "../lib/fluxo-navegacao";
+import { useFluxoAutorizado } from "../lib/fluxo-navegacao";
 import { registrarEventoAnalytics } from "../lib/analytics";
 import { buscarEscolas } from "../lib/supabase-client";
 
@@ -54,8 +54,8 @@ function Conteudo() {
       })
       .catch(() => {
         if (!ativo) return;
-        // Se a rede falhar no celular, o cartão escolhido no mapa continua
-        // sendo suficiente para a pessoa consultar e seguir para o cadastro.
+        // Se a rede falhar no celular, o cartão escolhido no mapa ainda permite
+        // consultar os dados institucionais que já estavam carregados.
         setEscola((atual) => atual ?? escolaDaLista);
         
         setCarregando(false);
@@ -78,7 +78,7 @@ function Conteudo() {
     );
   }
 
-  return <TelaDetalhes escola={escola} nivel={nivel} onVoltar={() => router.back()} onInscrever={(turno) => { registrarTurno(turno.id); registrarEventoAnalytics("iniciou_cadastro", { nivel, escola_id: escola.id, turno: turno.turno }); router.push(`/cadastro?escola=${escola.id}&turno=${turno.id}&nivel=${encodeURIComponent(nivel)}`); }} />;
+  return <TelaDetalhes escola={escola} nivel={nivel} onVoltar={() => router.back()} onContato={(turno) => registrarEventoAnalytics("clicou_whatsapp", { nivel, escolaId: escola.id, turno: turno.turno }, true)} />;
 }
 
 function Carregando() {

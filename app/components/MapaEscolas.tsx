@@ -30,27 +30,9 @@ function escaparHtml(texto: string) {
 
 function carregarLeaflet() {
   if (leafletEmCarregamento) return leafletEmCarregamento;
-  const estilos = new Promise<void>((resolve, reject) => {
-    const existente = document.querySelector<HTMLLinkElement>("link[data-eja-leaflet]");
-    if (existente?.sheet) return resolve();
-    const css = existente ?? document.createElement("link");
-    css.rel = "stylesheet";
-    css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-    css.dataset.ejaLeaflet = "pronto";
-    css.addEventListener("load", () => resolve(), { once: true });
-    css.addEventListener("error", () => { css.remove(); reject(new Error("Não foi possível carregar o estilo do mapa.")); }, { once: true });
-    if (!existente) document.head.appendChild(css);
-  });
-  const codigo = new Promise<void>((resolve, reject) => {
-    if (window.L) return resolve();
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    script.onload = () => { if (window.L) resolve(); else reject(new Error("Não foi possível inicializar o mapa.")); };
-    script.onerror = () => { leafletEmCarregamento = null; reject(new Error("Não foi possível carregar o mapa.")); };
-    document.head.appendChild(script);
-  });
-  // Sem o CSS, os ícones podem ser medidos/posicionados como elementos comuns.
-  leafletEmCarregamento = Promise.all([estilos, codigo]).then(() => undefined).catch((erro) => {
+  leafletEmCarregamento = import("leaflet").then((modulo) => {
+    window.L = modulo.default ?? modulo;
+  }).catch((erro) => {
     leafletEmCarregamento = null;
     throw erro;
   });
@@ -197,12 +179,12 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
         keyboard: true,
       }).setView(centroInicial, 12);
       L.control.zoom({ position: "bottomright" }).addTo(mapa);
-      const camadaBase = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      const camadaBase = L.tileLayer(process.env.NEXT_PUBLIC_MAP_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
-        attribution: "© OpenStreetMap",
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
         // Mantém uma margem generosa dos tiles atuais durante zoom/pan para
         // não expor o fundo vazio enquanto a nova rua está sendo carregada.
-        keepBuffer: 8,
+        keepBuffer: 2,
         updateWhenIdle: false,
         updateWhenZooming: false,
       }).addTo(mapa);

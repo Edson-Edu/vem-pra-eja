@@ -25,7 +25,7 @@ export default function PaginaNivel() {
       onVoltar={() => router.replace("/")}
       onEscolher={(nivel) => {
         registrarNivel(nivel);
-        registrarEventoAnalytics("escolheu_nivel", { nivel });
+        registrarEventoAnalytics("selecionou_nivel", { nivel });
         router.push(`/escolas?nivel=${encodeURIComponent(nivel)}`);
       }}
     />

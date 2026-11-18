@@ -1,65 +1,13 @@
-import { obterTokenAdministrador } from "./admin-auth";
+import { requisicaoAdministrativa } from "./admin-auth";
 
+export type GrupoAnalytics = Array<{ nome: string; total: number }>;
 export type EstatisticasAnalytics = {
-  resumo: {
-    visitas: number;
-    escolheuNivel: number;
-    abriuEscola: number;
-    iniciouCadastro: number;
-    concluiuInscricao: number;
-  };
-  acessos: {
-    dispositivos: Array<{ nome: string; total: number }>;
-    paginas: Array<{ nome: string; total: number }>;
-    horarios: Array<{ nome: string; total: number }>;
-  };
-  emails: {
-    naFila: number;
-    enviados: number;
-    comFalha: number;
-    falhas: Array<{
-      id: string;
-      escola: string;
-      destinatario: string;
-      erro: string;
-      data: string;
-    }>;
-  };
+  resumo: { visitas: number; escolheuNivel: number; abriuMapa: number; abriuEscola: number; chegouContato: number; cliquesWhatsapp: number };
+  acessos: { dispositivos: GrupoAnalytics; paginas: GrupoAnalytics; horarios: GrupoAnalytics };
+  encaminhamentos: { escolas: GrupoAnalytics; niveis: GrupoAnalytics; turnos: GrupoAnalytics };
+  serie: Array<{ dia: string; evento: string; total: number }>;
 };
 
-export async function corrigirEReenviarEmail(notificacaoId: string, novoEmail: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
-  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const token = obterTokenAdministrador();
-  if (!url || !chave || !token) throw new Error("Sua sessão administrativa expirou. Entre novamente.");
-
-  const resposta = await fetch(`${url}/functions/v1/reenviar-email`, {
-    method: "POST",
-    headers: { apikey: chave, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ notificacaoId, novoEmail }),
-  });
-  const corpo = await resposta.json().catch(() => ({})) as { erro?: string };
-  if (!resposta.ok) throw new Error(corpo.erro || "Não foi possível reenviar o e-mail.");
-}
-
 export async function carregarEstatisticasAnalytics(periodo: { inicio: string; fim: string }): Promise<EstatisticasAnalytics> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
-  const chave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const token = obterTokenAdministrador();
-  if (!url || !chave || !token) throw new Error("Sua sessão administrativa expirou. Entre novamente.");
-
-  const resposta = await fetch(`${url}/functions/v1/analytics-admin`, {
-    method: "POST",
-    headers: { apikey: chave, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify(periodo),
-  });
-  const texto = await resposta.text();
-  let corpo: EstatisticasAnalytics | { erro?: string } = {};
-  try { corpo = texto ? JSON.parse(texto) as EstatisticasAnalytics | { erro?: string } : {}; } catch { /* erro abaixo */ }
-  if (!resposta.ok) {
-    const erro = "erro" in corpo ? corpo.erro : "";
-    throw new Error(erro || "Não foi possível consultar os dados de acesso.");
-  }
-  if (!("resumo" in corpo) || !("acessos" in corpo)) throw new Error("O serviço de estatísticas retornou uma resposta inesperada.");
-  return corpo;
+  return await requisicaoAdministrativa("/api/admin/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(periodo) }) as unknown as EstatisticasAnalytics;
 }

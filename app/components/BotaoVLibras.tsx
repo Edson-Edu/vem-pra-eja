@@ -341,14 +341,6 @@ function agruparBlocosDaTelaDetalhes() {
   });
 }
 
-function agruparBlocosDaTelaSucesso() {
-  if (rotaAtual() !== "/sucesso") return;
-  document.querySelectorAll<HTMLElement>("[data-vlibras-pai='sucesso-resumo'], [data-vlibras-pai='sucesso-passo']").forEach((bloco) => {
-    const conteudo = bloco.dataset.vlibrasTexto ?? textoVisivelDoBloco(bloco);
-    if (conteudo) criarBlocoDeTraducao(bloco, conteudo);
-  });
-}
-
 function agruparBlocosDaPagina() {
   agruparIndicadoresDeProgresso();
   document.querySelectorAll<HTMLElement>("[data-eja-legenda-mapa]").forEach((bloco) => {
@@ -358,7 +350,6 @@ function agruparBlocosDaPagina() {
   agruparBlocosDaTelaNivel();
   agruparBlocosDaTelaDeMapa();
   agruparBlocosDaTelaDetalhes();
-  agruparBlocosDaTelaSucesso();
 }
 
 /** Acrescenta a identidade do projeto sem remover os comandos ou o crédito do VLibras. */
@@ -624,7 +615,7 @@ export default function BotaoVLibras() {
           widget.style.minWidth = `${largura}px`;
           widget.style.height = `${altura}px`;
           widget.style.left = `${compacto ? Math.max(12, window.innerWidth - largura - 12) : 16}px`;
-          // Na tela de detalhes, o rodapé de inscrição é fixo. O intérprete
+          // Na tela de detalhes, o rodapé de contato é fixo. O intérprete
           // sobe um pouco mais para não competir com esse botão.
           const margemInferior = celular ? (rota === "/detalhes" ? 132 : 84) : 12;
           widget.style.top = `${compacto ? Math.max(12, window.innerHeight - altura - margemInferior) : Math.max(12, Math.round((window.innerHeight - altura) / 2))}px`;

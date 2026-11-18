@@ -28,14 +28,14 @@ function Conteudo() {
 
     let ativo = true;
     buscarEscolas(nivel)
-      .then((dados) => { if (ativo) setEscolas(dados); })
+      .then((dados) => { if (ativo) { setEscolas(dados); registrarEventoAnalytics("visualizou_mapa", { nivel }); } })
       .catch(() => { if (ativo) setEscolas([]); });
     return () => { ativo = false; };
   }, [fluxoAutorizado, nivel, router]);
 
   if (!nivel || !fluxoAutorizado) return <Carregando texto="Voltando ao início..." />;
   if (escolas === null) return <Carregando texto="Carregando escolas no mapa..." />;
-  return <TelaEscolas nivel={nivel} escolas={escolas} onVoltar={() => router.back()} onDetalhes={(id) => { registrarEscola(id); registrarEventoAnalytics("abriu_escola", { nivel, escola_id: id }); router.push(`/detalhes?escola=${id}&nivel=${encodeURIComponent(nivel)}`); }} />;
+  return <TelaEscolas nivel={nivel} escolas={escolas} onVoltar={() => router.back()} onDetalhes={(id) => { registrarEscola(id); registrarEventoAnalytics("visualizou_escola", { nivel, escolaId: id }); router.push(`/detalhes?escola=${id}&nivel=${encodeURIComponent(nivel)}`); }} />;
 }
 
 function Carregando({ texto }: { texto: string }) { return <main className="grid min-h-dvh place-items-center bg-fundo-claro"><div className="text-center"><span className="mx-auto block size-10 animate-spin rounded-full border-4 border-azul-foco border-t-azul-acao" /><p className="mt-4 font-bold text-azul-principal">{texto}</p></div></main>; }

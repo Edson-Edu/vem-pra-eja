@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-vempraeja}
+      POSTGRES_USER: ${MIGRATION_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${MIGRATION_DB_PASSWORD:?configure MIGRATION_DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [backend]
+
+  migrate:
+    build:
+      context: .
+      target: tools
+    restart: "no"
+    environment:
+      MIGRATION_DB_HOST: db
+      MIGRATION_DB_PORT: 5432
+      MIGRATION_DB_NAME: ${DB_NAME:-vempraeja}
+      MIGRATION_DB_USER: ${MIGRATION_DB_USER:-postgres}
+      MIGRATION_DB_PASSWORD: ${MIGRATION_DB_PASSWORD:?configure MIGRATION_DB_PASSWORD}
+      APP_DB_USER: ${APP_DB_USER:-vempraeja_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?configure APP_DB_PASSWORD}
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [backend]
+
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        NEXT_PUBLIC_MAP_TILE_URL: ${NEXT_PUBLIC_MAP_TILE_URL:-}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-vempraeja}
+      DB_USER: ${APP_DB_USER:-vempraeja_app}
+      DB_PASSWORD: ${APP_DB_PASSWORD:?configure APP_DB_PASSWORD}
+      APP_ORIGIN: ${APP_ORIGIN:?configure APP_ORIGIN}
+      TRUST_PROXY: ${TRUST_PROXY:-true}
+      RATE_LIMIT_SECRET: ${RATE_LIMIT_SECRET:?configure RATE_LIMIT_SECRET}
+      LOGIN_RATE_LIMIT_SECRET: ${LOGIN_RATE_LIMIT_SECRET:?configure LOGIN_RATE_LIMIT_SECRET}
+      AZURE_SPEECH_KEY: ${AZURE_SPEECH_KEY:-}
+      AZURE_SPEECH_REGION: ${AZURE_SPEECH_REGION:-}
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    depends_on:
+      db: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [backend, edge]
+
+networks:
+  backend:
+    internal: true
+  edge:
+
+volumes:
+  postgres_data:

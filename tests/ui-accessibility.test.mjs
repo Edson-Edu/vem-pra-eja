@@ -65,22 +65,19 @@ test('VLibras encontra os itens pelo novo titulo e preserva o agrupamento', () =
 
 test('etapas visuais, leitor de tela e VLibras recebem os mesmos nomes', () => {
   const Progresso = carregar('app/components/IndicadorProgresso.tsx').default;
-  for (const [etapa, nome] of [[1, 'Nível'], [2, 'Escola'], [3, 'Turno'], [4, 'Cadastro']]) {
+  for (const [etapa, nome] of [[1, 'Nível'], [2, 'Escola'], [3, 'Contato']]) {
     const html = renderToStaticMarkup(React.createElement(Progresso, { etapa }));
-    assert.ok(html.includes(`${etapa} de 4 · ${nome}`));
-    assert.ok(html.includes(`aria-label="Etapa ${etapa} de 4: ${nome}"`));
-    assert.ok(html.includes(`data-vlibras-texto="Etapa ${etapa} de 4: ${nome}"`));
+    assert.ok(html.includes(`${etapa} de 3 · ${nome}`));
+    assert.ok(html.includes(`aria-label="Etapa ${etapa} de 3: ${nome}"`));
+    assert.ok(html.includes(`data-vlibras-texto="Etapa ${etapa} de 3: ${nome}"`));
   }
-  const concluido = renderToStaticMarkup(React.createElement(Progresso, { etapa: 4, concluido: true }));
-  assert.ok(concluido.includes('Concluído'));
-  assert.ok(concluido.includes('Cadastro concluído. Etapa 4 de 4.'));
 });
 
-test('nova inscrição limpa o fluxo anterior sem apagar preferências de acessibilidade', () => {
+test('novo fluxo limpa a escolha anterior sem apagar preferências de acessibilidade', () => {
   const dados = new Map([
     ['eja-fluxo-iniciado', 'true'], ['eja-fluxo-nivel', 'anterior'],
     ['eja-fluxo-escola', 'anterior'], ['eja-fluxo-turno', 'anterior'],
-    ['eja-escola-selecionada', 'anterior'], ['eja-inscricao-concluida', 'true'],
+    ['eja-escola-selecionada', 'anterior'],
     ['eja-audio-ativo', 'true'], ['eja-vlibras-ativo', 'true'],
   ]);
   const sessionStorage = { getItem: key => dados.get(key) ?? null, setItem: (key, value) => dados.set(key, value), removeItem: key => dados.delete(key) };
@@ -168,7 +165,7 @@ test('menu fica fora da abertura e permanece nas etapas do fluxo', () => {
       : nome === './MenuAcessibilidade' ? { default: () => React.createElement('button', null, 'Acessibilidade') }
       : nome.startsWith('./Botao') ? { default: () => null } : require(nome),
   }).default;
-  for (const rota of ['/', '/nivel', '/escolas', '/detalhes', '/cadastro', '/sucesso', '/admin']) {
+  for (const rota of ['/', '/nivel', '/escolas', '/detalhes', '/admin']) {
     pathname = rota;
     const html = renderToStaticMarkup(React.createElement(Controles));
     assert.equal(html.includes('Acessibilidade'), rota !== '/' && rota !== '/admin', rota);
@@ -186,29 +183,14 @@ test('abreviação ter vira terça-feira somente em dias de aula', () => {
   assert.equal(voz.diasDeAulaParaAudio('Seg - Ter'), 'segunda-feira até terça-feira');
 });
 
-test('VLibras pode interagir com as abas do cadastro', () => {
-  const { Secao } = carregar('app/components/TelaCadastro.tsx', {
-    require: nome => nome.startsWith('.') ? { default: () => null, useAudioDescricao: () => ({}) } : require(nome),
-  }, ['Secao']);
-  const html = renderToStaticMarkup(React.createElement(Secao, {
-    aberta: false, onAlternar() {}, icone: null, titulo: 'ENDEREÇO (opcional)',
-  }, React.createElement('span', null, 'CEP')));
-  assert.ok(html.includes('data-vlibras-acao="pronto"'));
-  assert.ok(html.includes('aria-expanded="false"'));
-  assert.ok(html.includes('ENDEREÇO (opcional)'));
-});
-
-test('conclusão não coloca dados pessoais ou escolares na URL', () => {
-  const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/cadastro/page.tsx'), 'utf8');
-  assert.match(fonte, /router\.push\("\/sucesso"\)/);
-  assert.doesNotMatch(fonte, /\/sucesso\?(?:nome|escola|turno)=/);
-});
-
-test('cadastro só confirma sucesso depois de salvar a inscrição', () => {
-  const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaCadastro.tsx'), 'utf8');
-  assert.doesNotMatch(fonte, /Pular cadastro/);
-  assert.equal([...fonte.matchAll(/onSucesso\(/g)].length, 1);
-  assert.ok(fonte.indexOf('await enviarInscricao') < fonte.indexOf('onSucesso(nome)'));
+test('fluxo público termina no WhatsApp sem formulário de dados pessoais', () => {
+  const raiz = path.resolve(import.meta.dirname, '..');
+  assert.equal(fs.existsSync(path.join(raiz, 'app/cadastro/page.tsx')), false);
+  assert.equal(fs.existsSync(path.join(raiz, 'app/components/TelaCadastro.tsx')), false);
+  const detalhes = fs.readFileSync(path.join(raiz, 'app/components/TelaDetalhes.tsx'), 'utf8');
+  assert.match(detalhes, /Falar com a escola pelo WhatsApp/);
+  assert.match(detalhes, /rel="noopener noreferrer"/);
+  assert.doesNotMatch(detalhes, /CPF|nome_completo|enviarInscricao/);
 });
 
 test('logos institucionais são servidas pelo próprio site', () => {
@@ -261,19 +243,10 @@ test('a interface usa a paleta institucional da marca', () => {
   assert.doesNotMatch(telas, /#1e1b4b|#e5ddff|#0b75e8|#E44335/i);
 });
 
-test('o e-mail institucional incorpora a logo para fundos claros', () => {
+test('a aplicação nova não importa funções de inscrição ou e-mail do legado', () => {
   const raiz = path.resolve(import.meta.dirname, '..');
-  const funcao = fs.readFileSync(path.join(raiz, 'supabase/functions/notificar-inscricao/index.ts'), 'utf8');
-  const logo = path.join(raiz, 'supabase/functions/notificar-inscricao/vem-pra-eja-logo-email.png');
-  const logoIncorporada = fs.readFileSync(path.join(raiz, 'supabase/functions/notificar-inscricao/logo-email.ts'), 'utf8');
-
-  assert.equal(fs.existsSync(logo), true);
-  assert.ok(fs.statSync(logo).size < 30_000, 'a logo do e-mail deve permanecer leve');
-  assert.match(funcao, /import \{ LOGO_EMAIL_BASE64 \} from "\.\/logo-email\.ts"/);
-  assert.ok(logoIncorporada.length > 20_000, 'a logo deve estar incorporada ao pacote da função');
-  assert.match(funcao, /<img src="cid:\$\{LOGO_EMAIL_CID\}"[^>]+alt="Vem pra EJA"/);
-  assert.match(funcao, /Content-ID: <\$\{LOGO_EMAIL_CID\}>/);
-  assert.match(funcao, /ContentID: LOGO_EMAIL_CID/);
-  assert.match(funcao, /background:#1e5bb8/);
-  assert.doesNotMatch(funcao, /vem-pra-eja-logo-2/);
+  const arquivos = fs.readdirSync(path.join(raiz, 'app'), { recursive: true })
+    .filter(nome => /\.(?:ts|tsx)$/.test(nome))
+    .map(nome => fs.readFileSync(path.join(raiz, 'app', nome), 'utf8')).join('\n');
+  assert.doesNotMatch(arquivos, /notificar-inscricao|reenviar-email|verificar-retornos-email|enviarInscricao/);
 });

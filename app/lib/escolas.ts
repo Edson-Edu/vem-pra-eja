@@ -20,6 +20,9 @@ export type Escola = {
   imagens?: string[];
   niveis: Turno["nivel"][];
   turnos: Turno[];
+  whatsapp: string | null;
+  telefoneContato: string | null;
+  emailContato: string | null;
 };
 
 // Dados usados enquanto o Supabase não é ligado ao projeto web.
@@ -34,6 +37,7 @@ export const escolas: Escola[] = [
     longitude: -48.6508,
     imagem: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=1200&auto=format&fit=crop",
     niveis: ["Ensino Fundamental", "Ensino Médio"],
+    whatsapp: "5547984400475", telefoneContato: "5547984400475", emailContato: null,
     turnos: [
       { id: "ceja-noite", turno: "Noturno", horario: "19:00 - 22:30", diasAula: "Segunda a quinta", descricao: "Aulas presenciais para jovens e adultos.", auxilios: ["Transporte", "Alimentação"], nivel: "Ensino Fundamental" },
       { id: "ceja-medio", turno: "Noturno", horario: "19:00 - 22:30", diasAula: "Segunda a quinta", descricao: "Conclusão do Ensino Médio na modalidade EJA.", auxilios: ["Transporte", "Alimentação"], nivel: "Ensino Médio" },
@@ -49,6 +53,7 @@ export const escolas: Escola[] = [
     longitude: -48.6475,
     imagem: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=1200&auto=format&fit=crop",
     niveis: ["Ensino Fundamental"],
+    whatsapp: "5547984400475", telefoneContato: "5547984400475", emailContato: null,
     turnos: [
       { id: "artur-noite", turno: "Noturno", horario: "18:30 - 22:00", diasAula: "Segunda a quinta", descricao: "Turma de Ensino Fundamental para EJA.", auxilios: ["Alimentação"], nivel: "Ensino Fundamental" },
     ],
@@ -63,6 +68,7 @@ export const escolas: Escola[] = [
     longitude: -48.6365,
     imagem: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop",
     niveis: ["Ensino Fundamental"],
+    whatsapp: "5547984400475", telefoneContato: "5547984400475", emailContato: null,
     turnos: [
       { id: "ivone-noite", turno: "Noturno", horario: "19:00 - 22:20", diasAula: "Segunda a quinta", descricao: "Aulas para retomada dos estudos.", auxilios: ["Transporte", "Alimentação"], nivel: "Ensino Fundamental" },
     ],

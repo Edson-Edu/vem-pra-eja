@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
-import { LockKeyhole, UserRound } from "lucide-react";
+import { LockKeyhole, LogOut, UserRound } from "lucide-react";
 import { administradorEstaLogado, entrarComoAdministrador, sairDaAreaAdministrativa } from "../lib/admin-auth";
 import PainelAdministrativo from "./PainelAdministrativo";
 
@@ -18,12 +18,6 @@ export default function PaginaAdmin() {
     administradorEstaLogado()
       .then(setAutenticado)
       .finally(() => setVerificando(false));
-  }, []);
-
-  useEffect(() => {
-    const encerrarSessao = () => sairDaAreaAdministrativa();
-    window.addEventListener("pagehide", encerrarSessao);
-    return () => window.removeEventListener("pagehide", encerrarSessao);
   }, []);
 
   async function entrar(evento: FormEvent<HTMLFormElement>) {
@@ -51,7 +45,7 @@ export default function PaginaAdmin() {
   }
 
   if (autenticado) {
-    return <PainelAdministrativo />;
+    return <div><button type="button" onClick={() => { void sairDaAreaAdministrativa().finally(() => setAutenticado(false)); }} className="fixed right-8 top-7 z-[1300] inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-black text-azul-principal shadow-md hover:bg-azul-superficie"><LogOut className="size-4" />Sair</button><PainelAdministrativo /></div>;
   }
 
   return (

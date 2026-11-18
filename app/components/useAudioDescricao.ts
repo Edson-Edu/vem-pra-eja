@@ -270,8 +270,7 @@ function tocarComSinteseDoNavegador(texto: string, versao: number) {
 
 async function tocar(texto: string, versao: number) {
   if (versao !== versaoDaFila || !estaAtiva()) return;
-  const endpoint = process.env.NEXT_PUBLIC_AZURE_VOICE_FUNCTION_URL || (process.env.NODE_ENV === "development" ? "/api/voz" : "");
-  if (!endpoint) { await tocarComSinteseDoNavegador(texto, versao); return; }
+  const endpoint = "/api/voz";
   // text/plain evita a pré-validação CORS de navegadores móveis. O corpo segue
   // sendo JSON e a Function o interpreta normalmente.
   try {

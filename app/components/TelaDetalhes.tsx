@@ -7,8 +7,11 @@ import {
   ChevronRight,
   Clock3,
   GraduationCap,
+  Mail,
   MapPin,
+  MessageCircle,
   Moon,
+  Phone,
   Sun,
   Sunset,
   X,
@@ -20,12 +23,14 @@ import type { Escola, Turno } from "../lib/escolas";
 import { distanciaEmMetros, formatarDistancia, useLocalizacaoUsuario } from "../lib/localizacao";
 import NomeEscolaFluido from "./NomeEscolaFluido";
 import { diasDeAulaParaAudio, textoParaAudio, useAudioDescricao } from "./useAudioDescricao";
+import { formatarTelefoneBrasileiro, linkDoWhatsApp } from "../lib/whatsapp";
+import { registrarEventoAnalytics } from "../lib/analytics";
 
 type Props = {
   escola: Escola;
   nivel: Turno["nivel"];
   onVoltar: () => void;
-  onInscrever: (turno: Turno) => void;
+  onContato: (turno: Turno) => void;
 };
 
 const iconeTurno = (turno: string) =>
@@ -49,13 +54,13 @@ const descricaoAuxilio: Record<string, string> = {
 // códigos técnicos 1S_ESCOLHER_2S, 1S_AVISAR_2S ou sinais de pontuação.
 const textoCejaBalnearioCamboriuParaVLibras = "Aqui você terminar Ensino Médio tempo um ano e seis meses Você escolher estudar normal ou estudar curso profissionalizante Aviso importante se você não ter diploma Ensino Fundamental escola dar prova para você começar direto Ensino Médio Escola também ter turmas em cidade perto";
 
-export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: Props) {
+export default function TelaDetalhes({ escola, nivel, onVoltar, onContato }: Props) {
   const [selecionado, setSelecionado] = useState<Turno | null>(null);
   const [auxilioAberto, setAuxilioAberto] = useState<string | null>(null);
   const { ativo, falarAgora, interromper } = useAudioDescricao();
   const { localizacao } = useLocalizacaoUsuario();
   const turnos = escola.turnos.filter((turno) => turno.nivel === nivel);
-  const leituraInicial = `Etapa 3 de 4: Turno. ${textoParaAudio(escola.nome)}, no bairro ${escola.bairro}, em ${escola.cidade}. Selecione um turno para conhecer horários, dias de aula, como funciona e auxílios.`;
+  const leituraInicial = `Etapa 3 de 3: Contato. ${textoParaAudio(escola.nome)}, no bairro ${escola.bairro}, em ${escola.cidade}. Selecione um turno para conhecer horários, dias de aula, como funciona, auxílios e falar diretamente com a escola.`;
   const textoDistancia = localizacao
     ? formatarDistancia(distanciaEmMetros(localizacao, escola))
     : "Confira no mapa";
@@ -68,6 +73,11 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
   };
 
   const resumo = selecionado ? pacoteDoTurno(selecionado) : leituraInicial;
+  const linkWhatsapp = selecionado ? linkDoWhatsApp(escola.whatsapp, escola.nome, nivel, selecionado.turno) : null;
+
+  useEffect(() => {
+    registrarEventoAnalytics("chegou_contato", { escolaId: escola.id, nivel });
+  }, [escola.id, nivel]);
 
   useEffect(() => {
     const espera = window.setTimeout(() => void falarAgora(leituraInicial), 500);
@@ -162,9 +172,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onInscrever }: P
 
       {selecionado && (
         <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-fundo-claro px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_22px_rgb(15_23_42/0.10)]">
-          <button data-vlibras-acao="pronto" type="button" onClick={() => { interromper(); onInscrever(selecionado); }} className="mx-auto block w-full max-w-3xl rounded-2xl bg-azul-acao py-4 font-black text-white shadow-lg">
-            Quero me inscrever ({selecionado.turno})
-          </button>
+          {linkWhatsapp ? <a data-vlibras-acao="pronto" href={linkWhatsapp} target="_blank" rel="noopener noreferrer" onClick={() => { interromper(); onContato(selecionado); }} className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-2xl bg-[#168a45] py-4 font-black text-white shadow-lg transition hover:bg-[#11753a] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-azul-acao"><MessageCircle className="size-5" aria-hidden="true" />Falar com a escola pelo WhatsApp ({selecionado.turno})</a> : <div className="mx-auto max-w-3xl rounded-2xl border border-amber-300 bg-amber-50 p-3 text-center"><p className="text-sm font-bold text-amber-900">Esta escola ainda não possui WhatsApp válido cadastrado.</p><div className="mt-2 flex flex-wrap justify-center gap-2">{escola.telefoneContato && <a href={`tel:+${escola.telefoneContato.replace(/\D/g, "")}`} className="inline-flex items-center gap-2 rounded-xl bg-azul-principal px-4 py-2 text-sm font-black text-white"><Phone className="size-4" />Ligar para {formatarTelefoneBrasileiro(escola.telefoneContato)}</a>}{escola.emailContato && <a href={`mailto:${escola.emailContato}`} className="inline-flex items-center gap-2 rounded-xl bg-azul-principal px-4 py-2 text-sm font-black text-white"><Mail className="size-4" />Enviar e-mail</a>}</div></div>}
         </div>
       )}
 

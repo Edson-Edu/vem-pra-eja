@@ -1,268 +1,37 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, ClipboardEdit, Download, Eye, FileText, ListChecks, Mail, MailWarning, Play, School } from "lucide-react";
-import { carregarEstatisticasAnalytics, corrigirEReenviarEmail, type EstatisticasAnalytics } from "../lib/analytics-admin";
-import { carregarInscricoesAdministrativas, type InscricaoAdministrativa } from "../lib/admin-escolas";
-import { exportarInscricoesCsv, exportarRelatorioCsv, visualizarInscricoesPdf, visualizarRelatorioPdf } from "../lib/exportacao-administrativa";
+import { ArrowLeft, BarChart3, Building2, Download, Eye, Map, MessageCircle, MonitorSmartphone, Presentation, Printer, UsersRound } from "lucide-react";
+import { carregarEstatisticasAnalytics, type EstatisticasAnalytics, type GrupoAnalytics } from "../lib/analytics-admin";
+import { exportarMetricasCsv, imprimirMetricas } from "../lib/exportacao-administrativa";
 import RetrospectivaAcessos from "./RetrospectivaAcessos";
 
-type Aba = "resumo" | "acessos" | "inscricoes" | "relatorios" | "emails";
 type Periodo = "Hoje" | "Últimos 7 dias" | "Mês" | "Personalizado";
-type Linha = { nome: string; total: number };
+type Aba = "resumo" | "acessos" | "encaminhamentos" | "relatorios";
+const abas: Array<{ id: Aba; nome: string }> = [{ id: "resumo", nome: "Resumo" }, { id: "acessos", nome: "Acessos" }, { id: "encaminhamentos", nome: "Encaminhamentos" }, { id: "relatorios", nome: "Relatórios" }];
 
-const abas: Array<{ id: Aba; titulo: string }> = [
-  { id: "resumo", titulo: "Resumo" }, { id: "acessos", titulo: "Acessos" }, { id: "inscricoes", titulo: "Inscrições" }, { id: "relatorios", titulo: "Relatórios" }, { id: "emails", titulo: "E-mails" },
-];
-const card = "rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_24px_-8px_rgba(2,87,160,0.12)]";
-
-function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) { return <section className={[card, className].join(" ")}>{children}</section>; }
-function Titulo({ children }: { children: React.ReactNode }) { return <h2 className="text-base font-black text-azul-principal">{children}</h2>; }
-function EmCalculo() { return <span className="text-2xl font-black text-slate-500">A calcular</span>; }
-
+function iso(data: Date) { return new Date(data.getTime() - data.getTimezoneOffset() * 60_000).toISOString().slice(0, 10); }
 function faixa(periodo: Periodo, inicio: string, fim: string) {
-  const agora = new Date();
-  const iso = (data: Date) => data.toISOString().slice(0, 10);
-  if (periodo === "Hoje") return { inicio: iso(agora), fim: iso(agora) };
-  if (periodo === "Últimos 7 dias") { const desde = new Date(agora); desde.setDate(agora.getDate() - 6); return { inicio: iso(desde), fim: iso(agora) }; }
-  if (periodo === "Mês") return { inicio: agora.getFullYear() + "-" + String(agora.getMonth() + 1).padStart(2, "0") + "-01", fim: iso(agora) };
-  return inicio && fim ? { inicio, fim } : null;
-}
-
-function Cartao({ titulo, texto, icone: Icon, valor, carregando, alerta = false, aoClicar }: { titulo: string; texto: string; icone: typeof Eye; valor?: number; carregando: boolean; alerta?: boolean; aoClicar?: () => void }) {
-  const cor = alerta ? "text-red-600" : "text-azul-acao";
-  const conteudo = <><span className={["grid size-9 place-items-center rounded-xl", alerta ? "bg-red-50" : "bg-azul-superficie", cor].join(" ")}><Icon className="size-5" /></span><div className="mt-4">{valor === undefined ? (carregando ? <span className="text-2xl font-black text-slate-400">…</span> : <EmCalculo />) : <span className={["text-2xl font-black", alerta ? "text-red-600" : "text-texto-principal"].join(" ")}>{valor.toLocaleString("pt-BR")}</span>}<p className={["mt-1 text-sm font-black", alerta ? "text-red-600" : "text-texto-principal"].join(" ")}>{titulo}</p><p className="mt-1 text-xs leading-5 text-slate-500">{texto}</p>{aoClicar && <p className="mt-3 text-xs font-black text-azul-acao">Abrir detalhes →</p>}</div></>;
-  return aoClicar ? <button type="button" onClick={aoClicar} className={[card, "text-left transition hover:-translate-y-0.5 hover:border-azul-acao focus:outline-none focus:ring-4 focus:ring-azul-acao/20"].join(" ")}>{conteudo}</button> : <Card>{conteudo}</Card>;
-}
-
-function Resumo({ dados, carregando, erro, aoAbrirEmails }: { dados: EstatisticasAnalytics | null; carregando: boolean; erro: string; aoAbrirEmails: () => void }) {
-  const r = dados?.resumo;
-  const cartoes = [
-    { titulo: "Pessoas que entraram no site", texto: "Pessoas únicas no Vem pra EJA durante o período.", icone: Eye, valor: r?.visitas },
-    { titulo: "Pessoas que escolheram um nível", texto: "Pessoas únicas que avançaram após escolher Fundamental ou Médio.", icone: ListChecks, valor: r?.escolheuNivel },
-    { titulo: "Pessoas que abriram uma escola", texto: "Pessoas únicas que abriram os detalhes de uma escola.", icone: School, valor: r?.abriuEscola },
-    { titulo: "Pessoas que começaram a inscrição", texto: "Pessoas únicas que chegaram ao formulário de inscrição.", icone: ClipboardEdit, valor: r?.iniciouCadastro },
-    { titulo: "Pessoas que enviaram a inscrição", texto: "Pessoas únicas que clicaram em enviar o formulário.", icone: CheckCircle2, valor: r?.concluiuInscricao },
-    { titulo: "E-mails aceitos pelo servidor", texto: "O servidor institucional colocou essas mensagens na fila; isso ainda não confirma a entrega na caixa da escola.", icone: Mail, valor: dados?.emails.enviados },
-    { titulo: "E-mails que precisam de atenção", texto: "Envios que falharam e precisam ser verificados.", icone: MailWarning, valor: dados?.emails.comFalha, alerta: true, aoClicar: aoAbrirEmails },
-  ];
-  const etapas = [["Entraram no site", r?.visitas], ["Escolheram um nível", r?.escolheuNivel], ["Abriram uma escola", r?.abriuEscola], ["Começaram a inscrição", r?.iniciouCadastro], ["Enviaram a inscrição", r?.concluiuInscricao]] as const;
-  const maior = Math.max(...etapas.map(([, valor]) => valor ?? 0), 1);
-  return <div className="space-y-6">{erro && <Card className="border-red-200 bg-red-50"><p className="font-bold text-red-700">Não foi possível atualizar os acessos: {erro}</p><p className="mt-1 text-sm text-red-600">O serviço local de estatísticas não respondeu. Tente atualizar a página.</p></Card>}<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{cartoes.map((item) => <Cartao key={item.titulo} {...item} carregando={carregando} />)}</div><Card><Titulo>Caminho das pessoas no site</Titulo><p className="mt-1 text-sm text-slate-500">Mostra em qual etapa as pessoas seguiram ou pararam no período escolhido.</p><div className="mt-6 space-y-4">{etapas.map(([nome, valor]) => <div key={nome}><div className="flex justify-between gap-4 text-sm"><span className="font-bold text-texto-principal">{nome}</span><span className="font-black text-azul-principal">{carregando ? "…" : (valor ?? 0).toLocaleString("pt-BR")}</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-azul-superficie"><div className="h-full rounded-full bg-azul-principal" style={{ width: String(((valor ?? 0) / maior) * 100) + "%" }} /></div></div>)}</div></Card></div>;
-}
-
-function Ranking({ titulo, descricao, dados, formatar }: { titulo: string; descricao: string; dados: Linha[]; formatar?: (nome: string) => string }) {
-  const maior = Math.max(...dados.map((item) => item.total), 1);
-  return <Card><Titulo>{titulo}</Titulo><p className="mt-1 text-sm leading-6 text-slate-500">{descricao}</p>{dados.length ? <ol className="mt-4 space-y-4">{dados.map((item) => <li key={item.nome}><div className="flex items-center justify-between gap-4 text-sm"><span className="truncate font-bold text-texto-principal">{formatar ? formatar(item.nome) : item.nome}</span><span className="shrink-0 font-black text-azul-principal">{item.total.toLocaleString("pt-BR")}</span></div><div className="mt-2 h-3 overflow-hidden rounded-full bg-azul-superficie"><div className="h-full rounded-full bg-azul-acao" style={{ width: String((item.total / maior) * 100) + "%" }} /></div></li>)}</ol> : <p className="mt-6 text-sm text-slate-500">Ainda não há dados neste período.</p>}</Card>;
-}
-
-function agruparHoras(linhas: Linha[]) {
-  const horas = new Map<string, number>();
-  linhas.forEach((linha) => {
-    const nome = linha.nome.slice(-2);
-    const hora = /^[0-9]{2}$/.test(nome) ? nome + "h" : linha.nome;
-    horas.set(hora, (horas.get(hora) ?? 0) + linha.total);
-  });
-  return [...horas].map(([nome, total]) => ({ nome, total })).sort((a, b) => Number(a.nome.slice(0, 2)) - Number(b.nome.slice(0, 2)));
-}
-
-function GraficoDeColunas({ dados }: { dados: Linha[] }) {
-  const maior = Math.max(...dados.map((item) => item.total), 1);
-  return <Card><Titulo>Gráfico de acessos por horário</Titulo><p className="mt-1 text-sm leading-6 text-slate-500">As colunas mais altas indicam os horários mais acessados.</p>{dados.length ? <div className="mt-7 flex h-64 items-end gap-2 border-b border-l border-slate-200 px-3 pt-4">{dados.map((item) => <div key={item.nome} className="flex h-full min-w-8 flex-1 flex-col justify-end text-center"><span className="mb-2 text-xs font-black text-azul-principal">{item.total}</span><div className="min-h-1 rounded-t-md bg-azul-acao transition-all" style={{ height: String(Math.max((item.total / maior) * 100, 2)) + "%" }} /><span className="mt-2 text-xs font-bold text-slate-500">{item.nome}</span></div>)}</div> : <p className="mt-6 text-sm text-slate-500">Ainda não há dados suficientes para montar este gráfico.</p>}</Card>;
-}
-
-function GraficoCircular({ dados }: { dados: Linha[] }) {
-  const cores = ["var(--eja-cor-azul-principal)", "var(--eja-cor-azul-escuro)", "var(--eja-cor-verde-marca)", "var(--eja-cor-verde-escuro)", "var(--eja-cor-laranja-marca)"];
-  const total = dados.reduce((soma, item) => soma + item.total, 0);
-  const segmentos = dados.map((item, indice) => {
-    const inicio = dados.slice(0, indice).reduce((soma, anterior) => soma + (total ? (anterior.total / total) * 100 : 0), 0);
-    const fim = inicio + (total ? (item.total / total) * 100 : 0);
-    return cores[indice % cores.length] + " " + inicio + "% " + fim + "%";
-  });
-  return <Card><Titulo>Gráfico de dispositivos</Titulo><p className="mt-1 text-sm leading-6 text-slate-500">Distribuição dos aparelhos usados para acessar o site.</p>{dados.length ? <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row sm:items-start"><div className="relative grid size-44 shrink-0 place-items-center rounded-full" style={{ backgroundImage: "conic-gradient(" + segmentos.join(", ") + ")" }}><div className="grid size-28 place-items-center rounded-full bg-white text-center"><strong className="text-2xl text-azul-principal">{total}</strong><span className="text-xs text-slate-500">acessos</span></div></div><ul className="w-full space-y-3">{dados.map((item, indice) => <li key={item.nome} className="flex items-center justify-between gap-3 text-sm"><span className="flex items-center gap-2 font-bold text-texto-principal"><i className="size-3 rounded-full" style={{ backgroundColor: cores[indice % cores.length] }} />{item.nome}</span><span className="font-black text-azul-principal">{item.total} ({Math.round((item.total / total) * 100)}%)</span></li>)}</ul></div> : <p className="mt-6 text-sm text-slate-500">Ainda não há dados suficientes para montar este gráfico.</p>}</Card>;
-}
-
-function Acessos({ dados, carregando, erro }: { dados: EstatisticasAnalytics | null; carregando: boolean; erro: string }) {
-  if (carregando) return <Card><p className="font-bold text-azul-principal">Carregando dados de acesso…</p></Card>;
-  if (erro) return <Card className="border-red-200 bg-red-50"><p className="font-bold text-red-700">Os dados de acesso ainda não puderam ser consultados.</p></Card>;
-  if (!dados) return <Card><p className="font-bold text-slate-500">Ainda não há dados de acesso para este período.</p></Card>;
-  const a = dados.acessos;
-  const hora = (valor: string) => { const h = valor.slice(-2); return /^[0-9]{2}$/.test(h) ? h + "h" : valor; };
-  const horarios = agruparHoras(a.horarios ?? []);
-  return <div className="space-y-6">
-    <Card><Titulo>Dados de navegação</Titulo><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Os gráficos mostram como as pessoas usam o site. Nenhum nome, CPF, telefone ou e-mail é enviado para esta análise.</p></Card>
-    <div className="grid gap-6 lg:grid-cols-3"><Ranking titulo="Dispositivos utilizados" descricao="Mostra celular, computador e tablet quando houver acessos." dados={a.dispositivos ?? []} /><Ranking titulo="Páginas mais acessadas" descricao="Telas mais abertas no período." dados={a.paginas ?? []} /><Ranking titulo="Horários de acesso" descricao="Horas em que houve mais pessoas ativas." dados={a.horarios ?? []} formatar={hora} /></div>
-    <div className="grid gap-6 lg:grid-cols-2"><GraficoDeColunas dados={horarios} /><GraficoCircular dados={a.dispositivos ?? []} /></div>
-  </div>;
-}
-
-function formatoData(valor: string) { const data = new Date(valor); return Number.isNaN(data.getTime()) ? "Data não informada" : data.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }); }
-function filtrarPeriodo(inscricao: InscricaoAdministrativa, periodo: Periodo, inicio: string, fim: string) { const intervalo = faixa(periodo, inicio, fim); if (!intervalo) return false; const data = new Date(inscricao.criadaEm); return Number.isNaN(data.getTime()) || (data >= new Date(intervalo.inicio + "T00:00:00") && data <= new Date(intervalo.fim + "T23:59:59")); }
-
-function AcoesDeExportacao({ onCsv, onPdf, desabilitado = false }: { onCsv: () => void; onPdf: () => void; desabilitado?: boolean }) {
-  const estilo = "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-50";
-  return <div className="flex flex-wrap gap-3"><button type="button" onClick={onCsv} disabled={desabilitado} className={[estilo, "bg-azul-principal text-white hover:bg-azul-secundario"].join(" ")}><Download className="size-4" />Baixar CSV</button><button type="button" onClick={onPdf} disabled={desabilitado} className={[estilo, "border border-azul-acao bg-white text-azul-principal hover:bg-azul-superficie"].join(" ")}><FileText className="size-4" />Visualizar / salvar PDF</button></div>;
-}
-
-function Inscricoes({ periodo, inicio, fim, textoDoPeriodo }: { periodo: Periodo; inicio: string; fim: string; textoDoPeriodo: string }) {
-  const [dados, setDados] = useState<InscricaoAdministrativa[]>([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
-  const [busca, setBusca] = useState("");
-  const [cidade, setCidade] = useState("");
-  const [bairro, setBairro] = useState("");
-  const [escola, setEscola] = useState("");
-  const [nivel, setNivel] = useState("");
-  const [turno, setTurno] = useState("");
-
-  useEffect(() => {
-    let ativo = true;
-    carregarInscricoesAdministrativas().then((linhas) => { if (ativo) setDados(linhas); }).catch(() => {
-      if (ativo) setErro("Não foi possível ler as inscrições. Confirme no Supabase se a permissão administrativa foi criada.");
-    }).finally(() => { if (ativo) setCarregando(false); });
-    return () => { ativo = false; };
-  }, []);
-
-  const opcoes = useMemo(() => ({
-    cidades: [...new Set(dados.map((item) => item.cidade).filter(Boolean))],
-    bairros: [...new Set(dados.map((item) => item.bairro).filter(Boolean))],
-    escolas: [...new Set(dados.map((item) => item.escola).filter(Boolean))],
-    niveis: [...new Set(dados.map((item) => item.nivel).filter(Boolean))],
-    turnos: [...new Set(dados.map((item) => item.turno).filter(Boolean))],
-  }), [dados]);
-
-  const visiveis = useMemo(() => dados.filter((item) => filtrarPeriodo(item, periodo, inicio, fim))
-    .filter((item) => !busca || (item.nome + " " + item.email).toLowerCase().includes(busca.toLowerCase()))
-    .filter((item) => !cidade || item.cidade === cidade)
-    .filter((item) => !bairro || item.bairro === bairro)
-    .filter((item) => !escola || item.escola === escola)
-    .filter((item) => !nivel || item.nivel === nivel)
-    .filter((item) => !turno || item.turno === turno), [bairro, busca, cidade, dados, escola, fim, inicio, nivel, periodo, turno]);
-
-  const select = (valor: string, mudar: (valor: string) => void, lista: string[], rotulo: string) => <select value={valor} onChange={(evento) => mudar(evento.target.value)} className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-azul-acao"><option value="">{rotulo}</option>{lista.map((item) => <option key={item} value={item}>{item}</option>)}</select>;
-
-  return <div className="space-y-6">
-    <Card><Titulo>Lista de inscrições</Titulo><p className="mt-2 text-sm leading-6 text-slate-500">Consulte as inscrições recebidas e filtre por cidade, bairro, escola, nível ou turno.</p><div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3"><input value={busca} onChange={(evento) => setBusca(evento.target.value)} className="h-11 w-full rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-azul-acao" placeholder="Buscar por nome ou e-mail" />{select(cidade, setCidade, opcoes.cidades, "Cidade")}{select(bairro, setBairro, opcoes.bairros, "Bairro")}{select(escola, setEscola, opcoes.escolas, "Escola")}{select(nivel, setNivel, opcoes.niveis, "Nível")}{select(turno, setTurno, opcoes.turnos, "Turno")}</div></Card>
-    <Card><div className="flex flex-wrap items-center justify-between gap-5"><div><Titulo>Exportar e guardar inscrições</Titulo><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Baixe uma planilha para a equipe ou abra uma versão pronta para imprimir e salvar como PDF. Os arquivos respeitam o período e todos os filtros escolhidos.</p><p className="mt-2 text-xs font-bold text-slate-500">Por segurança, inscrições não são excluídas automaticamente.</p></div><AcoesDeExportacao desabilitado={carregando || Boolean(erro)} onCsv={() => exportarInscricoesCsv(visiveis, textoDoPeriodo)} onPdf={() => visualizarInscricoesPdf(visiveis, textoDoPeriodo)} /></div></Card>
-    <p className="text-sm text-slate-500">{carregando ? "Carregando inscrições..." : String(visiveis.length) + " inscrição(ões) encontrada(s)"}</p>
-    <Card className="overflow-hidden p-0"><div className="overflow-x-auto"><table className="w-full min-w-[850px] text-left text-sm"><thead className="bg-azul-superficie text-azul-principal"><tr>{["Data", "Nome", "Bairro", "Escola", "Nível", "Turno", "E-mail"].map((titulo) => <th key={titulo} className="px-5 py-4 font-black">{titulo}</th>)}</tr></thead><tbody>{carregando ? <tr><td colSpan={7} className="px-5 py-14 text-center text-slate-500">Carregando inscrições...</td></tr> : erro ? <tr><td colSpan={7} className="px-5 py-14 text-center text-red-600">{erro}</td></tr> : visiveis.length ? visiveis.map((item) => <tr key={item.id} className="border-t border-slate-100"><td className="px-5 py-4 text-slate-500">{formatoData(item.criadaEm)}</td><td className="px-5 py-4 font-bold text-texto-principal">{item.nome}</td><td className="px-5 py-4 text-slate-500">{item.bairro || "—"}</td><td className="px-5 py-4 text-slate-500">{item.escola}</td><td className="px-5 py-4 text-slate-500">{item.nivel}</td><td className="px-5 py-4 text-slate-500">{item.turno}</td><td className="px-5 py-4 text-slate-500">{item.email || "—"}</td></tr>) : <tr><td colSpan={7} className="px-5 py-14 text-center text-slate-500">Nenhuma inscrição encontrada neste período.</td></tr>}</tbody></table></div></Card>
-  </div>;
-}
-
-function agrupar(inscricoes: InscricaoAdministrativa[], campo: (item: InscricaoAdministrativa) => string) { const mapa = new Map<string, number>(); inscricoes.forEach((item) => { const nome = campo(item) || "Não informado"; mapa.set(nome, (mapa.get(nome) ?? 0) + 1); }); return [...mapa].map(([nome, total]) => ({ nome, total })).sort((a, b) => b.total - a.total); }
-function Relatorios({ periodo, inicio, fim, textoDoPeriodo }: { periodo: Periodo; inicio: string; fim: string; textoDoPeriodo: string }) {
-  const [dados, setDados] = useState<InscricaoAdministrativa[]>([]);
-  const [erro, setErro] = useState("");
-  const [escola, setEscola] = useState("");
-  const [turno, setTurno] = useState("");
-
-  useEffect(() => {
-    let ativo = true;
-    carregarInscricoesAdministrativas().then((linhas) => { if (ativo) setDados(linhas); }).catch(() => {
-      if (ativo) setErro("Não foi possível montar os relatórios de inscrições.");
-    });
-    return () => { ativo = false; };
-  }, []);
-
-  const escolas = useMemo(() => [...new Set(dados.map((item) => item.escola).filter(Boolean))], [dados]);
-  const turnos = useMemo(() => [...new Set(dados.map((item) => item.turno).filter(Boolean))], [dados]);
-  const filtradas = useMemo(() => dados.filter((item) => filtrarPeriodo(item, periodo, inicio, fim)).filter((item) => !escola || item.escola === escola).filter((item) => !turno || item.turno === turno), [dados, escola, fim, inicio, periodo, turno]);
-  const porBairro = agrupar(filtradas, (item) => item.bairro);
-  const porCidade = agrupar(filtradas, (item) => item.cidade);
-  const porEscola = agrupar(filtradas, (item) => item.escola);
-  const porNivel = agrupar(filtradas, (item) => item.nivel);
-  const linhasParaExportar = [
-    ...porBairro.map((item) => ({ categoria: "Inscrições por bairro", item: item.nome, total: item.total })),
-    ...porCidade.map((item) => ({ categoria: "Inscrições por cidade", item: item.nome, total: item.total })),
-    ...porEscola.map((item) => ({ categoria: "Escolas mais procuradas", item: item.nome, total: item.total })),
-    ...porNivel.map((item) => ({ categoria: "Níveis de ensino procurados", item: item.nome, total: item.total })),
-  ];
-
-  if (erro) return <Card className="border-red-200 bg-red-50"><p className="font-bold text-red-700">{erro}</p></Card>;
-  return <div className="grid gap-6 lg:grid-cols-2">
-    <Card className="lg:col-span-2"><Titulo>Exportar relatório</Titulo><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Escolha uma escola ou turno, se quiser, e baixe os totais em planilha. A versão PDF organiza os mesmos dados por bairro, cidade, escola e nível.</p><div className="mt-5 grid gap-3 sm:grid-cols-2"><select value={escola} onChange={(evento) => setEscola(evento.target.value)} className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-azul-acao"><option value="">Todas as escolas</option>{escolas.map((item) => <option key={item} value={item}>{item}</option>)}</select><select value={turno} onChange={(evento) => setTurno(evento.target.value)} className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none focus:border-azul-acao"><option value="">Todos os turnos</option>{turnos.map((item) => <option key={item} value={item}>{item}</option>)}</select></div><div className="mt-5"><AcoesDeExportacao onCsv={() => exportarRelatorioCsv(linhasParaExportar, textoDoPeriodo)} onPdf={() => visualizarRelatorioPdf(linhasParaExportar, textoDoPeriodo)} /></div></Card>
-    <Ranking titulo="Inscrições por bairro" descricao="Bairros informados nas inscrições." dados={porBairro} />
-    <Ranking titulo="Inscrições por cidade" descricao="Cidades informadas nas inscrições." dados={porCidade} />
-    <Ranking titulo="Escolas mais procuradas" descricao="Escolas escolhidas pelas pessoas inscritas." dados={porEscola} />
-    <Ranking titulo="Níveis de ensino procurados" descricao="Nível escolhido em cada inscrição." dados={porNivel} />
-  </div>;
-}
-
-function FalhaDeEmail({ falha, aoAtualizar }: { falha: EstatisticasAnalytics["emails"]["falhas"][number]; aoAtualizar: () => void }) {
-  const [email, setEmail] = useState(falha.destinatario);
-  const [enviando, setEnviando] = useState(false);
-  const [mensagem, setMensagem] = useState("");
-
-  async function reenviar() {
-    setEnviando(true);
-    setMensagem("");
-    try {
-      await corrigirEReenviarEmail(falha.id, email);
-      setMensagem("E-mail corrigido e reenviado com sucesso.");
-      aoAtualizar();
-    } catch (erroDoReenvio) {
-      setMensagem(erroDoReenvio instanceof Error ? erroDoReenvio.message : "Não foi possível reenviar o e-mail.");
-    } finally {
-      setEnviando(false);
-    }
-  }
-
-  return <details className="rounded-2xl border border-red-200 bg-white open:shadow-[0_8px_24px_-8px_rgba(220,38,38,0.18)]"><summary className="cursor-pointer list-none px-5 py-4"><div className="flex items-center justify-between gap-4"><div><p className="font-black text-texto-principal">{falha.escola}</p><p className="mt-1 text-sm text-red-700">{falha.destinatario || "E-mail não informado"}</p></div><span className="shrink-0 rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">Ver e corrigir</span></div></summary><div className="border-t border-red-100 px-5 py-5"><dl className="grid gap-3 text-sm sm:grid-cols-2"><div><dt className="font-black text-slate-500">Data da tentativa</dt><dd className="mt-1 text-texto-principal">{formatoData(falha.data)}</dd></div><div><dt className="font-black text-slate-500">Motivo informado</dt><dd className="mt-1 break-words text-red-700">{falha.erro}</dd></div></dl><label className="mt-5 block text-sm font-black text-texto-principal" htmlFor={`email-falha-${falha.id}`}>E-mail institucional correto da escola</label><div className="mt-2 flex flex-col gap-3 sm:flex-row"><input id={`email-falha-${falha.id}`} type="email" required value={email} onChange={(evento) => setEmail(evento.target.value)} className="h-11 min-w-0 flex-1 rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-azul-acao" /><button type="button" onClick={reenviar} disabled={enviando || !email.trim()} className="h-11 rounded-xl bg-azul-principal px-5 text-sm font-black text-white transition hover:bg-azul-acao disabled:cursor-not-allowed disabled:opacity-50">{enviando ? "Reenviando…" : "Salvar e reenviar"}</button></div><p className="mt-2 text-xs leading-5 text-slate-500">A correção também será salva no cadastro da escola para as próximas inscrições.</p>{mensagem && <p className={["mt-3 text-sm font-bold", mensagem.includes("sucesso") ? "text-green-700" : "text-red-700"].join(" ")}>{mensagem}</p>}</div></details>;
-}
-
-function Emails({ dados, carregando, erro, aoAtualizar }: { dados: EstatisticasAnalytics | null; carregando: boolean; erro: string; aoAtualizar: () => void }) {
-  const itens = [
-    { titulo: "Na fila", valor: dados?.emails.naFila, Icon: MailWarning, cor: "text-amber-600" },
-    { titulo: "Aceitos pelo servidor", valor: dados?.emails.enviados, Icon: Mail, cor: "text-azul-acao" },
-    { titulo: "Com falha", valor: dados?.emails.comFalha, Icon: MailWarning, cor: "text-red-600" },
-  ];
-  return <div className="space-y-6"><Card><Titulo>Envio de e-mails</Titulo><p className="mt-2 text-sm leading-6 text-slate-500">Os números são atualizados pela confirmação do serviço institucional: o envio aparece como concluído somente depois que o servidor SMTP aceita a mensagem.</p></Card>{erro && <Card className="border-red-200 bg-red-50"><p className="font-bold text-red-700">Não foi possível consultar os envios: {erro}</p></Card>}<div className="grid gap-4 md:grid-cols-3">{itens.map(({ titulo, valor, Icon, cor }) => <Card key={titulo}><Icon className={["size-6", cor].join(" ")} /><div className="mt-4"><span className={["text-2xl font-black", cor].join(" ")}>{carregando ? "…" : (valor ?? 0).toLocaleString("pt-BR")}</span><p className="mt-1 text-sm font-black text-texto-principal">{titulo}</p></div></Card>)}</div>{!carregando && dados?.emails.falhas.length ? <Card><Titulo>Envios que precisam de correção</Titulo><p className="mt-2 text-sm leading-6 text-slate-500">Abra um item para consultar o motivo, corrigir o endereço institucional da escola e reenviar a inscrição.</p><div className="mt-5 space-y-3">{dados.emails.falhas.map((falha) => <FalhaDeEmail key={falha.id} falha={falha} aoAtualizar={aoAtualizar} />)}</div></Card> : !carregando && !erro ? <Card><p className="font-bold text-green-700">Nenhum envio com falha neste período.</p></Card> : null}</div>;
+  const hoje = new Date();
+  if (periodo === "Personalizado") return { inicio, fim };
+  const comeco = new Date(hoje);
+  if (periodo === "Últimos 7 dias") comeco.setDate(hoje.getDate() - 6);
+  if (periodo === "Mês") comeco.setDate(1);
+  return { inicio: iso(comeco), fim: iso(hoje) };
 }
 
 export default function EstatisticasRelatorios({ onVoltar }: { onVoltar: () => void }) {
-  const [aba, setAba] = useState<Aba>("resumo");
+  const hoje = iso(new Date());
   const [periodo, setPeriodo] = useState<Periodo>("Últimos 7 dias");
-  const [inicio, setInicio] = useState("");
-  const [fim, setFim] = useState("");
-  const [dados, setDados] = useState<EstatisticasAnalytics | null>(null);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState("");
-  const [retrospectivaAberta, setRetrospectivaAberta] = useState(false);
-  const [versaoDados, setVersaoDados] = useState(0);
-  const intervalo = useMemo(() => faixa(periodo, inicio, fim), [periodo, inicio, fim]);
-  const textoDoPeriodo = useMemo(() => periodo === "Personalizado" && inicio && fim ? inicio.split("-").reverse().join("/") + " até " + fim.split("-").reverse().join("/") : periodo, [periodo, inicio, fim]);
-
-  useEffect(() => {
-    const atualizacao = window.setInterval(() => setVersaoDados((atual) => atual + 1), 60_000);
-    return () => window.clearInterval(atualizacao);
-  }, []);
-
-  useEffect(() => {
-    let ativo = true;
-    if (!intervalo) {
-      setDados(null);
-      setCarregando(false);
-      setErro("Escolha a data inicial e a data final para consultar este período.");
-      return () => { ativo = false; };
-    }
-    setCarregando(true);
-    setErro("");
-    carregarEstatisticasAnalytics(intervalo).then((resultado) => {
-      if (ativo) setDados(resultado);
-    }).catch((falha: unknown) => {
-      if (ativo) setErro(falha instanceof Error ? falha.message : "Não foi possível consultar os dados de acesso.");
-    }).finally(() => { if (ativo) setCarregando(false); });
-    return () => { ativo = false; };
-  }, [intervalo, versaoDados]);
-
-  const botaoRetrospectiva = aba === "acessos" && dados && !carregando && !erro && <button type="button" onClick={() => setRetrospectivaAberta(true)} className="group inline-flex h-12 items-center gap-2 rounded-xl bg-azul-principal px-5 text-sm font-black text-white shadow-[0_10px_25px_-10px_rgba(2,87,160,0.9)] transition hover:-translate-y-0.5 hover:bg-azul-acao hover:shadow-[0_14px_30px_-10px_rgba(0,139,255,0.9)]"><span className="grid size-7 place-items-center rounded-lg bg-white/20 transition group-hover:scale-110"><Play className="size-3.5 fill-white" /></span>Ver Retrospectiva</button>;
-
-  return <section className="mx-auto max-w-7xl px-8 py-10">
-    <button type="button" onClick={onVoltar} className="inline-flex items-center gap-2 text-sm font-black text-azul-acao hover:text-azul-principal"><ArrowLeft className="size-4" />Voltar ao painel</button>
-    <div className="mt-6 flex flex-wrap items-start justify-between gap-5"><div><h1 className="text-3xl font-black text-azul-principal">Estatísticas e Relatórios</h1><p className="mt-1 text-sm text-slate-500">Acompanhe os acessos ao site e as inscrições recebidas.</p><p className="mt-3 text-xs text-slate-500">Período selecionado: <strong className="text-texto-principal">{textoDoPeriodo}</strong></p></div><div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5">{(["Hoje", "Últimos 7 dias", "Mês", "Personalizado"] as Periodo[]).map((item) => <button type="button" key={item} onClick={() => setPeriodo(item)} className={["rounded-lg px-3 py-2 text-xs font-black transition", periodo === item ? "bg-azul-principal text-white" : "text-slate-500 hover:bg-azul-superficie hover:text-azul-principal"].join(" ")}>{item}</button>)}</div></div>
-    {periodo === "Personalizado" && <div className="mt-4 flex items-center gap-3"><input type="date" value={inicio} onChange={(evento) => setInicio(evento.target.value)} className="h-10 rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-azul-acao" /><span className="text-sm text-slate-500">até</span><input type="date" value={fim} onChange={(evento) => setFim(evento.target.value)} className="h-10 rounded-xl border border-slate-300 px-3 text-sm outline-none focus:border-azul-acao" /></div>}
-    <div className="mt-8 flex items-end justify-between border-b border-slate-200"><div className="flex">{abas.map((item) => <button type="button" key={item.id} onClick={() => setAba(item.id)} className={["-mb-px shrink-0 border-b-2 px-5 py-3 text-sm font-black transition", aba === item.id ? "border-azul-principal text-azul-principal" : "border-transparent text-slate-400 hover:text-azul-secundario"].join(" ")}>{item.titulo}</button>)}</div><div className="mb-2">{botaoRetrospectiva}</div></div>
-    <div className="mt-7">{aba === "resumo" && <Resumo dados={dados} carregando={carregando} erro={erro} aoAbrirEmails={() => setAba("emails")} />}{aba === "acessos" && <Acessos dados={dados} carregando={carregando} erro={erro} />}{aba === "inscricoes" && <Inscricoes periodo={periodo} inicio={inicio} fim={fim} textoDoPeriodo={textoDoPeriodo} />}{aba === "relatorios" && <Relatorios periodo={periodo} inicio={inicio} fim={fim} textoDoPeriodo={textoDoPeriodo} />}{aba === "emails" && <Emails dados={dados} carregando={carregando} erro={erro} aoAtualizar={() => setVersaoDados((atual) => atual + 1)} />}</div>
-    {retrospectivaAberta && dados && <RetrospectivaAcessos dados={dados} periodo={periodo} inicio={inicio} fim={fim} textoDoPeriodo={textoDoPeriodo} aoFechar={() => setRetrospectivaAberta(false)} />}
-  </section>;
+  const [inicio, setInicio] = useState(hoje); const [fim, setFim] = useState(hoje);
+  const [aba, setAba] = useState<Aba>("resumo"); const [dados, setDados] = useState<EstatisticasAnalytics | null>(null);
+  const [erro, setErro] = useState(""); const [carregando, setCarregando] = useState(true); const [retrospectiva, setRetrospectiva] = useState(false);
+  const datas = useMemo(() => faixa(periodo, inicio, fim), [periodo, inicio, fim]);
+  const textoPeriodo = `${new Date(`${datas.inicio}T12:00:00`).toLocaleDateString("pt-BR")} a ${new Date(`${datas.fim}T12:00:00`).toLocaleDateString("pt-BR")}`;
+  useEffect(() => { let ativo = true; setCarregando(true); setErro(""); carregarEstatisticasAnalytics(datas).then((valor) => { if (ativo) setDados(valor); }).catch((causa) => { if (ativo) setErro(causa instanceof Error ? causa.message : "Não foi possível consultar as métricas."); }).finally(() => { if (ativo) setCarregando(false); }); return () => { ativo = false; }; }, [datas]);
+  return <section className="mx-auto max-w-7xl px-8 py-10"><button type="button" onClick={onVoltar} className="inline-flex items-center gap-2 text-sm font-black text-azul-acao"><ArrowLeft className="size-4" />Voltar ao painel</button><div className="mt-6 flex flex-wrap items-start justify-between gap-5"><div><h1 className="text-3xl font-black text-azul-principal">Estatísticas e relatórios</h1><p className="mt-2 text-sm text-slate-500">Métricas agregadas de uso e encaminhamentos; nenhum visitante é identificado.</p><p className="mt-2 text-xs font-bold text-slate-500">{textoPeriodo}</p></div><div className="flex flex-wrap gap-2">{(["Hoje", "Últimos 7 dias", "Mês", "Personalizado"] as Periodo[]).map((item) => <button type="button" key={item} onClick={() => setPeriodo(item)} className={`rounded-xl px-3 py-2 text-xs font-black ${periodo === item ? "bg-azul-principal text-white" : "border bg-white text-slate-600"}`}>{item}</button>)}</div></div>{periodo === "Personalizado" && <div className="mt-4 flex gap-3"><label className="text-sm font-bold">Início<input type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} className="ml-2 rounded-lg border p-2" /></label><label className="text-sm font-bold">Fim<input type="date" value={fim} onChange={(e) => setFim(e.target.value)} className="ml-2 rounded-lg border p-2" /></label></div>}<div className="mt-8 flex border-b">{abas.map((item) => <button type="button" key={item.id} onClick={() => setAba(item.id)} className={`border-b-2 px-5 py-3 text-sm font-black ${aba === item.id ? "border-azul-principal text-azul-principal" : "border-transparent text-slate-500"}`}>{item.nome}</button>)}</div>{erro && <Card><p role="alert" className="font-bold text-red-700">{erro}</p></Card>}{carregando && <Card><p className="text-slate-500">Carregando métricas…</p></Card>}{!carregando && dados && <div className="mt-6">{aba === "resumo" && <Resumo dados={dados} />}{aba === "acessos" && <div className="grid gap-5 lg:grid-cols-3"><Ranking titulo="Dispositivos" dados={dados.acessos.dispositivos} Icon={MonitorSmartphone} /><Ranking titulo="Páginas acessadas" dados={dados.acessos.paginas} Icon={Eye} /><Ranking titulo="Horários" dados={dados.acessos.horarios} Icon={BarChart3} /></div>}{aba === "encaminhamentos" && <><Card><p className="font-bold text-amber-900">Clique no WhatsApp significa apenas que o canal foi aberto. Não comprova conversa, matrícula ou vaga.</p></Card><div className="grid gap-5 lg:grid-cols-3"><Ranking titulo="Escolas" dados={dados.encaminhamentos.escolas} Icon={Building2} /><Ranking titulo="Níveis" dados={dados.encaminhamentos.niveis} Icon={UsersRound} /><Ranking titulo="Turnos" dados={dados.encaminhamentos.turnos} Icon={Map} /></div></>}{aba === "relatorios" && <Card><h2 className="text-xl font-black text-azul-principal">Exportar dados agregados</h2><p className="mt-2 text-sm text-slate-500">Os arquivos não contêm nome, CPF, telefone, e-mail, IP nem identificador de visitante.</p><div className="mt-6 flex gap-3"><button type="button" onClick={() => exportarMetricasCsv(dados, textoPeriodo)} className="inline-flex items-center gap-2 rounded-xl bg-azul-principal px-4 py-3 font-black text-white"><Download className="size-4" />Baixar CSV</button><button type="button" onClick={() => imprimirMetricas(dados, textoPeriodo)} className="inline-flex items-center gap-2 rounded-xl border border-azul-principal px-4 py-3 font-black text-azul-principal"><Printer className="size-4" />Imprimir / PDF</button><button type="button" onClick={() => setRetrospectiva(true)} className="inline-flex items-center gap-2 rounded-xl bg-violet-700 px-4 py-3 font-black text-white"><Presentation className="size-4" />Ver retrospectiva</button></div></Card>}</div>}{retrospectiva && dados && <RetrospectivaAcessos dados={dados} periodo={textoPeriodo} aoFechar={() => setRetrospectiva(false)} />}</section>;
 }
+
+function Card({ children }: { children: React.ReactNode }) { return <div className="mt-5 rounded-2xl bg-white p-6 shadow-[0_8px_24px_-8px_rgba(2,87,160,.14)]">{children}</div>; }
+function Resumo({ dados }: { dados: EstatisticasAnalytics }) { const itens = [{ nome: "Visitas", total: dados.resumo.visitas, Icon: Eye }, { nome: "Nível selecionado", total: dados.resumo.escolheuNivel, Icon: UsersRound }, { nome: "Mapa visualizado", total: dados.resumo.abriuMapa, Icon: Map }, { nome: "Escola visualizada", total: dados.resumo.abriuEscola, Icon: Building2 }, { nome: "Chegaram ao contato", total: dados.resumo.chegouContato, Icon: MessageCircle }, { nome: "Cliques no WhatsApp", total: dados.resumo.cliquesWhatsapp, Icon: MessageCircle }]; return <><div className="grid gap-4 md:grid-cols-3">{itens.map(({ nome, total, Icon }) => <Card key={nome}><Icon className="size-6 text-azul-acao" /><strong className="mt-4 block text-3xl font-black text-azul-principal">{total.toLocaleString("pt-BR")}</strong><span className="text-sm font-bold text-slate-600">{nome}</span></Card>)}</div><Card><h2 className="font-black text-azul-principal">Leitura responsável</h2><p className="mt-2 text-sm leading-6 text-slate-600">As contagens são interações agregadas, não pessoas únicas. O VemPraEJA não acompanha a conversa no WhatsApp nem sabe se houve matrícula.</p></Card></>; }
+function Ranking({ titulo, dados, Icon }: { titulo: string; dados: GrupoAnalytics; Icon: typeof BarChart3 }) { const maximo = Math.max(1, ...dados.map((item) => item.total)); return <Card><div className="flex items-center gap-2"><Icon className="size-5 text-azul-acao" /><h2 className="font-black text-azul-principal">{titulo}</h2></div><div className="mt-5 space-y-4">{dados.length ? dados.map((item) => <div key={item.nome}><div className="flex justify-between gap-3 text-sm"><span className="font-bold text-slate-700">{item.nome || "Não informado"}</span><strong>{item.total.toLocaleString("pt-BR")}</strong></div><div className="mt-1 h-2 rounded-full bg-slate-100"><div className="h-full rounded-full bg-azul-acao" style={{ width: `${Math.max(3, item.total / maximo * 100)}%` }} /></div></div>) : <p className="text-sm text-slate-500">Ainda não há dados neste período.</p>}</div></Card>; }

@@ -13,7 +13,6 @@ const chaves = [
   "eja-fluxo-nivel",
   "eja-fluxo-escola",
   "eja-fluxo-turno",
-  "eja-inscricao-concluida",
   "eja-escola-selecionada",
 ];
 

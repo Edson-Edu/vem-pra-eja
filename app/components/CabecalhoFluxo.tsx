@@ -6,12 +6,11 @@ import BotaoAudio from "./BotaoAudio";
 import IndicadorProgresso from "./IndicadorProgresso";
 
 type Props = {
-  etapa: 1 | 2 | 3 | 4;
+  etapa: 1 | 2 | 3;
   textoAudio: string;
   onVoltar?: () => void;
   posicao?: "sticky" | "absolute" | "relative";
   referencia?: Ref<HTMLHeadElement>;
-  concluido?: boolean;
 };
 
 const classeDaPosicao = {
@@ -20,7 +19,7 @@ const classeDaPosicao = {
   relative: "relative",
 };
 
-export default function CabecalhoFluxo({ etapa, textoAudio, onVoltar, posicao = "sticky", referencia, concluido = false }: Props) {
+export default function CabecalhoFluxo({ etapa, textoAudio, onVoltar, posicao = "sticky", referencia }: Props) {
   return (
     <header
       data-eja-cabecalho-fluxo
@@ -48,7 +47,7 @@ export default function CabecalhoFluxo({ etapa, textoAudio, onVoltar, posicao = 
         />
       </div>
 
-      <IndicadorProgresso etapa={etapa} concluido={concluido} className="mx-auto mt-8 max-w-[760px]" />
+      <IndicadorProgresso etapa={etapa} className="mx-auto mt-8 max-w-[760px]" />
     </header>
   );
 }
