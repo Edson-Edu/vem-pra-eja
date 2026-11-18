@@ -57,6 +57,7 @@ function Conteudo() {
         // Se a rede falhar no celular, o cartão escolhido no mapa continua
         // sendo suficiente para a pessoa consultar e seguir para o cadastro.
         setEscola((atual) => atual ?? escolaDaLista);
+        
         setCarregando(false);
       });
 

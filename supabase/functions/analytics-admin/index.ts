@@ -48,16 +48,6 @@ Deno.serve(async (request) => {
 
     const faixa = periodo(await request.json().catch(() => ({})));
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    try {
-      const verificacao = await fetch(`${url}/functions/v1/verificar-retornos-email`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${serviceRoleKey}` },
-        signal: AbortSignal.timeout(20_000),
-      });
-      if (!verificacao.ok) console.error("A verificação de devoluções não respondeu com sucesso.");
-    } catch (erroDeVerificacao) {
-      console.error("Não foi possível verificar devoluções antes do relatório:", erroDeVerificacao);
-    }
     const admin = createClient(url, serviceRoleKey, { auth: { persistSession: false } });
     const { data, error } = await admin.rpc("estatisticas_analytics_local", { p_inicio: faixa.inicio, p_fim: faixa.fim });
     if (error) throw error;

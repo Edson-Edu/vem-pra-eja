@@ -6,10 +6,20 @@ edge_container="supabase_edge_runtime_vem-pra-eja"
 scheduler_container="vempraeja-email-scheduler-local"
 env_file="supabase/functions/.env"
 
-if ! docker inspect "$kong_container" >/dev/null 2>&1; then
+if ! docker inspect "$kong_container" >/dev/null 2>&1 || ! docker inspect "$edge_container" >/dev/null 2>&1; then
   echo "ERRO: o Supabase local nao esta iniciado." >&2
   exit 1
 fi
+
+if [ "$(docker inspect --format '{{.State.Running}}' "$edge_container")" != "true" ]; then
+  echo "O servico local de funcoes estava parado; iniciando novamente..."
+  docker start "$edge_container" >/dev/null
+fi
+
+# Os contêineres criados pelo Supabase CLI não recebem esta política por
+# padrão. Ela evita que relatórios e e-mails permaneçam fora do ar após uma
+# falha isolada ou depois que o Docker Desktop reiniciar.
+docker update --restart unless-stopped "$edge_container" >/dev/null
 
 gateway_api_key=$(
   docker exec "$kong_container" printenv SUPABASE_SERVICE_KEY 2>/dev/null || true
@@ -65,5 +75,6 @@ docker run -d \
     done
   ' >/dev/null
 
-echo "Verificador local iniciado. Ele consultara as devolucoes a cada 5 minutos."
+echo "Agendador local iniciado. Ele recuperara a fila e consultara devolucoes a cada 5 minutos."
+echo "Reinicio automatico das funcoes locais ativado."
 echo "Para acompanhar: docker logs -f $scheduler_container"

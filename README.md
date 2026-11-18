@@ -8,7 +8,7 @@ realizar a pré-inscrição.
 
 - Next.js com exportação estática.
 - Supabase/PostgreSQL para escolas, turnos, inscrições, autenticação e métricas.
-- Edge Functions para e-mail institucional e tratamento de devoluções.
+- Edge Functions para e-mail institucional, recuperação da fila e tratamento de devoluções.
 - Azure Speech para leitura assistida.
 - VLibras e modo de alto contraste.
 
@@ -22,6 +22,7 @@ export NVM_DIR="$HOME/.nvm"
 source "$NVM_DIR/nvm.sh"
 nvm use 24
 npx supabase start
+sh scripts/iniciar-verificador-emails-local.sh
 npm run dev
 ```
 
@@ -30,6 +31,10 @@ Site: http://localhost:3000
 Painel: http://localhost:3000/admin
 
 Supabase Studio local: http://localhost:54323
+
+O script do verificador também ativa o reinício automático do serviço de
+funções locais. Execute-o novamente sempre que o Supabase recriar os
+contêineres (por exemplo, depois de `npx supabase stop --no-backup`).
 
 Para desligar:
 

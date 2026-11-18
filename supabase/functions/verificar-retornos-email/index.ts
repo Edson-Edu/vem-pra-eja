@@ -19,11 +19,20 @@ class ClienteImap {
   private buffer = new Uint8Array(0);
   private sequencia = 0;
 
-  constructor(private readonly conexao: Deno.Conn) {}
+  constructor(
+    private readonly conexao: Deno.Conn,
+    private readonly prazoFinal: number,
+  ) {}
+
+  private tempoRestante(limite = 8_000) {
+    const restante = this.prazoFinal - Date.now();
+    if (restante <= 0) throw new Error("A verificação IMAP atingiu o tempo máximo desta execução.");
+    return Math.min(limite, restante);
+  }
 
   private async completar() {
     const bloco = new Uint8Array(8192);
-    const quantidade = await comPrazo(this.conexao.read(bloco));
+    const quantidade = await comPrazo(this.conexao.read(bloco), this.tempoRestante());
     if (quantidade === null) throw new Error("O servidor IMAP encerrou a conexão.");
     const novo = new Uint8Array(this.buffer.length + quantidade);
     novo.set(this.buffer);
@@ -54,7 +63,9 @@ class ClienteImap {
   async escrever(conteudo: string) {
     const bytes = codificador.encode(`${conteudo}\r\n`);
     let enviados = 0;
-    while (enviados < bytes.length) enviados += await this.conexao.write(bytes.subarray(enviados));
+    while (enviados < bytes.length) {
+      enviados += await comPrazo(this.conexao.write(bytes.subarray(enviados)), this.tempoRestante());
+    }
   }
 
   async comando(comando: string) {
@@ -127,6 +138,47 @@ async function localizarNotificacao(admin: ReturnType<typeof createClient>, mess
   return null;
 }
 
+async function processarFilaDeEnvio(
+  admin: ReturnType<typeof createClient>,
+  url: string,
+  serviceRoleKey: string,
+) {
+  const { data: pendentes, error: erroPendentes } = await admin
+    .from("notificacoes_email")
+    .select("inscricao_id")
+    .eq("status", "na_fila")
+    .order("criado_em", { ascending: true })
+    .limit(5);
+  if (erroPendentes) throw erroPendentes;
+
+  let enviados = 0;
+  let falhas = 0;
+  for (const item of pendentes ?? []) {
+    const { data: inscricao, error: erroInscricao } = await admin
+      .from("inscricoes")
+      .select("*")
+      .eq("id", item.inscricao_id)
+      .single();
+    if (erroInscricao || !inscricao) {
+      falhas++;
+      continue;
+    }
+
+    const envio = await fetch(`${url}/functions/v1/notificar-inscricao`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ type: "RECOVERY", table: "inscricoes", record: inscricao }),
+      signal: AbortSignal.timeout(30_000),
+    }).catch(() => null);
+    if (envio?.ok) enviados++;
+    else falhas++;
+  }
+  return { pendentes: pendentes?.length ?? 0, enviados, falhas };
+}
+
 Deno.serve(async (request) => {
   if (request.method !== "POST") return new Response(JSON.stringify({ erro: "Método não permitido." }), { status: 405, headers: { "Content-Type": "application/json" } });
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -141,10 +193,15 @@ Deno.serve(async (request) => {
 
   let conexao: Deno.Conn | undefined;
   try {
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceRoleKey, { auth: { persistSession: false } });
+    // Mantém a execução abaixo do limite do Edge Runtime. Se houver muitas
+    // devoluções, as restantes são processadas na próxima rodada do agendador.
+    const prazoFinal = Date.now() + 22_000;
+    const url = Deno.env.get("SUPABASE_URL")!;
+    const admin = createClient(url, serviceRoleKey, { auth: { persistSession: false } });
+    const fila = await processarFilaDeEnvio(admin, url, serviceRoleKey);
     const { data: reservada, error: erroDaReserva } = await admin.rpc("reservar_verificacao_retornos_email");
     if (erroDaReserva) throw erroDaReserva;
-    if (!reservada) return new Response(JSON.stringify({ ignorado: true }), { headers: { "Content-Type": "application/json" } });
+    if (!reservada) return new Response(JSON.stringify({ ignorado: true, fila }), { headers: { "Content-Type": "application/json" } });
 
     const host = Deno.env.get("IMAP_HOST")?.trim() || Deno.env.get("SMTP_HOST")?.trim() || "mail.bc.sc.gov.br";
     const porta = Number(Deno.env.get("IMAP_PORT") || "993");
@@ -153,8 +210,8 @@ Deno.serve(async (request) => {
     const pasta = Deno.env.get("IMAP_MAILBOX")?.trim() || "Shared/vempraeja@bc.sc.gov.br/INBOX";
     if (!usuario || !senha) throw new Error("Credenciais IMAP não configuradas.");
 
-    conexao = await comPrazo(Deno.connectTls({ hostname: host, port: porta }));
-    const imap = new ClienteImap(conexao);
+    conexao = await comPrazo(Deno.connectTls({ hostname: host, port: porta }), 8_000);
+    const imap = new ClienteImap(conexao, prazoFinal);
     const saudacao = await imap.linha();
     if (!saudacao.startsWith("* OK")) throw new Error("O servidor IMAP não apresentou uma saudação válida.");
     await imap.comando(`LOGIN ${aspasImap(usuario)} ${aspasImap(senha)}`);
@@ -169,7 +226,9 @@ Deno.serve(async (request) => {
     const conhecidos = new Set((processados ?? []).map((item) => Number(item.uid)));
     let devolvidos = 0;
 
-    for (const uid of uids.filter((item) => !conhecidos.has(item))) {
+    const pendentes = uids.filter((item) => !conhecidos.has(item)).slice(0, 10);
+    for (const uid of pendentes) {
+      if (prazoFinal - Date.now() < 3_000) break;
       const mensagem = await imap.buscarMensagem(uid);
       const dados = dadosDaDevolucao(mensagem);
       const notificacaoId = await localizarNotificacao(admin, dados.messageId, dados.destinatario);
@@ -184,8 +243,8 @@ Deno.serve(async (request) => {
       }
       await admin.from("retornos_email_processados").upsert({ pasta, uid }, { onConflict: "pasta,uid" });
     }
-    await imap.comando("LOGOUT");
-    return new Response(JSON.stringify({ verificados: uids.length, devolvidos }), { headers: { "Content-Type": "application/json" } });
+    if (prazoFinal - Date.now() >= 2_000) await imap.comando("LOGOUT");
+    return new Response(JSON.stringify({ verificados: uids.length, devolvidos, fila }), { headers: { "Content-Type": "application/json" } });
   } catch (erro) {
     console.error(erro);
     return new Response(JSON.stringify({ erro: "Não foi possível verificar as devoluções de e-mail." }), { status: 500, headers: { "Content-Type": "application/json" } });
