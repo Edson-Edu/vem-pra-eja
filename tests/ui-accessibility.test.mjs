@@ -226,6 +226,17 @@ test('a área administrativa usa a versão da marca para fundos claros', () => {
   assert.doesNotMatch(fonte, />Login<\/h1>/);
 });
 
+test('login administrativo diferencia falhas sem enumerar contas', () => {
+  const cliente = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/lib/admin-auth.ts'), 'utf8');
+  const pagina = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/admin/page.tsx'), 'utf8');
+  assert.match(cliente, /Não foi possível conectar ao servidor/);
+  assert.match(cliente, /O servidor encontrou um problema interno/);
+  assert.match(cliente, /erro\.status === 429/);
+  assert.match(pagina, /Usuário ou senha inválidos/);
+  assert.match(pagina, /mensagemDeErroDeLogin\(causa\)/);
+  assert.doesNotMatch(cliente + pagina, /usuário não existe|e-mail não cadastrado/i);
+});
+
 test('a interface usa a paleta institucional da marca', () => {
   const css = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/globals.css'), 'utf8');
   for (const declaracao of [

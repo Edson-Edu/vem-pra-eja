@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
 import { LockKeyhole, LogOut, UserRound } from "lucide-react";
-import { administradorEstaLogado, entrarComoAdministrador, sairDaAreaAdministrativa } from "../lib/admin-auth";
+import { administradorEstaLogado, entrarComoAdministrador, mensagemDeErroDeLogin, sairDaAreaAdministrativa } from "../lib/admin-auth";
 import PainelAdministrativo from "./PainelAdministrativo";
 
 export default function PaginaAdmin() {
@@ -33,8 +33,8 @@ export default function PaginaAdmin() {
       }
       setAutenticado(true);
       setSenha("");
-    } catch {
-      setErro("Não foi possível entrar agora. Tente novamente.");
+    } catch (causa) {
+      setErro(mensagemDeErroDeLogin(causa));
     } finally {
       setEnviando(false);
     }

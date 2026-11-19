@@ -20,11 +20,10 @@ docker compose version
 Na raiz do projeto:
 
 ```bash
-cp .env.example .env
-openssl rand -hex 32
+./scripts/configurar-ambiente-local.sh
 ```
 
-Edite `.env`. Substitua todas as senhas e chaves de exemplo por valores aleatórios independentes e, para o teste local, use:
+O script cria um `.env` ignorado pelo Git, gera quatro segredos independentes com OpenSSL, aplica permissão `600` e configura automaticamente:
 
 ```dotenv
 APP_ORIGIN=http://localhost:3000
@@ -34,10 +33,12 @@ TRUST_PROXY=false
 
 Não envie `.env` ao Git. `AZURE_SPEECH_KEY` e `AZURE_SPEECH_REGION` podem ficar vazias; nesse caso, a leitura em voz alta usa a síntese disponível no navegador.
 
+Se um `.env` já existir, o script não o substitui. Use `./scripts/configurar-ambiente-local.sh --force` somente quando quiser descartar e recriar deliberadamente a configuração local. Trocar as senhas de um banco já inicializado exige rotação coordenada e não deve ser feito apenas recriando o arquivo.
+
 ## 3. Iniciar banco e aplicação
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build --wait
 docker compose ps
 docker compose logs --tail=100 migrate app db
 curl --fail http://localhost:3000/api/health

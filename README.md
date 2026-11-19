@@ -36,12 +36,12 @@ CPU, memória, domínio, política de backup, retenção de logs e janela de man
 
 ## Instalação com Docker
 
-1. Copie `.env.example` para `.env` e substitua todos os valores de exemplo. Gere segredos independentes, por exemplo com `openssl rand -base64 48`.
-2. Defina `APP_ORIGIN` com a origem HTTPS final, sem barra no fim. Para teste local, use `http://localhost:3000`.
+1. Em produção, copie `.env.example` para `.env`, substitua todos os valores de exemplo e defina `APP_ORIGIN` com a origem HTTPS final, sem barra no fim.
+2. Para um banco local novo, execute `./scripts/configurar-ambiente-local.sh`; o script gera os segredos, protege o arquivo e usa `http://localhost:3000`. Ele não substitui um `.env` existente sem a opção explícita `--force`.
 3. Suba a aplicação:
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build --wait
 docker compose ps
 curl --fail http://127.0.0.1:3000/api/health
 ```
