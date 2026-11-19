@@ -95,6 +95,7 @@ async function testarResponsividade() {
     await page.goto(`${baseUrl}/conclusao?escola=${escolaId}&nivel=${encodeURIComponent(nivel)}&turno=${turnoId}`);
     await esperarInterface(page);
     const selo = page.locator(".sucesso-selo");
+    const iconeWhatsApp = page.locator(".sucesso-icone-whatsapp");
     const cartao = page.locator(".sucesso-cartao");
     const cabecalho = page.locator("[data-eja-cabecalho-fluxo]");
     const reabrir = page.getByRole("link", { name: /Abrir WhatsApp novamente/ });
@@ -114,9 +115,22 @@ async function testarResponsividade() {
         alturaHeader: header ? getComputedStyle(header).height : null,
       };
     });
+    const alinhamentoDoIcone = await iconeWhatsApp.evaluate((icone) => {
+      const selo = icone.parentElement;
+      const caixaIcone = icone.getBoundingClientRect();
+      const caixaSelo = selo?.getBoundingClientRect();
+      if (!caixaSelo) throw new Error("Selo do WhatsApp ausente");
+      return {
+        diferencaX: Math.abs((caixaIcone.left + caixaIcone.width / 2) - (caixaSelo.left + caixaSelo.width / 2)),
+        diferencaY: Math.abs((caixaIcone.top + caixaIcone.height / 2) - (caixaSelo.top + caixaSelo.height / 2)),
+        transformacao: getComputedStyle(icone).transform,
+      };
+    });
     await page.screenshot({ path: path.join(pastaDeResultados, `conclusao-${rotulo}.png`), fullPage: false });
     assert.ok(caixaSelo && caixaCartao && caixaSelo.y >= caixaCartao.y, `${rotulo}: selo recortado no topo do cartão`);
     assert.ok(caixaSelo && caixaCabecalho && caixaSelo.y >= caixaCabecalho.y + caixaCabecalho.height, `${rotulo}: selo ficou sob o cabeçalho (${JSON.stringify({ caixaSelo, caixaCabecalho, diagnosticoViewport })})`);
+    assert.ok(alinhamentoDoIcone.diferencaX < 1 && alinhamentoDoIcone.diferencaY < 1, `${rotulo}: ícone do WhatsApp não está centralizado (${JSON.stringify(alinhamentoDoIcone)})`);
+    if (width < 768) assert.equal(alinhamentoDoIcone.transformacao, "none", `${rotulo}: rotação mobile ainda está ativa`);
     assert.ok(caixaReabrir && caixaVoltar && caixaVoltar.y - (caixaReabrir.y + caixaReabrir.height) <= 20, `${rotulo}: espaço artificial entre botões`);
     await voltar.scrollIntoViewIfNeeded();
     await assert.doesNotReject(() => voltar.waitFor({ state: "visible" }), `${rotulo}: botão de voltar inacessível`);

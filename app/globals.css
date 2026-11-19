@@ -1012,7 +1012,14 @@ html.alto-contraste .eja-acessibilidade-concluir { border: 1px solid var(--eja-c
     box-shadow: 0 12px 28px rgb(30 91 184 / 10%);
   }
   .sucesso-selo { width: clamp(56px, 9dvh, 80px); height: clamp(56px, 9dvh, 80px); }
-  .sucesso-selo svg { width: 60%; height: 60%; }
+  .sucesso-selo .sucesso-icone-whatsapp {
+    display: grid;
+    width: 60%;
+    height: 60%;
+    place-items: center;
+    transform: none !important;
+  }
+  .sucesso-selo .sucesso-icone-whatsapp svg { width: 100%; height: 100%; }
   .sucesso-resumo h1 { font-size: clamp(22px, 6vw, 28px); }
   .sucesso-resumo p { font-size: 14px; }
   .sucesso-etapas { display: grid; gap: 12px; margin-top: clamp(20px, 3dvh, 32px); padding-bottom: 0; }

@@ -84,7 +84,7 @@ function ConfirmacaoAnimada() {
       transition={{ duration: 0.35, ease: "backOut" }}
       className="sucesso-selo mx-auto flex size-16 items-center justify-center rounded-full bg-[#168a45] text-white shadow-lg shadow-[#168a45]/20 sm:size-20"
     >
-      <motion.div initial={{ rotate: -12 }} animate={{ rotate: 0 }} transition={{ delay: 0.2, duration: 0.35 }}>
+      <motion.div className="sucesso-icone-whatsapp" initial={{ rotate: -12 }} animate={{ rotate: 0 }} transition={{ delay: 0.2, duration: 0.35 }}>
         <IconeWhatsApp className="size-9 sm:size-11" />
       </motion.div>
     </motion.div>

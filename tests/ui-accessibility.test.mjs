@@ -251,6 +251,9 @@ test('conclusão móvel usa fluxo natural e permite rolagem sem recortar o selo'
   assert.match(css, /\.sucesso-cartao \{[\s\S]*?min-height: 0;[\s\S]*?overflow: visible;/);
   assert.match(css, /\.sucesso-voltar \{ margin-top: 12px;/);
   assert.doesNotMatch(css, /\.sucesso-voltar \{ margin-top: auto/);
+  assert.match(tela, /className="sucesso-icone-whatsapp"/);
+  assert.match(css, /\.sucesso-selo \.sucesso-icone-whatsapp[\s\S]*?transform: none !important;/);
+  assert.match(css, /\.sucesso-selo \.sucesso-icone-whatsapp svg \{ width: 100%; height: 100%; \}/);
 });
 
 test('texto institucional original permanece no cartão da escola', () => {
