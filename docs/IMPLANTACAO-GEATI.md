@@ -5,11 +5,12 @@
 - [ ] Revisar `.env` e guardar segredos no mecanismo institucional.
 - [ ] Confirmar domínio, DNS, certificado e `APP_ORIGIN`.
 - [ ] Garantir que 5432 não possui publicação externa.
-- [ ] Executar migrations e criar administrador nominal.
+- [ ] Executar migrations, criar `admin@bc.sc.gov.br` com senha forte e repassar as credenciais à equipe responsável por canal privado.
 - [ ] Confirmar que o banco iniciou vazio e cadastrar uma escola real pelo painel.
 - [ ] Testar login, cadastro/edição/ativação/exclusão de escola e persistência após reinício.
-- [ ] Testar mapa, filtros, teclado, contraste, voz, VLibras e celulares.
-- [ ] Confirmar política/provedor de mapas e eventual Azure Speech.
+- [ ] Testar mapa Leaflet/OpenStreetMap, filtros, teclado, contraste, voz, VLibras e celulares.
+- [ ] Solicitar `AZURE_SPEECH_KEY` e `AZURE_SPEECH_REGION` à equipe responsável por canal privado, configurá-los e validar a voz neural.
+- [ ] Validar também a contingência de voz do navegador quando o Azure estiver indisponível ou sem cota.
 - [ ] Configurar backups, cópia externa, monitoramento e retenção de logs.
 - [ ] Fazer teste de restauração antes da produção.
 
@@ -19,16 +20,20 @@
 git clone URL_DO_REPOSITORIO vempraeja
 cd vempraeja
 cp .env.example .env
-# editar .env em canal seguro
+# editar .env em canal seguro e preencher as credenciais do Azure Speech
 docker compose config
 docker compose up -d --build
 docker compose ps
 docker compose logs --tail=100 migrate app db
 curl --fail http://127.0.0.1:${APP_PORT:-3000}/api/health
-docker compose run --rm migrate npm run admin -- create admin@instituicao.br
+docker compose run --rm migrate npm run admin -- create admin@bc.sc.gov.br
 ```
 
 O PostgreSQL é iniciado apenas com a estrutura. Não há importação do Supabase, seed de escolas ou WhatsApps provisórios.
+
+As credenciais do Azure Speech são fornecidas pela equipe responsável pelo projeto e nunca devem ser enviadas pelo GitHub ou registradas em chamado público. A configuração do Azure faz parte da implantação do GEATI; a síntese do navegador existe somente como contingência para falha, indisponibilidade ou esgotamento da cota acadêmica.
+
+O GEATI deve criar a primeira conta administrativa e repassar usuário e senha à equipe responsável por canal privado. Não registre a senha no repositório, na documentação ou em chamado público.
 
 Não use `docker compose down -v` em produção: `-v` remove o volume do banco. Não execute `docker volume prune` no host sem inventário e backup verificado.
 
@@ -106,4 +111,4 @@ Monitorar pelo menos:
 
 ## Parâmetros definidos na implantação
 
-O Compose permite que o GEATI defina no momento da implantação: domínio final, proxy, capacidade, política de egress, provedor de tiles, uso do Azure, backup/RPO/RTO, observabilidade, retenção de logs e responsáveis por contas, atualizações e incidentes. SMTP não é necessário no fluxo atual.
+O Compose permite que o GEATI defina no momento da implantação: domínio final, proxy, capacidade, política de egress, backup/RPO/RTO, observabilidade, retenção de logs e responsáveis por contas, atualizações e incidentes. O mapa utiliza Leaflet/OpenStreetMap. O Azure Speech deve ser configurado com as credenciais entregues pela equipe responsável por canal privado; não se pressupõe contratação paga, e a síntese do navegador cobre indisponibilidade ou esgotamento da cota acadêmica. SMTP não é necessário no fluxo atual.

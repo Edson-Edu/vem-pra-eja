@@ -30,6 +30,7 @@ Mais detalhes: [arquitetura](docs/ARQUITETURA.md), [fluxo de dados](docs/FLUXO-D
 - Proxy reverso institucional com domínio e certificado HTTPS.
 - Espaço persistente para o volume PostgreSQL e para backups externos ao host.
 - Acesso de saída dos navegadores ao provedor de mapas e ao WhatsApp.
+- Acesso de saída da aplicação ao Azure Speech por HTTPS.
 - Node.js 24 apenas para desenvolvimento fora do Docker.
 
 CPU, memória, domínio, política de backup, retenção de logs e janela de manutenção devem ser confirmados pelo GEATI antes da produção. Como ponto inicial para homologação, reservar 2 vCPU, 2 GB de RAM e 10 GB persistentes, medindo o consumo real antes de fixar limites.
@@ -37,8 +38,9 @@ CPU, memória, domínio, política de backup, retenção de logs e janela de man
 ## Instalação com Docker
 
 1. Em produção, copie `.env.example` para `.env`, substitua todos os valores de exemplo e defina `APP_ORIGIN` com a origem HTTPS final, sem barra no fim.
-2. Para um banco local novo, execute `./scripts/configurar-ambiente-local.sh`; o script gera os segredos, protege o arquivo e usa `http://localhost:3000`. Ele não substitui um `.env` existente sem a opção explícita `--force`.
-3. Suba a aplicação:
+2. Na implantação do GEATI, preencha obrigatoriamente `AZURE_SPEECH_KEY` e `AZURE_SPEECH_REGION`. A equipe responsável pelo projeto fornece esses valores por canal privado; nunca os registre no GitHub, em chamados públicos ou na documentação.
+3. Para um banco local novo, execute `./scripts/configurar-ambiente-local.sh`; o script gera senhas e chaves criptograficamente seguras, protege o arquivo e usa `http://localhost:3000`. Ele não substitui um `.env` existente sem a opção explícita `--force`.
+4. Suba a aplicação:
 
 ```bash
 docker compose up -d --build --wait
@@ -55,14 +57,14 @@ O banco começa sem escolas, turnos ou auxílios fictícios. Esses dados são ca
 Após as migrations:
 
 ```bash
-docker compose run --rm migrate npm run admin -- create admin@instituicao.br
+docker compose run --rm migrate npm run admin -- create admin@bc.sc.gov.br
 ```
 
-A senha é lida sem aparecer no terminal, deve ter ao menos 12 caracteres e é armazenada com bcrypt, custo 12. Não existe senha padrão. Para redefinir ou desativar:
+O GEATI deve criar essa primeira conta, definir uma senha forte e repassar as credenciais à equipe responsável pelo projeto por canal privado. A senha é lida sem aparecer no terminal, deve ter ao menos 12 caracteres e é armazenada com bcrypt, custo 12. Não existe senha padrão e nenhuma senha deve ser registrada no GitHub ou em chamado público. Para redefinir ou desativar:
 
 ```bash
-docker compose run --rm migrate npm run admin -- reset admin@instituicao.br
-docker compose run --rm migrate npm run admin -- deactivate admin@instituicao.br
+docker compose run --rm migrate npm run admin -- reset admin@bc.sc.gov.br
+docker compose run --rm migrate npm run admin -- deactivate admin@bc.sc.gov.br
 ```
 
 O painel permanece deliberadamente bloqueado abaixo de 768 px.
@@ -78,7 +80,7 @@ O painel permanece deliberadamente bloqueado abaixo de 768 px.
 | `LOGIN_RATE_LIMIT_SECRET` | sim | chave separada para limitar tentativas de login |
 | `TRUST_PROXY` | sim em proxy confiável | aceita o primeiro `X-Forwarded-For`; não habilite sem proxy que substitua esse cabeçalho |
 | `NEXT_PUBLIC_MAP_TILE_URL` | não | provedor de tiles no build; confirme termos e atribuição antes de alterar |
-| `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` | não | voz neural; sem elas o navegador usa síntese local como fallback |
+| `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` | sim na implantação do GEATI | voz neural fornecida pela equipe responsável por canal privado; a síntese do navegador permanece apenas como contingência para falha, indisponibilidade ou esgotamento da cota do Azure |
 
 Não versionar `.env`, dumps, chaves, tokens ou dados exportados. Variáveis `NEXT_PUBLIC_*` são incorporadas no build e, portanto, nunca devem conter segredo.
 
@@ -147,8 +149,8 @@ Para avaliar a aplicação inteira pelo navegador com Docker, siga [Testes locai
 | app | db TCP 5432 | obrigatório, somente rede Docker `backend` |
 | navegador | tiles HTTPS 443 | mapa; sujeito à política do provedor |
 | navegador | `wa.me` HTTPS 443 | contato externo |
-| app | Azure Speech HTTPS 443 | opcional |
+| app | Azure Speech HTTPS 443 | obrigatório na implantação do GEATI; síntese do navegador é contingência |
 
 ## Parâmetros institucionais
 
-Domínio, certificados, limites de recursos, monitoramento, retenção de logs, frequência/guarda dos backups, credenciais do serviço de voz e provedor de mapa permanecem parametrizados para definição pelo GEATI durante a implantação. Nenhuma dessas decisões exige acesso de alunos ao servidor.
+Domínio, certificados, limites de recursos, monitoramento, retenção de logs e frequência/guarda dos backups permanecem parametrizados para definição pelo GEATI durante a implantação. O mapa permanece em Leaflet/OpenStreetMap. As credenciais do Azure Speech são fornecidas pela equipe responsável por canal privado e devem ser configuradas pelo GEATI. A credencial atual utiliza cota acadêmica e não pressupõe contratação paga; se o Azure recusar a solicitação por cota ou indisponibilidade, o site usa a síntese de voz do navegador como contingência. Nenhuma dessas decisões exige acesso de alunos ao servidor.
