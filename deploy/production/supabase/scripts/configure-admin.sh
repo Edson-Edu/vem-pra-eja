@@ -8,7 +8,7 @@ command -v jq >/dev/null 2>&1 || {
   exit 1
 }
 
-admin_email="${1:-edson.tavares@bc.sc.gov.br}"
+admin_email="${1:-admin@instituicao.br}"
 
 printf "Senha inicial do administrador %s: " "$admin_email"
 stty -echo

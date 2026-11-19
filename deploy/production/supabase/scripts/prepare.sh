@@ -22,12 +22,12 @@ sed -i \
   -e 's|^SMTP_ADMIN_EMAIL=.*$|SMTP_ADMIN_EMAIL=vempraeja@bc.sc.gov.br|' \
   -e 's|^SMTP_HOST=.*$|SMTP_HOST=mail.bc.sc.gov.br|' \
   -e 's|^SMTP_PORT=.*$|SMTP_PORT=587|' \
-  -e 's|^SMTP_USER=.*$|SMTP_USER=edson.tavares@bc.sc.gov.br|' \
+  -e 's|^SMTP_USER=.*$|SMTP_USER=usuario-smtp@instituicao.br|' \
   -e 's|^SMTP_SENDER_NAME=.*$|SMTP_SENDER_NAME=Vem Pra EJA|' \
   -e 's|^ENABLE_PHONE_SIGNUP=.*$|ENABLE_PHONE_SIGNUP=false|' \
   -e 's|^ENABLE_PHONE_AUTOCONFIRM=.*$|ENABLE_PHONE_AUTOCONFIRM=false|' \
   -e 's|^PROXY_DOMAIN=.*$|PROXY_DOMAIN=vempraeja.bc.sc.gov.br|' \
-  -e 's|^CERTBOT_EMAIL=.*$|CERTBOT_EMAIL=edson.tavares@bc.sc.gov.br|' \
+  -e 's|^CERTBOT_EMAIL=.*$|CERTBOT_EMAIL=admin@instituicao.br|' \
   .env
 
 cat >> .env <<'EOF'

@@ -57,7 +57,7 @@ sh scripts/start.sh
 Crie o primeiro administrador:
 
 ```bash
-sh scripts/configure-admin.sh edson.tavares@bc.sc.gov.br
+sh scripts/configure-admin.sh admin@instituicao.br
 ```
 
 O cadastro público de usuários fica desativado em produção. Na regra atual,
