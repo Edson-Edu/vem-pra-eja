@@ -35,6 +35,14 @@ type ArrasteDaLista = {
   alturaInicial: number;
 };
 
+type ArrasteDaGaleria = {
+  pointerId: number;
+  inicioX: number;
+  inicioY: number;
+  atualX: number;
+  atualY: number;
+};
+
 export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Props) {
   const [selecionada, setSelecionada] = useState(escolas[0]?.id);
   const [focoNoMapa, setFocoNoMapa] = useState(0);
@@ -299,7 +307,7 @@ function CartaoEscola({
         >
           Ver escola
         </button>
-        <p className="mt-2 text-center text-xs text-slate-500">Consulta gratuita · contato direto com a escola</p>
+        <p className="mt-2 text-center text-xs text-slate-500">Inscrição gratuita • Sem burocracia</p>
       </div>
     </div>
   );
@@ -308,28 +316,78 @@ function CartaoEscola({
 function FotosDaEscola({ escola, destaque }: { escola: Escola; destaque: boolean }) {
   const fotos = escola.imagens?.length ? escola.imagens : [escola.imagem];
   const [fotoAtual, setFotoAtual] = useState(0);
-  const [inicioToque, setInicioToque] = useState<number | null>(null);
+  const arrasteRef = useRef<ArrasteDaGaleria | null>(null);
+  const suprimirCliqueRef = useRef(false);
   const trocar = (direcao: number) => {
     setFotoAtual((atual) => (atual + direcao + fotos.length) % fotos.length);
   };
 
+  const iniciarArraste = (evento: ReactPointerEvent<HTMLDivElement>) => {
+    if (evento.pointerType === "mouse") return;
+    evento.stopPropagation();
+    arrasteRef.current = {
+      pointerId: evento.pointerId,
+      inicioX: evento.clientX,
+      inicioY: evento.clientY,
+      atualX: evento.clientX,
+      atualY: evento.clientY,
+    };
+    evento.currentTarget.setPointerCapture(evento.pointerId);
+  };
+
+  const moverArraste = (evento: ReactPointerEvent<HTMLDivElement>) => {
+    const arraste = arrasteRef.current;
+    if (!arraste || arraste.pointerId !== evento.pointerId) return;
+    arraste.atualX = evento.clientX;
+    arraste.atualY = evento.clientY;
+    const horizontal = Math.abs(arraste.atualX - arraste.inicioX);
+    const vertical = Math.abs(arraste.atualY - arraste.inicioY);
+    if (horizontal > vertical) {
+      evento.preventDefault();
+      evento.stopPropagation();
+    }
+  };
+
+  const encerrarArraste = (evento: ReactPointerEvent<HTMLDivElement>) => {
+    const arraste = arrasteRef.current;
+    if (!arraste || arraste.pointerId !== evento.pointerId) return;
+    evento.stopPropagation();
+    const deslocamentoX = evento.clientX - arraste.inicioX;
+    const deslocamentoY = evento.clientY - arraste.inicioY;
+    arrasteRef.current = null;
+    if (Math.abs(deslocamentoX) >= 40 && Math.abs(deslocamentoX) > Math.abs(deslocamentoY)) {
+      // O navegador pode sintetizar um clique depois do gesto. Sem este
+      // bloqueio, o clique alcança o cartão, refocaliza a escola e move o mapa.
+      suprimirCliqueRef.current = true;
+      trocar(deslocamentoX < 0 ? 1 : -1);
+    }
+  };
+
+  const cancelarArraste = (evento: ReactPointerEvent<HTMLDivElement>) => {
+    if (arrasteRef.current?.pointerId === evento.pointerId) arrasteRef.current = null;
+  };
+
   return (
     <div
-      onTouchStart={(evento) => setInicioToque(evento.touches[0]?.clientX ?? null)}
-      onTouchEnd={(evento) => {
-        const fim = evento.changedTouches[0]?.clientX;
-        if (inicioToque !== null && fim !== undefined && Math.abs(fim - inicioToque) >= 40) {
-          trocar(fim < inicioToque ? 1 : -1);
-        }
-        setInicioToque(null);
+      data-eja-galeria
+      data-foto-atual={fotoAtual}
+      onPointerDown={iniciarArraste}
+      onPointerMove={moverArraste}
+      onPointerUp={encerrarArraste}
+      onPointerCancel={cancelarArraste}
+      onClick={(evento) => {
+        if (!suprimirCliqueRef.current) return;
+        suprimirCliqueRef.current = false;
+        evento.preventDefault();
+        evento.stopPropagation();
       }}
-      className="relative h-36 overflow-hidden bg-slate-200"
+      className="relative h-36 touch-pan-y overflow-hidden bg-slate-200"
     >
       <img
         draggable={false}
         src={fotos[fotoAtual]}
         alt={`Foto de ${escola.nome}`}
-        className="size-full select-none object-cover"
+        className="pointer-events-none size-full select-none object-cover"
         onError={(evento) => {
           evento.currentTarget.style.display = "none";
         }}

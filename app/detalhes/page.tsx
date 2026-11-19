@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TelaDetalhes from "../components/TelaDetalhes";
 import { type Escola } from "../lib/escolas";
-import { useFluxoAutorizado } from "../lib/fluxo-navegacao";
+import { registrarTurno, useFluxoAutorizado } from "../lib/fluxo-navegacao";
 import { registrarEventoAnalytics } from "../lib/analytics";
 import { buscarEscolas } from "../lib/supabase-client";
 
@@ -78,7 +78,12 @@ function Conteudo() {
     );
   }
 
-  return <TelaDetalhes escola={escola} nivel={nivel} onVoltar={() => router.back()} onContato={(turno) => registrarEventoAnalytics("clicou_whatsapp", { nivel, escolaId: escola.id, turno: turno.turno }, true)} />;
+  return <TelaDetalhes escola={escola} nivel={nivel} onVoltar={() => router.back()} onContato={(turno) => {
+    registrarTurno(turno.id);
+    registrarEventoAnalytics("clicou_whatsapp", { nivel, escolaId: escola.id, turno: turno.turno }, true);
+    const destino = `/conclusao?escola=${encodeURIComponent(escola.id)}&nivel=${encodeURIComponent(nivel)}&turno=${encodeURIComponent(turno.id)}`;
+    window.setTimeout(() => router.push(destino), 0);
+  }} />;
 }
 
 function Carregando() {

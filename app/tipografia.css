@@ -74,7 +74,9 @@ html.alto-contraste .eja-tamanho-texto label:has(:checked) { border-color: var(-
 /* Texto grande e telefones estreitos ganham espaço por rolagem vertical. */
 @media (max-width: 767px) {
   main:has(> [data-eja-cabecalho-fluxo]):not(:has(> form[novalidate])) [data-eja-cabecalho-fluxo] { height: auto; min-height: 120px; }
-  main.sucesso-tela [data-eja-cabecalho-fluxo] { min-height: 64px; }
+  /* A conclusão não exibe progresso; ela não deve herdar os 120 px das
+     etapas comuns nem cobrir o selo no início do conteúdo. */
+  main.sucesso-tela [data-eja-cabecalho-fluxo] { min-height: 64px !important; }
   main:has(.eja-nome-escola-fluido) > section > div.grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); }
   main:has(.eja-nome-escola-fluido) > div.fixed:has(> button) { position: sticky; }
   main:has(.eja-nome-escola-fluido) > section { padding-bottom: 24px; }

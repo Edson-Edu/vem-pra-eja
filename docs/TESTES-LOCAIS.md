@@ -108,6 +108,22 @@ No site público, confira:
 
 O painel administrativo deve continuar bloqueado abaixo de 768 px; isso é intencional.
 
+### Testes automatizados do site público
+
+Com a aplicação disponível em `http://localhost:3000`, execute os testes de
+interação em Chromium:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+A suíte reproduz o gesto horizontal da galeria, confirma que o mapa continua
+arrastável, valida localização autorizada, negada e indisponível e verifica as
+telas de detalhes e conclusão em 320, 360, 375, 390, 428, 768, 1024 e 1366 px.
+As capturas locais são gravadas em `test-results/public-regressions/` e não
+entram no Git nem na imagem Docker de produção.
+
 ## 9. Parar e reiniciar
 
 ```bash

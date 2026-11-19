@@ -184,7 +184,7 @@ export default function MapaEscolas({ escolas, selecionada, onMarcadorClick, cab
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
         // Mantém uma margem generosa dos tiles atuais durante zoom/pan para
         // não expor o fundo vazio enquanto a nova rua está sendo carregada.
-        keepBuffer: 2,
+        keepBuffer: 8,
         updateWhenIdle: false,
         updateWhenZooming: false,
       }).addTo(mapa);

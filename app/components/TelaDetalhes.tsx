@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   HandHeart,
   CalendarDays,
@@ -8,7 +8,6 @@ import {
   Clock3,
   GraduationCap,
   MapPin,
-  MessageCircle,
   Moon,
   Sun,
   Sunset,
@@ -20,6 +19,7 @@ import CabecalhoFluxo from "./CabecalhoFluxo";
 import type { Escola, Turno } from "../lib/escolas";
 import { distanciaEmMetros, formatarDistancia, useLocalizacaoUsuario } from "../lib/localizacao";
 import NomeEscolaFluido from "./NomeEscolaFluido";
+import IconeWhatsApp from "./IconeWhatsApp";
 import { diasDeAulaParaAudio, textoParaAudio, useAudioDescricao } from "./useAudioDescricao";
 import { formatarTelefoneBrasileiro, linkDoWhatsApp, linkDoWhatsAppContingencia, WHATSAPP_CONTINGENCIA } from "../lib/whatsapp";
 import { registrarEventoAnalytics } from "../lib/analytics";
@@ -55,6 +55,8 @@ const textoCejaBalnearioCamboriuParaVLibras = "Aqui você terminar Ensino Médio
 export default function TelaDetalhes({ escola, nivel, onVoltar, onContato }: Props) {
   const [selecionado, setSelecionado] = useState<Turno | null>(null);
   const [auxilioAberto, setAuxilioAberto] = useState<string | null>(null);
+  const [alturaRodapeContato, setAlturaRodapeContato] = useState(112);
+  const rodapeContatoRef = useRef<HTMLDivElement>(null);
   const { ativo, falarAgora, interromper } = useAudioDescricao();
   const { localizacao } = useLocalizacaoUsuario();
   const turnos = escola.turnos.filter((turno) => turno.nivel === nivel);
@@ -83,11 +85,29 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onContato }: Pro
     return () => window.clearTimeout(espera);
   }, [escola.id, falarAgora, leituraInicial]);
 
+  useEffect(() => {
+    if (!selecionado || !rodapeContatoRef.current) return;
+    const rodape = rodapeContatoRef.current;
+    const atualizarAltura = () => setAlturaRodapeContato(Math.ceil(rodape.getBoundingClientRect().height));
+    atualizarAltura();
+    const observador = new ResizeObserver(atualizarAltura);
+    observador.observe(rodape);
+    window.addEventListener("resize", atualizarAltura);
+    return () => {
+      observador.disconnect();
+      window.removeEventListener("resize", atualizarAltura);
+    };
+  }, [selecionado]);
+
   return (
     <main className="min-h-dvh bg-fundo-claro">
       <CabecalhoFluxo etapa={3} textoAudio={resumo} onVoltar={() => { interromper(); onVoltar(); }} />
 
-      <section className="mx-auto max-w-3xl bg-fundo-claro px-5 pb-40 pt-5">
+      <section
+        data-eja-conteudo-detalhes
+        className="mx-auto max-w-3xl bg-fundo-claro px-5 pt-5"
+        style={{ paddingBottom: selecionado ? `${alturaRodapeContato + 24}px` : "40px" }}
+      >
         <div data-vlibras-pai="resumo-escola" className="mb-6 text-center">
           <h1 className="text-2xl font-black leading-tight sm:text-3xl">
             <NomeEscolaFluido nome={escola.nome} leitura={leituraInicial} />
@@ -170,8 +190,8 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onContato }: Pro
       </section>
 
       {selecionado && (
-        <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-fundo-claro px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_22px_rgb(15_23_42/0.10)]">
-          {linkWhatsapp ? <a data-vlibras-acao="pronto" href={linkWhatsapp} target="_blank" rel="noopener noreferrer" onClick={() => { interromper(); onContato(selecionado); }} className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-2xl bg-[#168a45] py-4 font-black text-white shadow-lg transition hover:bg-[#11753a] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-azul-acao"><MessageCircle className="size-5" aria-hidden="true" />Falar com a escola pelo WhatsApp ({selecionado.turno})</a> : <div className="mx-auto max-w-3xl rounded-2xl border border-amber-300 bg-amber-50 p-3 text-center"><p className="text-sm font-bold text-amber-900">Esta escola não possui WhatsApp válido cadastrado.</p><p className="mt-1 text-xs leading-5 text-amber-800">Se precisar de orientação, use o contato geral de contingência do VemPraEJA. Este não é o WhatsApp oficial da escola.</p><a data-vlibras-acao="pronto" href={linkContingencia ?? undefined} target="_blank" rel="noopener noreferrer" onClick={() => { interromper(); onContato(selecionado); }} className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[#168a45] px-4 py-2 text-sm font-black text-white"><MessageCircle className="size-4" />Contato geral: {formatarTelefoneBrasileiro(WHATSAPP_CONTINGENCIA)}</a></div>}
+        <div ref={rodapeContatoRef} data-eja-rodape-contato className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-fundo-claro px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_22px_rgb(15_23_42/0.10)]">
+          {linkWhatsapp ? <a data-vlibras-acao="pronto" href={linkWhatsapp} target="_blank" rel="noopener noreferrer" onClick={() => { interromper(); onContato(selecionado); }} className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-2xl bg-[#168a45] px-4 py-4 text-center font-black text-white shadow-lg transition hover:bg-[#11753a] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-azul-acao"><IconeWhatsApp className="size-5 shrink-0" />Entrar em contato pelo WhatsApp</a> : <div className="mx-auto max-w-3xl rounded-2xl border border-amber-300 bg-amber-50 p-3 text-center"><p className="text-sm font-bold text-amber-900">Esta escola não possui WhatsApp válido cadastrado.</p><p className="mt-1 text-xs leading-5 text-amber-800">Se precisar de orientação, use o contato geral de contingência do VemPraEJA. Este não é o WhatsApp oficial da escola.</p><a data-vlibras-acao="pronto" href={linkContingencia ?? undefined} target="_blank" rel="noopener noreferrer" onClick={() => { interromper(); onContato(selecionado); }} className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[#168a45] px-4 py-2 text-sm font-black text-white"><IconeWhatsApp className="size-4 shrink-0" />Contato geral: {formatarTelefoneBrasileiro(WHATSAPP_CONTINGENCIA)}</a></div>}
         </div>
       )}
 

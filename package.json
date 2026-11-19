@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test tests/ui-accessibility.test.mjs tests/nivel-disponibilidade.test.mjs tests/whatsapp.test.mjs",
+    "test:e2e": "node tests/public-interactions.mjs",
     "test:layout": "node tests/tablet-layout.cjs",
     "db:migrate": "node scripts/migrate.mjs",
     "admin": "node scripts/admin.mjs",
@@ -33,6 +34,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
+    "playwright": "^1.65.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

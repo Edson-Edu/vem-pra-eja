@@ -21,11 +21,3 @@ export function exportarMetricasCsv(dados: EstatisticasAnalytics, periodo: strin
   dados.encaminhamentos.turnos.forEach((item) => linhas.push([periodo, "Clique no WhatsApp por turno", item.nome, item.total]));
   baixar(`metricas-vempraeja-${new Date().toISOString().slice(0, 10)}.csv`, `\uFEFF${linhas.map((linha) => linha.map(csv).join(";")).join("\n")}`, "text/csv;charset=utf-8");
 }
-
-export function imprimirMetricas(dados: EstatisticasAnalytics, periodo: string) {
-  const janela = window.open("", "_blank", "noopener,noreferrer");
-  if (!janela) return;
-  const grupos = [["Escolas", dados.encaminhamentos.escolas], ["Níveis", dados.encaminhamentos.niveis], ["Turnos", dados.encaminhamentos.turnos]] as const;
-  janela.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório VemPraEJA</title><style>body{font:14px Arial;margin:36px;color:#17233b}h1{color:#075aa5}table{border-collapse:collapse;width:100%;margin:12px 0 28px}th,td{border:1px solid #ccd5df;padding:8px;text-align:left}th{background:#eef6fd}</style></head><body><h1>VemPraEJA — métricas agregadas</h1><p>${periodo}</p><p><strong>Atenção:</strong> cliques no WhatsApp representam encaminhamentos; não comprovam contato nem matrícula.</p>${grupos.map(([titulo, itens]) => `<h2>${titulo}</h2><table><tr><th>Item</th><th>Total de cliques</th></tr>${itens.map((item) => `<tr><td>${item.nome}</td><td>${item.total}</td></tr>`).join("")}</table>`).join("")}</body></html>`);
-  janela.document.close(); janela.focus(); janela.print();
-}

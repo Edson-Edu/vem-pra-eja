@@ -183,14 +183,37 @@ test('abreviação ter vira terça-feira somente em dias de aula', () => {
   assert.equal(voz.diasDeAulaParaAudio('Seg - Ter'), 'segunda-feira até terça-feira');
 });
 
-test('fluxo público termina no WhatsApp sem formulário de dados pessoais', () => {
+test('fluxo público abre o WhatsApp e termina na conclusão sem formulário de dados pessoais', () => {
   const raiz = path.resolve(import.meta.dirname, '..');
   assert.equal(fs.existsSync(path.join(raiz, 'app/cadastro/page.tsx')), false);
   assert.equal(fs.existsSync(path.join(raiz, 'app/components/TelaCadastro.tsx')), false);
   const detalhes = fs.readFileSync(path.join(raiz, 'app/components/TelaDetalhes.tsx'), 'utf8');
-  assert.match(detalhes, /Falar com a escola pelo WhatsApp/);
+  const conclusao = fs.readFileSync(path.join(raiz, 'app/components/TelaConclusao.tsx'), 'utf8');
+  const paginaConclusao = fs.readFileSync(path.join(raiz, 'app/conclusao/page.tsx'), 'utf8');
+  assert.match(detalhes, /Entrar em contato pelo WhatsApp/);
+  assert.doesNotMatch(detalhes, /WhatsApp \(\{selecionado\.turno\}\)/);
   assert.match(detalhes, /rel="noopener noreferrer"/);
-  assert.doesNotMatch(detalhes, /CPF|nome_completo|enviarInscricao/);
+  assert.match(conclusao, /Agora é só conversar com a escola!/);
+  assert.match(conclusao, /Abrir WhatsApp novamente/);
+  assert.match(conclusao, /não garante a matrícula/);
+  assert.doesNotMatch(conclusao, /mensagem (?:foi )?enviada|mensagem recebida/i);
+  assert.match(paginaConclusao, /onReabrirWhatsApp/);
+  assert.doesNotMatch(detalhes + conclusao + paginaConclusao, /CPF|nome_completo|enviarInscricao/);
+});
+
+test('relatório usa a impressão da página e possui layout A4 sem abrir guia vazia', () => {
+  const raiz = path.resolve(import.meta.dirname, '..');
+  const estatisticas = fs.readFileSync(path.join(raiz, 'app/admin/EstatisticasRelatorios.tsx'), 'utf8');
+  const relatorio = fs.readFileSync(path.join(raiz, 'app/admin/RelatorioImpressao.tsx'), 'utf8');
+  const exportacao = fs.readFileSync(path.join(raiz, 'app/lib/exportacao-administrativa.ts'), 'utf8');
+  const css = fs.readFileSync(path.join(raiz, 'app/globals.css'), 'utf8');
+  assert.match(estatisticas, /window\.print\(\)/);
+  assert.doesNotMatch(estatisticas + exportacao, /window\.open|about:blank|document\.write/);
+  assert.match(relatorio, /Avanço pelas etapas/);
+  assert.match(relatorio, /Cliques no WhatsApp/);
+  assert.match(relatorio, /Nenhuma interação agregada foi registrada/);
+  assert.match(css, /@page \{ size: A4 portrait/);
+  assert.match(css, /\[data-relatorio-impressao\]/);
 });
 
 test('site público explica o estado inicial sem escolas cadastradas', () => {
@@ -198,6 +221,42 @@ test('site público explica o estado inicial sem escolas cadastradas', () => {
   assert.match(fonte, /As escolas serão cadastradas em breve/);
   assert.match(fonte, /Nenhuma escola cadastrada para este nível/);
   assert.match(fonte, /role="status"/);
+});
+
+test('galeria móvel separa o gesto horizontal da rolagem vertical e do mapa', () => {
+  const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaEscolas.tsx'), 'utf8');
+  assert.match(fonte, /data-eja-galeria/);
+  assert.match(fonte, /touch-pan-y/);
+  assert.match(fonte, /setPointerCapture/);
+  assert.match(fonte, /horizontal > vertical/);
+  assert.match(fonte, /suprimirCliqueRef/);
+  assert.match(fonte, /evento\.stopPropagation\(\)/);
+  assert.doesNotMatch(fonte, /onTouchStart|onTouchEnd/);
+});
+
+test('detalhes reserva exatamente a altura observada do rodapé de contato', () => {
+  const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaDetalhes.tsx'), 'utf8');
+  assert.match(fonte, /data-eja-conteudo-detalhes/);
+  assert.match(fonte, /data-eja-rodape-contato/);
+  assert.match(fonte, /ResizeObserver/);
+  assert.match(fonte, /alturaRodapeContato \+ 24/);
+  assert.doesNotMatch(fonte, /px-5 pb-40 pt-5/);
+});
+
+test('conclusão móvel usa fluxo natural e permite rolagem sem recortar o selo', () => {
+  const tela = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaConclusao.tsx'), 'utf8');
+  const css = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/globals.css'), 'utf8');
+  assert.match(tela, /overflow-x-hidden overflow-y-auto/);
+  assert.match(tela, /sucesso-cartao[^\n]+overflow-visible/);
+  assert.match(css, /\.sucesso-cartao \{[\s\S]*?min-height: 0;[\s\S]*?overflow: visible;/);
+  assert.match(css, /\.sucesso-voltar \{ margin-top: 12px;/);
+  assert.doesNotMatch(css, /\.sucesso-voltar \{ margin-top: auto/);
+});
+
+test('texto institucional original permanece no cartão da escola', () => {
+  const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaEscolas.tsx'), 'utf8');
+  assert.match(fonte, /Inscrição gratuita • Sem burocracia/);
+  assert.doesNotMatch(fonte, /Consulta gratuita · contato direto com a escola/);
 });
 
 test('logos institucionais são servidas pelo próprio site', () => {
