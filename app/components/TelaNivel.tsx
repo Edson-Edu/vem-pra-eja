@@ -25,7 +25,7 @@ type Props = { onVoltar: () => void; onEscolher: (nivel: Nivel["filtro"]) => voi
 const pergunta = "Até que série ou ano você estudou?";
 const instrucao = "Toque em uma opção para continuar.";
 const pacoteDaOpcao = (nivel: Nivel, indice: number) => `Opção ${indice + 1}: ${textoParaAudio(nivel.titulo.replace("\n", ", "))}. ${nivel.subtitulo}`;
-const leituraCompleta = `Etapa 1 de 4: Nível. ${pergunta} ${instrucao} ${niveis.map(pacoteDaOpcao).join(" ")} Todas as escolas são gratuitas e possuem auxílios para que você consiga concluir os estudos.`;
+const leituraCompleta = `Etapa 1 de 3: Nível. ${pergunta} ${instrucao} ${niveis.map(pacoteDaOpcao).join(" ")} Todas as escolas são gratuitas e possuem auxílios para que você consiga concluir os estudos.`;
 
 export default function TelaNivel({ onVoltar, onEscolher }: Props) {
   const { ativo, falarAgora, interromper } = useAudioDescricao();

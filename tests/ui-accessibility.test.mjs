@@ -193,6 +193,13 @@ test('fluxo público termina no WhatsApp sem formulário de dados pessoais', () 
   assert.doesNotMatch(detalhes, /CPF|nome_completo|enviarInscricao/);
 });
 
+test('site público explica o estado inicial sem escolas cadastradas', () => {
+  const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaEscolas.tsx'), 'utf8');
+  assert.match(fonte, /As escolas serão cadastradas em breve/);
+  assert.match(fonte, /Nenhuma escola cadastrada para este nível/);
+  assert.match(fonte, /role="status"/);
+});
+
 test('logos institucionais são servidas pelo próprio site', () => {
   const fonte = fs.readFileSync(path.resolve(import.meta.dirname, '..', 'app/components/TelaAbertura.tsx'), 'utf8');
   assert.match(fonte, /src="\/marca\/vem-pra-eja-logo-2\.png"/);

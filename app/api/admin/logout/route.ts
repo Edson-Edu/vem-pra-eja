@@ -7,6 +7,6 @@ export async function POST(request: NextRequest) {
   if ("erro" in acesso) return NextResponse.json({ erro: acesso.erro }, { status: acesso.status });
   await revogarSessao(request);
   const resposta = NextResponse.json({ ok: true });
-  resposta.cookies.set(COOKIE_SESSAO, "", { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
+  resposta.cookies.set(COOKIE_SESSAO, "", { httpOnly: true, sameSite: "strict", secure: process.env.APP_ORIGIN?.startsWith("https://") ?? process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
   return resposta;
 }

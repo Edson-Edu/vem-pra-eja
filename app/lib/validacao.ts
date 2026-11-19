@@ -7,6 +7,7 @@ const diaSchema = z.enum(["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sá
 const horarioSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
 const telefoneSchema = z.string().trim().transform((valor, contexto) => {
+  if (!valor) return "";
   const normalizado = normalizarTelefoneBrasileiro(valor);
   if (!normalizado) contexto.addIssue({ code: "custom", message: "Informe um telefone brasileiro válido com DDD." });
   return normalizado ?? valor;

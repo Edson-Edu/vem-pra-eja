@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const resposta = NextResponse.json({ email: administrador.email, csrfToken: sessao.csrfToken });
     resposta.cookies.set(COOKIE_SESSAO, sessao.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.APP_ORIGIN?.startsWith("https://") ?? process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
       expires: sessao.expiraEm,

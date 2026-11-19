@@ -7,11 +7,9 @@ import {
   ChevronRight,
   Clock3,
   GraduationCap,
-  Mail,
   MapPin,
   MessageCircle,
   Moon,
-  Phone,
   Sun,
   Sunset,
   X,
@@ -23,7 +21,7 @@ import type { Escola, Turno } from "../lib/escolas";
 import { distanciaEmMetros, formatarDistancia, useLocalizacaoUsuario } from "../lib/localizacao";
 import NomeEscolaFluido from "./NomeEscolaFluido";
 import { diasDeAulaParaAudio, textoParaAudio, useAudioDescricao } from "./useAudioDescricao";
-import { formatarTelefoneBrasileiro, linkDoWhatsApp } from "../lib/whatsapp";
+import { formatarTelefoneBrasileiro, linkDoWhatsApp, linkDoWhatsAppContingencia, WHATSAPP_CONTINGENCIA } from "../lib/whatsapp";
 import { registrarEventoAnalytics } from "../lib/analytics";
 
 type Props = {
@@ -74,6 +72,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onContato }: Pro
 
   const resumo = selecionado ? pacoteDoTurno(selecionado) : leituraInicial;
   const linkWhatsapp = selecionado ? linkDoWhatsApp(escola.whatsapp, escola.nome, nivel, selecionado.turno) : null;
+  const linkContingencia = selecionado ? linkDoWhatsAppContingencia(escola.nome, nivel, selecionado.turno) : null;
 
   useEffect(() => {
     registrarEventoAnalytics("chegou_contato", { escolaId: escola.id, nivel });
@@ -172,7 +171,7 @@ export default function TelaDetalhes({ escola, nivel, onVoltar, onContato }: Pro
 
       {selecionado && (
         <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-slate-200 bg-fundo-claro px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_22px_rgb(15_23_42/0.10)]">
-          {linkWhatsapp ? <a data-vlibras-acao="pronto" href={linkWhatsapp} target="_blank" rel="noopener noreferrer" onClick={() => { interromper(); onContato(selecionado); }} className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-2xl bg-[#168a45] py-4 font-black text-white shadow-lg transition hover:bg-[#11753a] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-azul-acao"><MessageCircle className="size-5" aria-hidden="true" />Falar com a escola pelo WhatsApp ({selecionado.turno})</a> : <div className="mx-auto max-w-3xl rounded-2xl border border-amber-300 bg-amber-50 p-3 text-center"><p className="text-sm font-bold text-amber-900">Esta escola ainda não possui WhatsApp válido cadastrado.</p><div className="mt-2 flex flex-wrap justify-center gap-2">{escola.telefoneContato && <a href={`tel:+${escola.telefoneContato.replace(/\D/g, "")}`} className="inline-flex items-center gap-2 rounded-xl bg-azul-principal px-4 py-2 text-sm font-black text-white"><Phone className="size-4" />Ligar para {formatarTelefoneBrasileiro(escola.telefoneContato)}</a>}{escola.emailContato && <a href={`mailto:${escola.emailContato}`} className="inline-flex items-center gap-2 rounded-xl bg-azul-principal px-4 py-2 text-sm font-black text-white"><Mail className="size-4" />Enviar e-mail</a>}</div></div>}
+          {linkWhatsapp ? <a data-vlibras-acao="pronto" href={linkWhatsapp} target="_blank" rel="noopener noreferrer" onClick={() => { interromper(); onContato(selecionado); }} className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2 rounded-2xl bg-[#168a45] py-4 font-black text-white shadow-lg transition hover:bg-[#11753a] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-azul-acao"><MessageCircle className="size-5" aria-hidden="true" />Falar com a escola pelo WhatsApp ({selecionado.turno})</a> : <div className="mx-auto max-w-3xl rounded-2xl border border-amber-300 bg-amber-50 p-3 text-center"><p className="text-sm font-bold text-amber-900">Esta escola não possui WhatsApp válido cadastrado.</p><p className="mt-1 text-xs leading-5 text-amber-800">Se precisar de orientação, use o contato geral de contingência do VemPraEJA. Este não é o WhatsApp oficial da escola.</p><a data-vlibras-acao="pronto" href={linkContingencia ?? undefined} target="_blank" rel="noopener noreferrer" onClick={() => { interromper(); onContato(selecionado); }} className="mt-2 inline-flex items-center gap-2 rounded-xl bg-[#168a45] px-4 py-2 text-sm font-black text-white"><MessageCircle className="size-4" />Contato geral: {formatarTelefoneBrasileiro(WHATSAPP_CONTINGENCIA)}</a></div>}
         </div>
       )}
 

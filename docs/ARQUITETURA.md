@@ -4,7 +4,7 @@
 
 A versão GEATI usa Next.js com Route Handlers e PostgreSQL convencional. O backend integrado substitui PostgREST, Supabase Auth e Edge Functions no caminho de produção. Essa escolha reduz o conjunto operacional de vários serviços do Supabase self-hosted para dois serviços permanentes (`app` e `db`), reaproveitando a interface React, o painel, o mapa, os filtros e a modelagem institucional já existentes.
 
-A estrutura legada `supabase/` não foi apagada. Ela é fonte de histórico e pode ser usada para exportar escolas até a homologação da nova arquitetura, mas não é carregada pelo app novo.
+A estrutura legada `supabase/` não foi apagada e permanece apenas como histórico. Ela não é carregada pelo app novo e nenhum dado antigo é importado: o PostgreSQL institucional começa sem escolas cadastradas.
 
 ## Componentes
 
@@ -46,6 +46,8 @@ O papel do app pode manter escolas/turnos/auxílios, ler administradores e mante
 ## Persistência e consistência
 
 O banco vive no volume `postgres_data`. Salvar uma escola, seus turnos e auxílios ocorre em uma transação. Atualização de imagem não executa seed nem recria banco. Migrations possuem lock consultivo e registro próprio para impedir execução concorrente ou repetida.
+
+Não há seed de escolas fictícias. O catálogo de auxílios também pode começar vazio e ser preenchido pelo administrador durante o cadastro das unidades.
 
 ## Escalabilidade e limites
 

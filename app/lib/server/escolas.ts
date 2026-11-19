@@ -6,8 +6,8 @@ import type { EscolaAdministrativaEntrada } from "../validacao";
 import { consultar, transacao } from "./db";
 
 type LinhaEscola = {
-  id: string; nome: string; niveis_oferecidos: string[]; whatsapp: string | null; telefone_contato: string | null;
-  email_contato: string | null; latitude: number; longitude: number; cidade: string; image_url: string | null;
+  id: string; nome: string; niveis_oferecidos: string[]; whatsapp: string | null;
+  latitude: number; longitude: number; cidade: string; image_url: string | null;
   bairro: string; sigla: string | null; endereco: string | null; ativa: boolean;
 };
 type LinhaTurno = { id: string; escola_id: string; turno: string; horario: string | null; descricao: string | null; auxilios: string | null; nivel_do_turno: string; dias_aula: string | null };
@@ -74,8 +74,6 @@ export async function escolasPublicas(nivel?: string | null, id?: string | null)
     imagens: imagensDaEscola(escola.image_url),
     niveis: escola.niveis_oferecidos,
     whatsapp: escola.whatsapp,
-    telefoneContato: escola.telefone_contato,
-    emailContato: escola.email_contato,
     turnos: base.turnos.filter((turno) => turno.escola_id === escola.id).map((turno) => {
       const vinculados = base.beneficios.filter((item) => item.turno_id === turno.id);
       const auxilios = vinculados.length ? vinculados.map((item) => item.nome) : String(turno.auxilios ?? "").split(",").map((item) => item.trim()).filter(Boolean);
@@ -116,12 +114,12 @@ export async function salvarEscola(entrada: EscolaAdministrativaEntrada) {
     const nomeCompleto = [entrada.sigla, entrada.nome].filter(Boolean).join(" ");
     const endereco = [entrada.rua, entrada.numero, entrada.complemento].filter(Boolean).join(", ");
     await cliente.query(
-      `insert into public.escolas (id, sigla, nome, cidade, bairro, endereco, whatsapp, telefone_contato, latitude, longitude, niveis_oferecidos, image_url, ativa)
-       values ($1,$2,$3,$4,$5,$6,$7,$7,$8,$9,$10,$11,$12)
+      `insert into public.escolas (id, sigla, nome, cidade, bairro, endereco, whatsapp, latitude, longitude, niveis_oferecidos, image_url, ativa)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        on conflict (id) do update set sigla=excluded.sigla, nome=excluded.nome, cidade=excluded.cidade, bairro=excluded.bairro,
-         endereco=excluded.endereco, whatsapp=excluded.whatsapp, telefone_contato=excluded.telefone_contato, latitude=excluded.latitude,
+         endereco=excluded.endereco, whatsapp=excluded.whatsapp, latitude=excluded.latitude,
          longitude=excluded.longitude, niveis_oferecidos=excluded.niveis_oferecidos, image_url=excluded.image_url, ativa=excluded.ativa, updated_at=now()`,
-      [escolaId, entrada.sigla || null, nomeCompleto, entrada.cidade, entrada.bairro, endereco || null, entrada.whatsapp, entrada.latitude, entrada.longitude, entrada.niveis, entrada.fotos.filter(Boolean).join(", ") || null, entrada.ativa],
+      [escolaId, entrada.sigla || null, nomeCompleto, entrada.cidade, entrada.bairro, endereco || null, entrada.whatsapp || null, entrada.latitude, entrada.longitude, entrada.niveis, entrada.fotos.filter(Boolean).join(", ") || null, entrada.ativa],
     );
     const existentes = new Set((await cliente.query<{ id: string }>("select id from public.turnos_escola where escola_id=$1", [escolaId])).rows.map((item) => item.id));
     const mantidos: string[] = [];

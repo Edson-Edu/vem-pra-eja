@@ -278,7 +278,7 @@ function FormularioRefinado({ formulario, setFormulario, catalogo, onAdicionarBe
     const proximosErros: Record<string, string> = {};
     if (!formulario.nome.trim()) proximosErros.nome = "Informe o nome da escola.";
     if (!formulario.bairro) proximosErros.bairro = "Selecione o bairro.";
-    if (!normalizarTelefoneBrasileiro(formulario.whatsapp)) proximosErros.whatsapp = "Informe um WhatsApp brasileiro válido com DDD.";
+    if (formulario.whatsapp.trim() && !normalizarTelefoneBrasileiro(formulario.whatsapp)) proximosErros.whatsapp = "Informe um WhatsApp brasileiro válido com DDD ou deixe o campo vazio.";
     if (!formulario.latitude.trim() || !Number.isFinite(Number(formulario.latitude))) proximosErros.latitude = "Informe uma latitude válida.";
     if (!formulario.longitude.trim() || !Number.isFinite(Number(formulario.longitude))) proximosErros.longitude = "Informe uma longitude válida.";
     if (!formulario.niveis.length) proximosErros.niveis = "Selecione pelo menos um nível de ensino.";
@@ -318,7 +318,7 @@ function FormularioRefinado({ formulario, setFormulario, catalogo, onAdicionarBe
             <input value={formulario.nome} onChange={(evento) => atualizar("nome", evento.target.value)} className="h-11 min-w-0 flex-1 rounded-r-xl border border-slate-300 bg-white px-3 font-normal text-texto-principal outline-none transition focus:border-azul-acao focus:ring-4 focus:ring-azul-foco" placeholder="Nome da escola" />
           </div>
         </Campo>
-        <Campo titulo="WhatsApp institucional" erro={erros.whatsapp} dica="Informe DDD e número; o sistema normaliza o código do Brasil."><input type="tel" value={formulario.whatsapp} onChange={(evento) => atualizar("whatsapp", evento.target.value)} className={control} placeholder="(47) 99999-9999" inputMode="tel" autoComplete="tel" /></Campo>
+        <Campo titulo="WhatsApp oficial da escola" erro={erros.whatsapp} dica="Opcional. Informe DDD e número; se ficar vazio, o site identificará o contato geral de contingência."><input type="tel" value={formulario.whatsapp} onChange={(evento) => atualizar("whatsapp", evento.target.value)} className={control} placeholder="(47) 99999-9999" inputMode="tel" autoComplete="tel" /></Campo>
         <Campo titulo="Cidade"><select value={formulario.cidade} onChange={(evento) => { setFormulario((atual) => ({ ...atual, cidade: evento.target.value as EscolaFormulario["cidade"], bairro: "" })); setErros((atual) => { const restante = { ...atual }; delete restante.bairro; return restante; }); }} className={control}>{CIDADES.map((cidade) => <option key={cidade} value={cidade}>{cidade}</option>)}</select></Campo>
         <Campo titulo="Bairro" erro={erros.bairro}><select value={formulario.bairro} onChange={(evento) => atualizar("bairro", evento.target.value)} className={control}><option value="">Selecione o bairro</option>{BAIRROS[formulario.cidade].map((bairro) => <option key={bairro} value={bairro}>{bairro}</option>)}</select></Campo>
         <div className="col-span-2 grid grid-cols-[minmax(0,1fr)_9rem_minmax(0,0.8fr)] gap-4">

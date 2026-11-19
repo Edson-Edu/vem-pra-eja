@@ -2,7 +2,7 @@
 
 O VemPraEJA ajuda jovens e adultos a encontrar escolas de EJA em Camboriú e Balneário Camboriú, comparar níveis e turnos, consultar o mapa e falar diretamente com a instituição escolhida.
 
-Esta versão não realiza pré-inscrição e não coleta nome, CPF, e-mail, telefone, endereço ou mensagens dos visitantes. O último passo abre o WhatsApp oficial da escola com um texto inicial preenchido; a conversa e a eventual matrícula acontecem fora da plataforma.
+Esta versão não realiza pré-inscrição e não coleta nome, CPF, e-mail, telefone, endereço ou mensagens dos visitantes. O último passo abre o WhatsApp oficial da escola com um texto inicial preenchido; quando ele não está cadastrado, a interface oferece separadamente o contato geral de contingência do VemPraEJA. A conversa e a eventual matrícula acontecem fora da plataforma.
 
 ## Arquitetura
 
@@ -20,9 +20,9 @@ Navegador ───────────────────────�
 - Docker Compose: `app`, `db` e o serviço efêmero `migrate`.
 - Volume `postgres_data`: persistência independente dos contêineres.
 
-O frontend nunca acessa o PostgreSQL diretamente. Operações administrativas passam pela API, que valida sessão, CSRF, autorização e dados de entrada. A árvore `supabase/` foi mantida apenas como legado para auditoria e migração; ela não participa da nova execução Docker.
+O frontend nunca acessa o PostgreSQL diretamente. Operações administrativas passam pela API, que valida sessão, CSRF, autorização e dados de entrada. A árvore `supabase/` foi mantida apenas como histórico; ela não participa da nova execução Docker e seus dados não são importados.
 
-Mais detalhes: [arquitetura](docs/ARQUITETURA.md), [fluxo de dados](docs/FLUXO-DE-DADOS.md) e [manual do GEATI](docs/IMPLANTACAO-GEATI.md).
+Mais detalhes: [arquitetura](docs/ARQUITETURA.md), [fluxo de dados](docs/FLUXO-DE-DADOS.md), [testes locais](docs/TESTES-LOCAIS.md) e [manual do GEATI](docs/IMPLANTACAO-GEATI.md).
 
 ## Requisitos
 
@@ -37,7 +37,7 @@ CPU, memória, domínio, política de backup, retenção de logs e janela de man
 ## Instalação com Docker
 
 1. Copie `.env.example` para `.env` e substitua todos os valores de exemplo. Gere segredos independentes, por exemplo com `openssl rand -base64 48`.
-2. Defina `APP_ORIGIN` com a origem HTTPS final, sem barra no fim.
+2. Defina `APP_ORIGIN` com a origem HTTPS final, sem barra no fim. Para teste local, use `http://localhost:3000`.
 3. Suba a aplicação:
 
 ```bash
@@ -47,6 +47,8 @@ curl --fail http://127.0.0.1:3000/api/health
 ```
 
 O serviço `migrate` cria o papel de privilégio mínimo e aplica apenas migrations ainda não registradas. Ele não derruba, recria nem limpa o banco. O PostgreSQL não publica porta no host; a aplicação escuta somente em `127.0.0.1:${APP_PORT:-3000}` para uso pelo proxy reverso.
+
+O banco começa sem escolas, turnos ou auxílios fictícios. Esses dados são cadastrados pelo painel. O site público informa adequadamente quando ainda não há escolas disponíveis.
 
 ### Primeira conta administrativa
 
@@ -71,7 +73,7 @@ O painel permanece deliberadamente bloqueado abaixo de 768 px.
 |---|---:|---|
 | `MIGRATION_DB_PASSWORD` | sim | conta proprietária, usada somente por migrations/rotinas operacionais |
 | `APP_DB_PASSWORD` | sim | conta de privilégio mínimo usada pelo app |
-| `APP_ORIGIN` | sim | validação de Origin/CSRF, por exemplo `https://eja.exemplo.edu.br` |
+| `APP_ORIGIN` | sim | validação de Origin/CSRF, por exemplo `https://eja.exemplo.edu.br` ou `http://localhost:3000` em teste |
 | `RATE_LIMIT_SECRET` | sim | pseudonimização temporária em memória para limitar APIs públicas |
 | `LOGIN_RATE_LIMIT_SECRET` | sim | chave separada para limitar tentativas de login |
 | `TRUST_PROXY` | sim em proxy confiável | aceita o primeiro `X-Forwarded-For`; não habilite sem proxy que substitua esse cabeçalho |
@@ -88,19 +90,7 @@ As migrations ficam em `database/migrations/` e são registradas em `schema_migr
 docker compose run --rm migrate
 ```
 
-Alterações do painel são transacionais e permanecem no volume. Não edite JSON nem faça novo deploy para cadastrar uma escola.
-
-### Migração das escolas do Supabase legado
-
-Faça primeiro em homologação e mantenha backup da origem:
-
-```bash
-SOURCE_DATABASE_URL='postgresql://...' node scripts/exportar-supabase.mjs
-docker compose run --rm -v "$PWD/migration-data:/app/migration-data:ro" migrate \
-  node scripts/importar-escolas.mjs migration-data/escolas-AAAA-MM-DD.json
-```
-
-O exportador lê somente escolas, turnos e auxílios. Tabelas de inscrições não são exportadas. O importador preserva UUIDs, executa em uma transação e usa provisoriamente `5547984400475` quando a origem não possui WhatsApp válido. Revise esses números no painel antes da publicação.
+Alterações do painel são transacionais e permanecem no volume. Não edite JSON nem faça novo deploy para cadastrar uma escola. Nenhum dado do Supabase antigo é importado.
 
 ## Backup, restauração e atualização
 
@@ -130,6 +120,8 @@ Não publique a porta 5432. Não exponha a porta 3000 além de loopback/rede do 
 
 Um clique no WhatsApp é um encaminhamento, não prova conversa, matrícula ou vaga.
 
+O contato geral `5547989074653` é mostrado somente quando a escola não possui WhatsApp válido e sempre é identificado como contingência, nunca como número oficial da unidade.
+
 ## OpenStreetMap
 
 O padrão usa `https://tile.openstreetmap.org/{z}/{x}/{y}.png`, atribuição visível, cache normal do navegador e sem prefetch/offline. A política oficial informa que o serviço é comunitário, sem SLA e pode bloquear uso inadequado: [OSMF Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/). Para tráfego institucional relevante, o GEATI deve avaliar um provedor com contrato/SLA ou tiles próprios antes da produção.
@@ -143,7 +135,9 @@ npm test
 npm run build
 ```
 
-Use PostgreSQL convencional também no desenvolvimento. O Supabase CLI só é necessário para consultar o legado durante a transição.
+Use PostgreSQL convencional também no desenvolvimento. O Supabase CLI e o banco antigo não são necessários para a nova aplicação.
+
+Para avaliar a aplicação inteira pelo navegador com Docker, siga [Testes locais](docs/TESTES-LOCAIS.md). Os endereços padrão são `http://localhost:3000` e `http://localhost:3000/admin`.
 
 ## Portas e integrações
 
@@ -155,6 +149,6 @@ Use PostgreSQL convencional também no desenvolvimento. O Supabase CLI só é ne
 | navegador | `wa.me` HTTPS 443 | contato externo |
 | app | Azure Speech HTTPS 443 | opcional |
 
-## Pendências institucionais
+## Parâmetros institucionais
 
-Antes de publicar, o GEATI precisa confirmar domínio, certificados, limites de recursos, monitoramento, retenção de logs, frequência/guarda dos backups, credenciais do serviço de voz, provedor de mapa, responsáveis por atualização e procedimento de incidente. Nenhuma dessas decisões exige acesso de alunos ao servidor.
+Domínio, certificados, limites de recursos, monitoramento, retenção de logs, frequência/guarda dos backups, credenciais do serviço de voz e provedor de mapa permanecem parametrizados para definição pelo GEATI durante a implantação. Nenhuma dessas decisões exige acesso de alunos ao servidor.

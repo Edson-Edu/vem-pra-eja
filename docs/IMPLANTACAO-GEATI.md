@@ -6,7 +6,7 @@
 - [ ] Confirmar domínio, DNS, certificado e `APP_ORIGIN`.
 - [ ] Garantir que 5432 não possui publicação externa.
 - [ ] Executar migrations e criar administrador nominal.
-- [ ] Importar escolas em homologação e revisar todos os WhatsApps provisórios.
+- [ ] Confirmar que o banco iniciou vazio e cadastrar uma escola real pelo painel.
 - [ ] Testar login, cadastro/edição/ativação/exclusão de escola e persistência após reinício.
 - [ ] Testar mapa, filtros, teclado, contraste, voz, VLibras e celulares.
 - [ ] Confirmar política/provedor de mapas e eventual Azure Speech.
@@ -27,6 +27,8 @@ docker compose logs --tail=100 migrate app db
 curl --fail http://127.0.0.1:${APP_PORT:-3000}/api/health
 docker compose run --rm migrate npm run admin -- create admin@instituicao.br
 ```
+
+O PostgreSQL é iniciado apenas com a estrutura. Não há importação do Supabase, seed de escolas ou WhatsApps provisórios.
 
 Não use `docker compose down -v` em produção: `-v` remove o volume do banco. Não execute `docker volume prune` no host sem inventário e backup verificado.
 
@@ -102,6 +104,6 @@ Monitorar pelo menos:
 4. Se migration incompatível alterou dados, parar app e seguir o procedimento de restauração aprovado.
 5. Rotacionar segredos se houver suspeita de exposição e revogar sessões administrativas.
 
-## Decisões ainda necessárias
+## Parâmetros definidos na implantação
 
-O GEATI deve informar: domínio final, proxy suportado, disponibilidade de SMTP (não é necessária no fluxo atual), capacidade, política de egress, provedor de tiles, uso do Azure, backup/RPO/RTO, observabilidade, retenção de logs e responsáveis por contas/atualizações/incidentes.
+O Compose permite que o GEATI defina no momento da implantação: domínio final, proxy, capacidade, política de egress, provedor de tiles, uso do Azure, backup/RPO/RTO, observabilidade, retenção de logs e responsáveis por contas, atualizações e incidentes. SMTP não é necessário no fluxo atual.

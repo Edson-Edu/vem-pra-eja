@@ -14,6 +14,7 @@ import {
   Clock3,
   LocateFixed,
   MapPin,
+  School,
 } from "lucide-react";
 import CabecalhoFluxo from "./CabecalhoFluxo";
 import BotaoAudio from "./BotaoAudio";
@@ -77,7 +78,9 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
     ? "1, 2…: da mais próxima à mais distante."
     : "1, 2…: ordem da lista. Localização indisponível.";
   const legendaMapa = `Azul: escola selecionada. Vermelho: outras escolas. ${legendaNumeros}`;
-  const orientacao = `Etapa 2 de 4: Escola. Escolha sua escola. Encontramos ${escolas.length} escolas prontas para você. ${legendaMapa} Navegue pelo mapa ou toque no nome de uma escola para ouvir seus detalhes.`;
+  const orientacao = escolas.length
+    ? `Etapa 2 de 3: Escola. Escolha sua escola. Encontramos ${escolas.length} escolas prontas para você. ${legendaMapa} Navegue pelo mapa ou toque no nome de uma escola para ouvir seus detalhes.`
+    : `Etapa 2 de 3: Escola. Ainda não há escolas cadastradas para ${nivel}. Volte mais tarde ou entre em contato com a equipe do VemPraEJA.`;
 
   const comecarArrasteLista = (evento: ReactPointerEvent<HTMLButtonElement>) => {
     if (window.innerWidth >= 1280 || !listaRef.current) return;
@@ -180,16 +183,17 @@ export default function TelaEscolas({ nivel, escolas, onVoltar, onDetalhes }: Pr
           </button>
           <p className="px-5 pb-3 text-sm font-semibold text-azul-principal">
             <MapPin className="mr-2 inline size-4 text-azul-secundario" />
-            {escolas.length} escolas prontas para te receber
+            {escolas.length ? `${escolas.length} ${escolas.length === 1 ? "escola pronta" : "escolas prontas"} para te receber` : "Nenhuma escola cadastrada para este nível"}
           </p>
-          <aside aria-label="Legenda do mapa" data-eja-legenda-mapa data-vlibras-texto={legendaMapa} className="relative mx-4 mb-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] leading-relaxed text-slate-600">
+          {escolas.length > 0 && <aside aria-label="Legenda do mapa" data-eja-legenda-mapa data-vlibras-texto={legendaMapa} className="relative mx-4 mb-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] leading-relaxed text-slate-600">
             <p className="flex flex-wrap gap-x-3"><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-azul-acao" />Selecionada</span><span><span aria-hidden="true" className="mr-1 inline-block size-2.5 rounded-full bg-verde-escuro" />Outras escolas</span></p>
             <p>{legendaNumeros}</p>
-          </aside>
+          </aside>}
         </div>
 
         <div data-eja-rolagem-escolas className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
           <div className="space-y-4">
+            {!escolasOrdenadas.length && <div role="status" className="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center"><span className="mx-auto grid size-14 place-items-center rounded-full bg-azul-superficie text-azul-principal"><School className="size-7" aria-hidden="true" /></span><h2 className="mt-4 text-lg font-black text-azul-principal">As escolas serão cadastradas em breve</h2><p className="mt-2 text-sm leading-6 text-slate-600">No momento não há unidades disponíveis para {nivel}. Você pode voltar e consultar novamente mais tarde.</p><button type="button" onClick={onVoltar} className="mt-5 rounded-xl bg-azul-principal px-5 py-3 text-sm font-black text-white">Voltar para os níveis</button></div>}
             {escolasOrdenadas.map((escola, indice) => (
               <CartaoEscola
                 key={escola.id}
@@ -295,7 +299,7 @@ function CartaoEscola({
         >
           Ver escola
         </button>
-        <p className="mt-2 text-center text-xs text-slate-500">Inscrição gratuita · sem burocracia</p>
+        <p className="mt-2 text-center text-xs text-slate-500">Consulta gratuita · contato direto com a escola</p>
       </div>
     </div>
   );

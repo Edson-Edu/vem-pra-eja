@@ -1,4 +1,4 @@
-export const WHATSAPP_PROVISORIO = "5547984400475";
+export const WHATSAPP_CONTINGENCIA = "5547989074653";
 
 export function normalizarTelefoneBrasileiro(valor: string | null | undefined) {
   let numeros = String(valor ?? "").replace(/\D/g, "");
@@ -26,9 +26,17 @@ export function mensagemDeContato(nomeEscola: string, nivel: string, turno: stri
   return `Olá! Encontrei ${nomeEscola} pelo site VemPraEJA e gostaria de receber informações sobre a matrícula na EJA. Tenho interesse no nível ${nivel} e no turno ${turno}.`;
 }
 
+export function mensagemDeContingencia(nomeEscola: string, nivel: string, turno: string) {
+  return `Olá! Estou acessando o VemPraEJA. A escola ${nomeEscola} está sem WhatsApp disponível no site e gostaria de orientação sobre a EJA. Tenho interesse no nível ${nivel} e no turno ${turno}.`;
+}
+
 export function linkDoWhatsApp(telefone: string | null | undefined, nomeEscola: string, nivel: string, turno: string) {
   const normalizado = normalizarTelefoneBrasileiro(telefone);
   if (!normalizado) return null;
   return `https://wa.me/${normalizado}?text=${encodeURIComponent(mensagemDeContato(nomeEscola, nivel, turno))}`;
+}
+
+export function linkDoWhatsAppContingencia(nomeEscola: string, nivel: string, turno: string) {
+  return `https://wa.me/${WHATSAPP_CONTINGENCIA}?text=${encodeURIComponent(mensagemDeContingencia(nomeEscola, nivel, turno))}`;
 }
 

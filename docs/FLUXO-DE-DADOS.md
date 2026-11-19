@@ -6,8 +6,9 @@
 2. O navegador consulta escolas ativas pela API do VemPraEJA.
 3. O mapa exibe localização e informações institucionais.
 4. A pessoa escolhe escola e turno.
-5. O navegador monta um link `https://wa.me/` com o número institucional e uma mensagem genérica.
-6. O WhatsApp é aberto fora do VemPraEJA.
+5. O navegador monta um link `https://wa.me/` com o número oficial da escola e uma mensagem contextual.
+6. Se não houver WhatsApp escolar válido, a interface informa isso e oferece, sem redirecionamento silencioso, o contato geral de contingência `5547989074653`.
+7. O WhatsApp é aberto fora do VemPraEJA.
 
 O site não solicita nem grava nome, CPF, idade, telefone, e-mail, endereço, conteúdo da conversa ou resultado da matrícula. O número do visitante não é conhecido pela plataforma.
 
@@ -43,4 +44,4 @@ As estatísticas não podem ser apresentadas como pessoas únicas. “Clique no 
 
 ## Legado
 
-As tabelas e funções antigas de pré-inscrição permanecem apenas na pasta histórica `supabase/` durante a transição. Elas não são construídas nem chamadas pelo Docker GEATI. O procedimento de migração exporta exclusivamente dados institucionais. Exclusão definitiva de dados pessoais legados depende de autorização, política de retenção e backup separados; não é executada automaticamente por este projeto.
+As tabelas e funções antigas de pré-inscrição permanecem apenas na pasta histórica `supabase/`. Elas não são construídas nem chamadas pelo Docker GEATI, e nenhum dado do banco antigo é importado. Exclusão definitiva de dados pessoais legados depende de autorização, política de retenção e backup separados; não é executada automaticamente por este projeto.

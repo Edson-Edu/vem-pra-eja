@@ -5,8 +5,6 @@ create table if not exists public.escolas (
   nome text not null,
   niveis_oferecidos text[] not null default '{}',
   whatsapp text,
-  telefone_contato text,
-  email_contato text,
   latitude double precision not null,
   longitude double precision not null,
   cidade text not null,
@@ -18,8 +16,7 @@ create table if not exists public.escolas (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint escolas_cidade_valida check (cidade in ('Camboriú', 'Balneário Camboriú')),
-  constraint escolas_whatsapp_valido check (whatsapp is null or whatsapp ~ '^55[1-9][0-9]{9,10}$'),
-  constraint escolas_telefone_valido check (telefone_contato is null or telefone_contato ~ '^55[1-9][0-9]{9,10}$')
+  constraint escolas_whatsapp_valido check (whatsapp is null or whatsapp ~ '^55[1-9][0-9]{9,10}$')
 );
 
 create table if not exists public.beneficios_catalogo (
